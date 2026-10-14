@@ -122,7 +122,12 @@ Pour le référencement, chaque page porte :
 
 Le site fournit aussi `sitemap.xml` et `robots.txt`.
 
-Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools.
+Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools :
+
+- **Google Search Console** : propriété de type « Préfixe de l’URL », avec l’adresse du site. Le fichier de validation HTML est dans `assets/racine/`.
+- **Bing Webmaster Tools** : importer le site depuis Google Search Console. Bing reprend alors la validation et le sitemap.
+
+Tout fichier placé dans `assets/racine/` est copié tel quel à la racine du site (fichiers de validation, etc.).
 
 #### Application installable (PWA)
 

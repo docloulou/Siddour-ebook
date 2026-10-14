@@ -41,6 +41,8 @@ EPUB_NAME = 'siddour_liseuse_{}.epub'
 DEPOT = 'docloulou/Siddour-ebook'  # dépôt GitHub, lien « Contribuer » du pied de page
 # Adresse de contact, à l'envers et en base64 : absente en clair du dépôt comme des pages.
 # Le script de la page la reconstitue seulement quand le lecteur clique.
+# Fichiers copiés tels quels à la racine du site : validation Google Search Console, Bing…
+RACINE = Path(__file__).resolve().parent.parent / 'assets' / 'racine'
 CONTACT = 'aHZvLmJyekBrb29iZS1ydW9kZGlz'
 
 WEB_CSS = '''
@@ -503,6 +505,8 @@ class Site:
         for lv in self.livres:
             shutil.copyfile(sortie / EPUB_NAME.format(lv.mode), telecharger / EPUB_NAME.format(lv.mode))
         (self.dossier / '.nojekyll').write_text('', encoding='utf-8')
+        if RACINE.is_dir():
+            shutil.copytree(RACINE, self.dossier, dirs_exist_ok=True)
 
     def index_moteurs(self) -> None:
         lignes = ['User-agent: *', 'Allow: /']
