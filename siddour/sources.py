@@ -146,6 +146,8 @@ SOURCE_FIXES = {
     'Berachot, Birkhot Hamitzvot': [('<small> ?גרם</small> ?', ''),
                                     (r'^(ואחר כך לוקחת דבר מועט ואומרת):[\u00ad-]*\s*', r'<small>\1</small> '),
                                     ('^(ואחר שיקבענה ינשקנה ויאמר) - ', r'<small>\1</small> ')],
+    # « בחו"ל—וְעַל… » : le tiret sépare la condition du texte, comme l'espace ailleurs.
+    'Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Al Hamichyah': [('(<small>בחו"ל</small>)—', r'\1 ')],
     'Berachot, Asher Yatzar Etchem Badin': [(
         '^ברוך אתה יי .*מחיה המתים\\.$',
         'בָּרוּךְ אַתָּה יְיָ אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר יָצַר אֶתְכֶם בַּדִּין, וְזָן וְכִלְכֵּל אֶתְכֶם בַּדִּין, '
