@@ -6,7 +6,7 @@ import re
 import time
 from pathlib import Path
 
-from .hebreu import HE_RE
+from .hebreu import HE_RE, loose
 from .plan import BOOK
 
 API = "https://www.sefaria.org/api/v3/texts/{ref}"
@@ -41,6 +41,26 @@ def fetch_section(ref: str, cache_dir: Path, offline: bool) -> dict:
     return data
 
 
+# Corrections ponctuelles du texte source, par section : (motif, remplacement).
+_YOM_TOV = (loose('ביום') + r' <small><small>(ביום טוב[^<]*)</small> (' + loose('טוב') + r')</small> ('
+            + loose('מקרא') + ' ' + loose('קדש') + ' ' + loose('הזה') + r'\.?)')
+_YOM_TOV_FIX = r'<small><small>\1</small> בְּיוֹם \2 \3</small>'
+
+SOURCE_FIXES = {
+    # Lettre parasite à la fin de l'invitation au zimoun.
+    'Fast Days and Mourning, Mourning': [('(' + loose('קדישא') + ':)צ', r'\1')],
+    # « בְּיוֹם » appartient à l'ajout de Yom tov : à 'Hol hamoèd, on s'arrête avant.
+    'Post Meal Blessing': [(_YOM_TOV, _YOM_TOV_FIX)],
+    'Al Hamihya': [(_YOM_TOV, _YOM_TOV_FIX)],
+}
+
+
+def apply_fixes(ref: str, texts: list[str]) -> list[str]:
+    for pattern, repl in SOURCE_FIXES.get(ref, []):
+        texts = [re.sub(pattern, repl, t) for t in texts]
+    return texts
+
+
 def flatten(text) -> list[str]:
     if isinstance(text, str):
         return [text]
@@ -57,7 +77,7 @@ def validate_source(data: dict, ref: str) -> tuple[dict, list[str]]:
     v = versions[0]
     if v.get("language") not in {"he", "hebrew"}:
         raise ValueError("Version non hébraïque : " + ref)
-    texts = flatten(v.get("text"))
+    texts = apply_fixes(ref, flatten(v.get("text")))
     if not any(HE_RE.search(t) for t in texts):
         raise ValueError("Texte hébreu vide : " + ref)
     return v, texts

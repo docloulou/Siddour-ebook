@@ -144,7 +144,7 @@ PH_WORDS = {
     'הוא': 'hou', 'כחו': 'ko’ho', 'ששי': 'chichi', 'אכלתי': 'akhalti',
     'חוס': '’hous', 'שום': 'choum', 'ונשוב': 'venachouv', 'שבות': 'chevout',
     'מיורדי': 'miyoredé', 'וצירם': 'vetsiram', 'קום': 'koum', 'הושר': 'hochar',
-    "ה'": 'Hachem', 'יהוה': 'Adonaï', 'יי': 'Adonaï',
+    "ה'": 'Hachem', 'יו"ד': 'youd', 'יהוה': 'Adonaï', 'יי': 'Adonaï',
 }
 # Préfixes possibles devant le Tétragramme (le, ve, mi…).
 _NAME_PREFIXES = {'ב', 'ל', 'ו', 'מ', 'ד', 'וב', 'ול'}

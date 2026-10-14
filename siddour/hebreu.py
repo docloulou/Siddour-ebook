@@ -16,6 +16,11 @@ def plain_hebrew(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip(" :.,;")
 
 
+def loose(word: str) -> str:
+    """Motif d'un mot hébreu, quel que soit l'ordre ou la présence du nikoud."""
+    return ''.join(re.escape(c) + '[\u0591-\u05c7]*' for c in word)
+
+
 def is_vocalized(word: str) -> bool:
     return bool(re.search(r"[ְ-ׇֻ]", word))
 

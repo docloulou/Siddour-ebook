@@ -32,10 +32,10 @@ def make_credits(title: str, licences: set[str], mode: str) -> str:
             '<p class="credits">Rite séfarade (Edot HaMizrah). Textes issus de Sefaria.</p>'
             '<ul class="credits">' + items + '</ul>'
             '<p class="credits">' + note
-            + 'Les ajouts portent leur condition et sont séparés du texte commun. '
-              'Les variantes indiquent de choisir une seule formule. '
-              'Les blocs longs proposent un lien vers la suite. '
-              'Les notes numérotées sont expliquées en fin de section. '
+            + 'Les consignes figurent en italique juste avant le passage qu’elles concernent. '
+              'Une variante brève est donnée entre crochets, dans la phrase, avec sa condition. '
+              'Les ajouts plus longs sont encadrés et proposent un lien vers la suite de la prière. '
+              'Les sources et les précisions techniques sont en notes numérotées, en fin de section. '
               'Les consignes françaises traduisent cette source et ses usages, notamment ceux du Ben Ich ’Haï. '
               'Le classement reprend le plan fourni, inspiré de l’index du Sidour Torah-Box ; '
               'il ne constitue pas une reproduction de cette édition.</p>')

@@ -32,7 +32,7 @@ Les textes sources sont inclus dans `cache/`, ce qui permet de générer les liv
 python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist
 ```
 
-Cette commande produit les trois EPUB et exporte un CSV de toutes les rubriques. Autres exemples :
+Cette commande produit les trois EPUB et exporte `rubriques_traduites.csv`, la liste des consignes avec leur nombre d’utilisations. Autres exemples :
 
 ```bash
 # Une édition seulement
@@ -41,8 +41,8 @@ python3 siddour_ebook_liseuse.py --offline --mode phonetique --sortie ./dist
 # Aperçus HTML pour relire la mise en page
 python3 siddour_ebook_liseuse.py --offline --html --sortie ./build
 
-# Traductions corrigées dans le CSV éditable
-python3 siddour_ebook_liseuse.py --offline --rubriques ./data/rubriques_traduites.csv --sortie ./dist
+# Essayer des traductions sans toucher aux données (colonnes hebreu;francais)
+python3 siddour_ebook_liseuse.py --offline --rubriques ./mes_corrections.csv --sortie ./build
 
 # Sous-ensemble du plan
 python3 siddour_ebook_liseuse.py --offline --chapitres apres-le-repas,priere-du-matin --sortie ./build
@@ -55,13 +55,35 @@ Sans `--offline`, le script télécharge auprès de Sefaria les sections absente
 
 ## Continuer le travail
 
-- **Plan et textes à inclure** : modifier `PLAN` dans `siddour_ebook_liseuse.py`.
-- **Traductions des consignes** : modifier `data/rubriques_traduites.csv`, enregistré en UTF-8, séparateur `;`, puis générer avec `--rubriques`. Le script embarque déjà 680 traductions ; le CSV est facultatif.
-- **Police, tailles, espacements et séparateurs** : modifier `CSS` dans le script.
-- **Articulation des commentaires** : modifier `ReadingLayout`, notamment `note`, `paragraph`, `conditional_items` et `render`. `_brief_rubric` raccourcit certaines consignes à l’affichage.
-- **Phonétique** : modifier `translit_word`, `translit` et les corrections de `PH_WORDS`.
+Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 
-Le zimoun regroupe les rôles et affiche les mots ajoutés à partir de dix convives entre crochets. Les variantes proposent de choisir une seule formule. Les notes techniques restent en fin de section, avec liens de retour.
+| Fichier | Rôle |
+| --- | --- |
+| `siddour/plan.py` | Plan du livre : chapitres, sections et références Sefaria. |
+| `siddour/sources.py` | Téléchargement, cache et corrections ponctuelles de la source (`SOURCE_FIXES`). |
+| `siddour/hebreu.py` | Nikoud, balises `<small>`/`<big>`, recherche dans le texte hébreu. |
+| `siddour/consignes.py` | Traduction des consignes et découpage consigne / texte à réciter. |
+| `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
+| `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
+| `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
+
+Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
+
+- `data/consignes.csv` : consignes, repères et références, indexés par l’hébreu sans nikoud.
+- `data/intertitres.csv` : titres internes.
+- `data/consignes_locales.csv` : consigne dont le sens dépend du passage (section Sefaria et numéro de paragraphe), par exemple un « אומרים » qui désigne l’officiant.
+
+Une consigne absente de ces tables bloque la génération et est listée, pour qu’aucun hébreu non traduit n’apparaisse dans les livres.
+
+### Conventions de mise en page
+
+Inspirées du Pata’h Eliyahou et de l’édition Beit Hassofer :
+
+- La consigne figure en italique, en petit, juste avant le passage qu’elle concerne. Une consigne qui suit le passage (« deux fois », « jusqu’ici ») est collée à ce passage.
+- Une répétition courte s’écrit dans la ligne : *(trois fois)*.
+- Une variante brève reste dans la phrase, entre crochets, avec sa condition : *[Dix jours de pénitence : …]*. Les noms à insérer s’écrivent de la même façon : *[Untel, fils d’Untel]*.
+- Un ajout long est encadré, avec la condition en en-tête et un lien « Suite de la prière ». Les rôles (zimoun, Kedoucha, bénédiction des Cohanim) sont aussi encadrés.
+- Les sources (Ben Ich ’Haï, Kaf ha’Haïm…) et les précisions techniques (initiales, acrostiches) passent en notes numérotées, en fin de section, avec liens aller et retour.
 
 ## Sources et limites
 
