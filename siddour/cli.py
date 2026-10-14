@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 
 from .consignes import Consignes
@@ -9,6 +10,7 @@ from .edition import FONT_PATH, build_edition
 from .phonetique import translit
 from .plan import PLAN, select_plan
 from .sources import fetch_section, validate_source
+from .version import Version
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -29,6 +31,10 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--rubriques', help='CSV facultatif de corrections : hebreu;francais')
     ap.add_argument('--font', help='police .ttf ou .otf à embarquer')
     ap.add_argument('--html', action='store_true', help='produire aussi les versions HTML pour relecture')
+    ap.add_argument('--edition', type=int, help='numéro d’édition imprimé dans le livre (sinon « Version de travail »)')
+    ap.add_argument('--revision', type=int, default=0, help='numéro de révision de cette édition (défaut : 0)')
+    ap.add_argument('--date', type=date.fromisoformat, default=date.today(),
+                    help='date de fabrication AAAA-MM-JJ (défaut : aujourd’hui)')
     ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
     args = ap.parse_args(argv)
 
@@ -61,7 +67,8 @@ def main(argv: list[str] | None = None) -> None:
     sortie.mkdir(parents=True, exist_ok=True)
     modes = ['hebreu', 'phonetique', 'bilingue'] if args.mode == 'tous' else [args.mode]
     for mode in modes:
-        build_edition(plan, sources, mode, consignes, sortie, font, args.html)
+        build_edition(plan, sources, mode, consignes, sortie, font, args.html,
+                      Version(args.edition, args.revision, args.date))
     cp = sortie / 'rubriques_traduites.csv'
     consignes.export(cp)
     print('CSV :', cp)

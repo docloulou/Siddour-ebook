@@ -9,6 +9,7 @@ from .consignes import Consignes
 from .mise_en_page import render_section
 from .plan import BOOK
 from .sources import validate_source
+from .version import Version, date_fr
 
 ROOT = Path(__file__).resolve().parent.parent
 CSS = (Path(__file__).resolve().parent / 'style.css').read_text(encoding='utf-8')
@@ -64,12 +65,27 @@ INTRODUCTION = (
 )
 
 
-def make_credits(title: str, licences: set[str], mode: str) -> str:
+def exposants(text: str) -> str:
+    """Échappe le texte ; ʳᵉ, ᵉʳ et ᵉ deviennent des <sup>, absents de certaines polices de liseuse."""
+    text = html.escape(text)
+    for uni, sup in (('ʳᵉ', 're'), ('ᵉʳ', 'er'), ('ᵉ', 'e')):
+        text = text.replace(uni, '<sup>' + sup + '</sup>')
+    return text
+
+
+def colophon(version: Version) -> str:
+    """Repère d'édition en bas de l'introduction, visible dès l'ouverture du livre."""
+    return ('<div class="colophon"><p>' + exposants(version.libelle) + '</p>'
+            '<p>Fabriqué le ' + exposants(date_fr(version.jour)) + '</p></div>')
+
+
+def make_credits(title: str, licences: set[str], mode: str, version: Version) -> str:
     items = ''.join('<li>' + html.escape(x) + '</li>' for x in sorted(licences))
     note = ('La phonétique est générée automatiquement selon des conventions françaises '
             'et peut comporter des approximations. ') if mode != 'hebreu' else ''
     return ('<h1>À propos de cette édition</h1>'
             '<p class="credits"><b>' + html.escape(title) + '.</b> ' + EDITION_NOTES[mode] + '</p>'
+            '<p class="credits">' + exposants(version.complet) + '.</p>'
             '<p class="credits">Rite séfarade (Edot HaMizrah). Textes issus de Sefaria.</p>'
             '<ul class="credits">' + items + '</ul>'
             '<p class="credits">' + note
@@ -123,8 +139,7 @@ def cover_page(cover: tuple[str, bytes], title: str) -> str:
             + html.escape(title, quote=True) + '"/></div>')
 
 
-def add_metadata(book, title: str, mode: str, licences: set[str]) -> None:
-    from datetime import date
+def add_metadata(book, title: str, mode: str, licences: set[str], version: Version) -> None:
     book.set_identifier('urn:siddour-ebook:edot-hamizrah:' + mode)
     book.set_title(title)
     # Langue principale du texte récité, puis celle des consignes.
@@ -134,8 +149,9 @@ def add_metadata(book, title: str, mode: str, licences: set[str]) -> None:
     book.add_author('Siddour-ebook', uid='creator')
     book.add_metadata('DC', 'contributor', 'Sefaria (textes sources)')
     book.add_metadata('DC', 'publisher', 'Siddour-ebook')
-    book.add_metadata('DC', 'date', date.today().isoformat())
-    book.add_metadata('DC', 'description', DESCRIPTION[mode])
+    book.add_metadata('DC', 'date', version.jour.isoformat())
+    book.add_metadata('DC', 'description', DESCRIPTION[mode] + ' ' + version.complet + '.')
+    book.add_metadata(None, 'meta', version.libelle, {'property': 'schema:version'})
     for subject in SUBJECTS:
         book.add_metadata('DC', 'subject', subject)
     book.add_metadata('DC', 'source', 'Sefaria, Siddur Edot HaMizrach (https://www.sefaria.org)')
@@ -160,7 +176,9 @@ def add_metadata(book, title: str, mode: str, licences: set[str]) -> None:
 
 
 def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consignes,
-                  sortie: Path, font: Path | None, with_html: bool = False) -> Path:
+                  sortie: Path, font: Path | None, with_html: bool = False,
+                  version: Version | None = None) -> Path:
+    version = version or Version()
     consignes.missing.clear()
     chapters = []
     licences: set[str] = set()
@@ -179,7 +197,7 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
     from ebooklib import epub
     title = 'Siddour séfarade : ' + TITLES[mode]
     book = epub.EpubBook()
-    add_metadata(book, title, mode, licences)
+    add_metadata(book, title, mode, licences, version)
     cover = cover_image(mode)
     if cover:
         book.set_cover(cover[0], cover[1], create_page=False)
@@ -214,9 +232,10 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
     contents = make_contents([
         (chap['fr'], chap.get('he', ''), [(p.file_name.removeprefix('text/'), p.title) for p in pages])
         for chap, pages in zip(plan, chapter_pages)])
-    credits = make_credits(title, licences, mode)
+    credits = make_credits(title, licences, mode, version)
+    introduction = INTRODUCTION + colophon(version)
     sommaire = page('sommaire', 'Sommaire', contents)
-    intro = page('introduction', 'Introduction', INTRODUCTION)
+    intro = page('introduction', 'Introduction', introduction)
     about = page('a-propos', 'À propos de cette édition', credits)
     spine = [sommaire, intro, about]
     guide = []
@@ -225,7 +244,7 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
         spine.insert(0, couverture)
         guide.append({'type': 'cover', 'title': 'Couverture', 'href': couverture.file_name})
     toc = [intro, about]
-    htmlparts = [contents, INTRODUCTION, credits]
+    htmlparts = [contents, introduction, credits]
     for (chap_title, sections), pages in zip(chapters, chapter_pages):
         htmlparts.append('<h1>' + html.escape(chap_title) + '</h1>')
         htmlparts.extend(content for _, content in sections)
@@ -250,5 +269,5 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
             '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>' + html.escape(title)
             + '</title><style>' + CSS + '</style></head><body>' + ''.join(htmlparts) + '</body></html>',
             encoding='utf-8')
-    print('EPUB :', path, '|', len(chapters), 'chapitres,', sum(len(s) for _, s in chapters), 'sections')
+    print('EPUB :', path, '|', version.libelle, '|', len(chapters), 'chapitres,', sum(len(s) for _, s in chapters), 'sections')
     return path

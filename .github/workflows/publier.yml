@@ -1,0 +1,97 @@
+# Publication manuelle : Actions > « Publier les EPUB » > Run workflow.
+# Fabrique les trois EPUB numérotés, les vérifie avec EPUBCheck, met à jour
+# les liens du README, puis crée la release correspondante.
+name: Publier les EPUB
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: "révision = corrections (coquilles, traductions) ; édition = changement important (contenu, plan, présentation)"
+        type: choice
+        options: [revision, edition]
+        default: revision
+      notes:
+        description: "Ce qui change dans cette publication (facultatif, affiché dans la release)"
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publication
+  cancel-in-progress: false
+
+env:
+  EPUBCHECK_VERSION: "5.1.0"
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Calculer le numéro d'édition
+        id: version
+        env:
+          INCREMENT: ${{ inputs.increment }}
+        run: |
+          python3 -m siddour.publication suivante --increment "$INCREMENT" | tee -a "$GITHUB_OUTPUT"
+          echo "date=$(TZ=Europe/Paris date +%F)" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Fabriquer les EPUB
+        run: >
+          python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist
+          --edition ${{ steps.version.outputs.edition }}
+          --revision ${{ steps.version.outputs.revision }}
+          --date ${{ steps.version.outputs.date }}
+
+      - name: Vérifier avec EPUBCheck
+        run: |
+          curl -sSL -o epubcheck.zip "https://github.com/w3c/epubcheck/releases/download/v${EPUBCHECK_VERSION}/epubcheck-${EPUBCHECK_VERSION}.zip"
+          unzip -q epubcheck.zip -d "$RUNNER_TEMP"
+          for f in dist/*.epub; do
+            java -jar "$RUNNER_TEMP/epubcheck-${EPUBCHECK_VERSION}/epubcheck.jar" "$f"
+          done
+
+      - name: Mettre à jour le README et étiqueter
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          LIBELLE: ${{ steps.version.outputs.libelle }}
+        run: |
+          python3 -m siddour.publication readme --tag "$TAG" --depot "$GITHUB_REPOSITORY" --date "${{ steps.version.outputs.date }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md dist/*.epub
+          git commit -m "Publie la $LIBELLE"
+          git tag -a "$TAG" -m "$LIBELLE"
+          git push origin "HEAD:${GITHUB_REF_NAME}" "$TAG"
+
+      - name: Créer la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          LIBELLE: ${{ steps.version.outputs.libelle }}
+          NOTES: ${{ inputs.notes }}
+          DATE: ${{ steps.version.outputs.date }}
+        run: |
+          {
+            echo "**$LIBELLE**, fabriquée le $DATE."
+            echo
+            if [ -n "$NOTES" ]; then echo "$NOTES"; echo; fi
+            echo "- \`siddour_liseuse_hebreu.epub\` : textes en hébreu, consignes en français"
+            echo "- \`siddour_liseuse_phonetique.epub\` : textes en phonétique, consignes en français"
+            echo "- \`siddour_liseuse_bilingue.epub\` : chaque passage en hébreu puis en phonétique"
+          } > notes.md
+          gh release create "$TAG" dist/*.epub --title "Siddour séfarade — $LIBELLE" --notes-file notes.md --latest

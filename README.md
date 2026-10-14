@@ -6,6 +6,8 @@ Cette version reprend le travail de mise en page du 13 octobre 2026 : consignes 
 
 ## Livres disponibles
 
+Les liens de la dernière publication s’affichent en haut de cette page après chaque passage de l’action « Publier les EPUB ». Les fichiers de `dist/` sont ceux de la dernière fabrication :
+
 - [Édition hébraïque](dist/siddour_liseuse_hebreu.epub)
 - [Édition phonétique](dist/siddour_liseuse_phonetique.epub)
 - [Édition hébreu puis phonétique pour chaque passage](dist/siddour_liseuse_bilingue.epub)
@@ -55,6 +57,37 @@ python3 siddour_ebook_liseuse.py --liste
 
 Sans `--offline`, le script télécharge auprès de Sefaria les sections absentes du cache. Il réutilise les fichiers déjà présents.
 
+## Publier une nouvelle édition
+
+Dans l’onglet **Actions** de GitHub, choisir **Publier les EPUB**, puis **Run workflow**, et indiquer :
+
+- **revision** pour des corrections : coquilles, traductions de consignes, phonétique ;
+- **edition** pour un changement important : contenu ajouté, plan revu, nouvelle présentation ;
+- éventuellement une phrase décrivant les changements, reprise dans la release.
+
+L’action :
+
+1. calcule le numéro suivant ;
+2. fabrique les trois EPUB ;
+3. les vérifie avec EPUBCheck ;
+4. met à jour `dist/` et les liens en haut de ce README ;
+5. ajoute l’étiquette `edition-<N>-revision-<M>` ;
+6. crée la release avec les trois fichiers.
+
+La numérotation suit celle d’un livre imprimé : *1ʳᵉ édition*, puis *1ʳᵉ édition, révision 1*, *révision 2*… Une nouvelle édition remet les révisions à zéro, par exemple *2ᵉ édition*.
+
+Le numéro et la date de fabrication apparaissent à trois endroits :
+
+- en bas de l’introduction ;
+- sur la page « À propos de cette édition » ;
+- dans la description du livre, que la plupart des liseuses affichent dans la fiche du livre.
+
+Une génération locale sans `--edition` porte la mention « Version de travail ». Pour fabriquer localement un livre numéroté :
+
+```bash
+python3 siddour_ebook_liseuse.py --offline --sortie ./build --edition 1 --revision 2 --date 2026-10-14
+```
+
 ## Continuer le travail
 
 Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
@@ -68,6 +101,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
 | `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
+| `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils de l’action de publication (`.github/workflows/publier.yml`). |
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
 
