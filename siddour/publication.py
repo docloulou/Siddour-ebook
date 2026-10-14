@@ -3,14 +3,20 @@
     python3 -m siddour.publication suivante --increment revision
     python3 -m siddour.publication actuelle
     python3 -m siddour.publication readme --tag edition-1-revision-0 --depot owner/repo --date 2026-10-14
+    python3 -m siddour.publication indexnow --site https://owner.github.io/repo/
 """
 from __future__ import annotations
 
 import argparse
+import html
+import json
 import re
 import subprocess
+import urllib.error
+import urllib.request
 from datetime import date, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 from .rites import RITES
@@ -21,6 +27,9 @@ README = ROOT / 'README.md'
 DEBUT, FIN = '<!-- publication:debut -->', '<!-- publication:fin -->'
 EDITIONS = [('hebreu', 'Édition hébraïque'), ('phonetique', 'Édition phonétique'),
             ('bilingue', 'Édition hébreu puis phonétique')]
+# Clé IndexNow (Bing, Yandex, Seznam…) : le site la publie dans <clé>.txt à sa racine, ce qui prouve
+# que les adresses signalées après chaque déploiement viennent bien de lui.
+INDEXNOW = '198f6d8339c4d3a274ec18384fe2cdeb'
 
 
 def bloc_readme(version: Version, depot: str, site: str = '') -> str:
@@ -62,6 +71,24 @@ def actuelle(tags: list[str]) -> Version:
     return Version(edition, revision, quand.astimezone(ZoneInfo('Europe/Paris')).date())
 
 
+def indexnow(site: str) -> None:
+    """Signale les pages du sitemap publié aux moteurs qui suivent IndexNow (Bing, Yandex, Seznam, Naver…) :
+    ils les explorent à nouveau sans attendre leur prochain passage. Google n'y participe pas."""
+    site = site.rstrip('/') + '/'
+    with urllib.request.urlopen(site + 'sitemap.xml', timeout=30) as reponse:
+        adresses = [html.unescape(u) for u in re.findall(r'<loc>([^<]+)</loc>', reponse.read().decode('utf-8'))]
+    corps = json.dumps({'host': urlsplit(site).hostname, 'key': INDEXNOW, 'keyLocation': site + INDEXNOW + '.txt',
+                        'urlList': adresses[:10000]}).encode('utf-8')
+    demande = urllib.request.Request('https://api.indexnow.org/indexnow', data=corps, method='POST',
+                                     headers={'Content-Type': 'application/json; charset=utf-8'})
+    try:
+        with urllib.request.urlopen(demande, timeout=60) as reponse:
+            print('IndexNow :', len(adresses), 'adresses signalées (réponse ' + str(reponse.status) + ')')
+    except urllib.error.HTTPError as erreur:
+        # 403 : clé introuvable sur le site ; 422 : adresses hors du site ; 429 : trop de signalements.
+        raise SystemExit('IndexNow : refus ' + str(erreur.code) + ' ' + erreur.reason)
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='commande', required=True)
@@ -73,7 +100,13 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument('--depot', required=True, help='propriétaire/dépôt')
     r.add_argument('--date', type=date.fromisoformat, default=date.today())
     r.add_argument('--site', default='', help='adresse du site de lecture en ligne')
+    i = sub.add_parser('indexnow', help='signale les pages du site publié à Bing et aux moteurs IndexNow')
+    i.add_argument('--site', required=True, help='adresse du site publié')
     args = ap.parse_args(argv)
+
+    if args.commande == 'indexnow':
+        indexnow(args.site)
+        return
 
     if args.commande in ('suivante', 'actuelle'):
         tags = git('tag', '--list', 'edition-*').split()
