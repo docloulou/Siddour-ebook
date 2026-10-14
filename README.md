@@ -1,5 +1,17 @@
 # Siddour-ebook
 
+<!-- publication:debut -->
+## Télécharger
+
+**1ʳᵉ édition — 14 octobre 2026** · [notes de publication](https://github.com/docloulou/Siddour-ebook/releases/tag/edition-1-revision-0) · [toutes les éditions](https://github.com/docloulou/Siddour-ebook/releases)
+
+- [Édition hébraïque](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-0/siddour_liseuse_hebreu.epub)
+- [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-0/siddour_liseuse_phonetique.epub)
+- [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-0/siddour_liseuse_bilingue.epub)
+
+📖 [Lire en ligne dans le navigateur](https://docloulou.github.io/Siddour-ebook/)
+<!-- publication:fin -->
+
 Siddour séfarade pour liseuse, selon le plan fourni : **26 chapitres et 95 sections**. Les consignes pratiques sont en français dans les trois éditions.
 
 Cette version reprend le travail de mise en page du 13 octobre 2026 : consignes raccourcies, suppression des citations répétitives, ajouts délimités et zimoun présenté comme un dialogue.
