@@ -39,6 +39,9 @@ TEXTE = {'hebreu': 'en hébreu vocalisé', 'phonetique': 'en phonétique',
 MENU = {'hebreu': 'Hébreu', 'phonetique': 'Phonétique', 'bilingue': 'Bilingue'}
 EPUB_NAME = 'siddour_liseuse_{}.epub'
 DEPOT = 'docloulou/Siddour-ebook'  # dépôt GitHub, lien « Contribuer » du pied de page
+# Adresse de contact, à l'envers et en base64 : absente en clair du dépôt comme des pages.
+# Le script de la page la reconstitue seulement quand le lecteur clique.
+CONTACT = 'aHZvLmJyekBrb29iZS1ydW9kZGlz'
 
 WEB_CSS = '''
 @font-face { font-family: "SiddurHebrew"; src: url("FONT_URL") format("truetype"); font-display: swap; }
@@ -88,6 +91,22 @@ APP_JS = r'''"use strict";
 (() => {
   const VERSION = __VERSION__;
   const script = document.currentScript;
+
+  // Contact : l'adresse n'est reconstituée qu'au clic, hors de portée des robots qui lisent les pages.
+  const contact = document.querySelector(".contact");
+  if (contact) {
+    contact.hidden = false;
+    contact.querySelector("a").addEventListener("click", (e) => {
+      const a = e.currentTarget;
+      if (a.href.startsWith("mailto:")) return;
+      e.preventDefault();
+      const adresse = atob(contact.dataset.c).split("").reverse().join("");
+      a.href = "mailto:" + adresse + "?subject=" + encodeURIComponent("Siddour séfarade");
+      a.textContent = adresse;
+      location.href = a.href;
+    });
+  }
+
   if (!("serviceWorker" in navigator) || !script) return;
   const annonce = (texte) => {
     const div = document.createElement("div");
@@ -328,7 +347,8 @@ class Site:
                 '<a href="https://www.sefaria.org">Sefaria</a> · '
                 '<a href="' + root + 'index.html#telecharger">Télécharger les EPUB</a></p>'
                 '<p>Projet libre et collaboratif : <a href="' + self.github + '">contribuer sur GitHub</a> · '
-                '<a href="' + self.github + '/issues">signaler une erreur</a></p></footer>\n'
+                '<a href="' + self.github + '/issues">signaler une erreur</a>'
+                '<span class="contact" data-c="' + CONTACT + '" hidden> · <a href="#">nous écrire</a></span></p></footer>\n'
                 '</body>\n</html>\n')
         target = self.dossier / path
         target.parent.mkdir(parents=True, exist_ok=True)

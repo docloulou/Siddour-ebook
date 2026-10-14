@@ -88,7 +88,8 @@ Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
 - un sommaire par édition ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
 - une application installable qui se lit hors connexion et se met à jour à chaque publication (voir plus bas).
-- en pied de page, un lien vers ce dépôt pour contribuer et un autre pour signaler une erreur. L’action donne le dépôt avec `--depot` ; par défaut, c’est `docloulou/Siddour-ebook`.
+- en pied de page, un lien vers ce dépôt pour contribuer, un autre pour signaler une erreur, et un lien « nous écrire ». L’action donne le dépôt avec `--depot` ; par défaut, c’est `docloulou/Siddour-ebook`.
+  L’adresse de contact n’apparaît en clair ni dans les pages ni dans le dépôt : elle est stockée à l’envers et encodée (`CONTACT` dans `siddour/site.py`), puis reconstituée par le script de la page au moment du clic.
 
 Pour le référencement, chaque page porte :
 
