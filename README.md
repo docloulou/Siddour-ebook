@@ -45,6 +45,9 @@ python3 siddour_ebook_liseuse.py --offline --mode phonetique --sortie ./dist
 # Aperçus HTML pour relire la mise en page
 python3 siddour_ebook_liseuse.py --offline --html --sortie ./build
 
+# Site de lecture en ligne (ouvrir ./site/index.html dans le navigateur)
+python3 siddour_ebook_liseuse.py --offline --sortie ./build --site ./site
+
 # Essayer des traductions sans toucher aux données (colonnes hebreu;francais)
 python3 siddour_ebook_liseuse.py --offline --rubriques ./mes_corrections.csv --sortie ./build
 
@@ -72,7 +75,29 @@ L’action :
 3. les vérifie avec EPUBCheck ;
 4. met à jour `dist/` et les liens en haut de ce README ;
 5. ajoute l’étiquette `edition-<N>-revision-<M>` ;
-6. crée la release avec les trois fichiers.
+6. crée la release avec les trois fichiers ;
+7. publie le site de lecture en ligne sur GitHub Pages.
+
+Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages › Build and deployment › Source : GitHub Actions**.
+
+### Site de lecture en ligne
+
+Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
+
+- une page d’accueil avec les couvertures, la lecture en ligne et les EPUB à télécharger ;
+- un sommaire par édition ;
+- une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
+
+Pour le référencement, chaque page porte :
+
+- un titre et une description propres ;
+- une adresse canonique ;
+- les balises Open Graph et Twitter pour les aperçus de partage ;
+- des données structurées schema.org : `Book` avec ses trois éditions, `BreadcrumbList` et `WebPage`.
+
+Le site fournit aussi `sitemap.xml` et `robots.txt`.
+
+Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools.
 
 La numérotation suit celle d’un livre imprimé : *1ʳᵉ édition*, puis *1ʳᵉ édition, révision 1*, *révision 2*… Une nouvelle édition remet les révisions à zéro, par exemple *2ᵉ édition*.
 
@@ -101,6 +126,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
 | `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
+| `siddour/site.py` | Site web de lecture et métadonnées de référencement. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils de l’action de publication (`.github/workflows/publier.yml`). |
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :

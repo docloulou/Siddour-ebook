@@ -21,18 +21,19 @@ LIVRES = [('Édition hébraïque', 'siddour_liseuse_hebreu.epub'),
           ('Édition hébreu puis phonétique', 'siddour_liseuse_bilingue.epub')]
 
 
-def bloc_readme(version: Version, depot: str) -> str:
+def bloc_readme(version: Version, depot: str, site: str = '') -> str:
     base = 'https://github.com/' + depot + '/releases/download/' + version.tag + '/'
     liens = '\n'.join('- [' + nom + '](' + base + fichier + ')' for nom, fichier in LIVRES)
     return (DEBUT + '\n## Télécharger\n\n**' + version.complet + '** · '
             '[notes de publication](https://github.com/' + depot + '/releases/tag/' + version.tag + ')'
             ' · [toutes les éditions](https://github.com/' + depot + '/releases)\n\n'
-            + liens + '\n' + FIN)
+            + liens + '\n'
+            + ('\n📖 [Lire en ligne dans le navigateur](' + site.rstrip('/') + '/)\n' if site else '') + FIN)
 
 
-def mettre_a_jour_readme(version: Version, depot: str) -> None:
+def mettre_a_jour_readme(version: Version, depot: str, site: str = '') -> None:
     texte = README.read_text(encoding='utf-8')
-    bloc = bloc_readme(version, depot)
+    bloc = bloc_readme(version, depot, site)
     if DEBUT in texte:
         texte = re.sub(re.escape(DEBUT) + '.*?' + re.escape(FIN), lambda _: bloc, texte, flags=re.S)
     else:
@@ -51,6 +52,7 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument('--tag', required=True)
     r.add_argument('--depot', required=True, help='propriétaire/dépôt')
     r.add_argument('--date', type=date.fromisoformat, default=date.today())
+    r.add_argument('--site', default='', help='adresse du site de lecture en ligne')
     args = ap.parse_args(argv)
 
     if args.commande == 'suivante':
@@ -63,7 +65,7 @@ def main(argv: list[str] | None = None) -> None:
         m = TAG_RE.match(args.tag)
         if not m:
             raise SystemExit('Étiquette attendue : edition-<N>-revision-<M>')
-        mettre_a_jour_readme(Version(int(m[1]), int(m[2]), args.date), args.depot)
+        mettre_a_jour_readme(Version(int(m[1]), int(m[2]), args.date), args.depot, args.site)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import html
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
 
 from .consignes import Consignes
@@ -175,10 +176,21 @@ def add_metadata(book, title: str, mode: str, licences: set[str], version: Versi
         book.add_metadata(None, 'meta', value, {'property': prop})
 
 
-def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consignes,
-                  sortie: Path, font: Path | None, with_html: bool = False,
-                  version: Version | None = None) -> Path:
-    version = version or Version()
+@dataclass
+class Livre:
+    """Une édition mise en page, prête à être assemblée en EPUB ou en site web."""
+    mode: str
+    version: Version
+    licences: set[str]
+    chapters: list[tuple[dict, list[tuple[str, str]]]]  # (chapitre du plan, [(titre, html)])
+
+    @property
+    def title(self) -> str:
+        return 'Siddour séfarade : ' + TITLES[self.mode]
+
+
+def render_book(plan: list[dict], sources: dict, mode: str, consignes: Consignes,
+                version: Version | None = None) -> Livre:
     consignes.missing.clear()
     chapters = []
     licences: set[str] = set()
@@ -190,12 +202,17 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
             licences.add((data.get('indexTitle') or data.get('book') or BOOK) + ', '
                          + v.get('versionTitle', '').strip() + ' : ' + v.get('license', 'licence non précisée'))
             sections.append((title, render_section(title, texts, mode, ref, consignes)))
-        chapters.append((chap['fr'], sections))
+        chapters.append((chap, sections))
     if consignes.missing:
         raise ValueError('Traductions manquantes :\n' + '\n'.join(sorted(consignes.missing)))
+    return Livre(mode, version or Version(), licences, chapters)
 
+
+def build_edition(livre: Livre, sortie: Path, font: Path | None, with_html: bool = False) -> Path:
+    mode, version, licences, title = livre.mode, livre.version, livre.licences, livre.title
+    chapters = [(chap['fr'], sections) for chap, sections in livre.chapters]
+    plan = [chap for chap, _ in livre.chapters]
     from ebooklib import epub
-    title = 'Siddour séfarade : ' + TITLES[mode]
     book = epub.EpubBook()
     add_metadata(book, title, mode, licences, version)
     cover = cover_image(mode)

@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 
 from .consignes import Consignes
-from .edition import FONT_PATH, build_edition
+from .edition import FONT_PATH, build_edition, render_book
 from .phonetique import translit
 from .plan import PLAN, select_plan
 from .sources import fetch_section, validate_source
@@ -35,6 +35,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--revision', type=int, default=0, help='numéro de révision de cette édition (défaut : 0)')
     ap.add_argument('--date', type=date.fromisoformat, default=date.today(),
                     help='date de fabrication AAAA-MM-JJ (défaut : aujourd’hui)')
+    ap.add_argument('--site', metavar='DOSSIER', help='produire aussi le site web de lecture (GitHub Pages)')
+    ap.add_argument('--site-url', default='', help='adresse publique du site, pour les liens canoniques et le sitemap')
     ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
     args = ap.parse_args(argv)
 
@@ -66,9 +68,15 @@ def main(argv: list[str] | None = None) -> None:
     sortie = Path(args.sortie)
     sortie.mkdir(parents=True, exist_ok=True)
     modes = ['hebreu', 'phonetique', 'bilingue'] if args.mode == 'tous' else [args.mode]
+    version = Version(args.edition, args.revision, args.date)
+    livres = []
     for mode in modes:
-        build_edition(plan, sources, mode, consignes, sortie, font, args.html,
-                      Version(args.edition, args.revision, args.date))
+        livre = render_book(plan, sources, mode, consignes, version)
+        build_edition(livre, sortie, font, args.html)
+        livres.append(livre)
+    if args.site:
+        from .site import build_site
+        build_site(livres, Path(args.site), sortie, args.site_url)
     cp = sortie / 'rubriques_traduites.csv'
     consignes.export(cp)
     print('CSV :', cp)
