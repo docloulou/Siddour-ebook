@@ -1,0 +1,141 @@
+{
+ "versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "<big><b>ברכת המעקה</b></big>",
+    "<small>מצות עשה לעשות מעקה לגגו אם הבית שתחת הגג הוא בית דירה ותשמיש קבע אבל אם הבית שתחת הגג הוא רק מחסן וכדומה שמשמש לתשמיש ארעי אינו חייב להניח מעקה לגגו</small>",
+    "<small>לְשֵׁם יִחוּד קֻדְשָׁא בְּרִיךְ הוּא וּשְׁכִינְתֵּיהּ, בִּדְחִֽילוּ וּרְחִֽימוּ, וּרְחִֽימוּ וּדְחִֽילוּ, לְיַחֲדָא שֵׁם יוֹ\"ד קֵ\"א בְּוָא\"ו קֵ\"א בְּיִחוּדָא שְׁלִים, בְּשֵׁם כָּל־יִשְׂרָאֵל, הֲרֵֽינִי בָּא לְקַיֵּם מִצְוַת עֲשֵׂה דְּאוֹרַיְתָא לַעֲשׂוֹת מַעֲקֶה כַּכָּתוּב כִּ֤י תִבְנֶה֙ בַּ֣יִת חָדָ֔שׁ וְעָשִׂ֥יתָ מַעֲקֶ֖ה לְגַגֶּ֑ךָ׃ וִיהִ֤י ׀ נֹ֤עַם אֲדֹנָ֥י אֱלֹהֵ֗ינוּ עָ֫לֵ֥ינוּ וּמַעֲשֵׂ֣ה יָ֭דֵינוּ כּוֹנְנָ֥ה עָלֵ֑ינוּ וּֽמַעֲשֵׂ֥ה יָ֝דֵ֗ינוּ כּוֹנְנֵֽהוּ:</small><br><br><b>בָּרוּךְ</b> אַתָּה יְהֹוָה, אֱלֹהֵֽינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו וְצִוָּנוּ לַעֲשׂוֹת מַעֲקֶה:"
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  },
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "תורת אמת 357",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "http://www.toratemetfreeware.com/index.html?downloads",
+   "versionTitle": "Torat Emet 357",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Building a Fence",
+ "heRef": "סידור נוסח עדות המזרח, ברכות ותפילות שונות, ברכת המעקה",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Building a Fence",
+ "heSectionRef": "סידור נוסח עדות המזרח, ברכות ותפילות שונות, ברכת המעקה",
+ "firstAvailableSectionRef": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Building a Fence",
+ "isSpanning": false,
+ "next": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Separating Hallah",
+ "prev": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Mezuza",
+ "title": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Building a Fence",
+ "book": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Building a Fence",
+ "heTitle": "סידור נוסח עדות המזרח, ברכות ותפילות שונות, ברכת המעקה",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Edot HaMizrach",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור נוסח עדות המזרח",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  2
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Building a Fence"
+ ],
+ "heTitleVariants": [
+  "ברכת המעקה"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}

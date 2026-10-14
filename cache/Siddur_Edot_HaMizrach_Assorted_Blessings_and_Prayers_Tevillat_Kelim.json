@@ -1,0 +1,142 @@
+{
+ "versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "<big><b>ברכת טבילת כלים</b></big>",
+    "<small>הקונה מגוי כלי סעודה העשויים ממתכת או זכוכית, חייבת להטבילם במקוה או במעיין המכילים ארבעים סאה ויתבול כל הכלי בבת אחת</small>",
+    "<small>לפני הטבילה יברך</small>",
+    "<b>בָּרוּךְ</b> אַתָּה יְהֹוָה, אֱלֹהֵֽינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו וְצִוָּנוּ עַל טְבִילַת כֵּלִים: <small>על כלי אחד אומר כְּלִי</small>"
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  },
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "תורת אמת 357",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "http://www.toratemetfreeware.com/index.html?downloads",
+   "versionTitle": "Torat Emet 357",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Tevillat Kelim",
+ "heRef": "סידור נוסח עדות המזרח, ברכות ותפילות שונות, ברכת טבילת כלים",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Tevillat Kelim",
+ "heSectionRef": "סידור נוסח עדות המזרח, ברכות ותפילות שונות, ברכת טבילת כלים",
+ "firstAvailableSectionRef": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Tevillat Kelim",
+ "isSpanning": false,
+ "next": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Separating Tithes",
+ "prev": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Separating Hallah",
+ "title": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Tevillat Kelim",
+ "book": "Siddur Edot HaMizrach, Assorted Blessings and Prayers, Tevillat Kelim",
+ "heTitle": "סידור נוסח עדות המזרח, ברכות ותפילות שונות, ברכת טבילת כלים",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Edot HaMizrach",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור נוסח עדות המזרח",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  2
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Tevillat Kelim"
+ ],
+ "heTitleVariants": [
+  "ברכת טבילת כלים"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}

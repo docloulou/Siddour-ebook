@@ -1,0 +1,141 @@
+{
+ "versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "<big><b>קוה </b></big>",
+    "<b>קַוֵּ֗ה</b> אֶל־יְהֹ֫וָ֥ה חֲ֭זַק וְיַאֲמֵ֣ץ לִבֶּ֑ךָ וְ֝קַוֵּ֗ה אֶל־יְהֹוָֽה: אֵין־קָד֥וֹשׁ כַּיהֹוָ֖ה כִּ֣י אֵ֣ין בִּלְתֶּ֑ךָ וְאֵ֥ין צ֖וּר כֵּאלֹהֵֽינוּ׃ כִּ֤י מִ֣י אֱ֭לוֹהַּ מִבַּלְעֲדֵ֣י יְהֹוָ֑ה וּמִ֥י צ֝֗וּר זוּלָתִ֥י אֱלֹהֵֽינוּ׃  ",
+    "<b>אֵין</b> כֵּאלֹהֵֽינוּ, אֵין כַּאדוֹנֵֽנוּ, אֵין כְּמַלְכֵּֽנוּ, אֵין כְּמוֹשִׁיעֵֽנוּ: מִי כֵּאלֹהֵֽינוּ, מִי כַּאדוֹנֵֽנוּ, מִי כְּמַלְכֵּֽנוּ, מִי כְּמוֹשִׁיעֵֽנוּ: נוֹדֶה לֵאלֹהֵֽינוּ, נוֹדֶה לַאדוֹנֵֽנוּ, נוֹדֶה לְמַלְכֵּֽנוּ, נוֹדֶה לְמוֹשִׁיעֵֽנוּ: בָּרוּךְ אֱלֹהֵֽינוּ, בָּרוּךְ אֲדוֹנֵֽנוּ, בָּרוּךְ מַלְכֵּֽנוּ, בָּרוּךְ מוֹשִׁיעֵֽנוּ: אַתָּה הוּא אֱלֹהֵֽינוּ, אַתָּה הוּא אֲדוֹנֵֽנוּ, אַתָּה הוּא מַלְכֵּֽנוּ, אַתָּה הוּא מוֹשִׁיעֵֽנוּ: אַתָּה תוֹשִׁיעֵֽנוּ, אַתָּ֣ה תָ֭קוּם תְּרַחֵ֣ם צִיּ֑וֹן כִּי־עֵ֥ת לְ֝חֶֽנְנָ֗הּ כִּי־בָ֥א מוֹעֵֽד: \n"
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  },
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "תורת אמת 357",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "http://www.toratemetfreeware.com/index.html?downloads",
+   "versionTitle": "Torat Emet 357",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Edot HaMizrach, Rosh Hodesh, Kaveh",
+ "heRef": "סידור נוסח עדות המזרח, סדר ראש חודש, קוה",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Edot HaMizrach, Rosh Hodesh, Kaveh",
+ "heSectionRef": "סידור נוסח עדות המזרח, סדר ראש חודש, קוה",
+ "firstAvailableSectionRef": "Siddur Edot HaMizrach, Rosh Hodesh, Kaveh",
+ "isSpanning": false,
+ "next": "Siddur Edot HaMizrach, Rosh Hodesh, Incense Offering",
+ "prev": "Siddur Edot HaMizrach, Rosh Hodesh, Barchi Nafshi",
+ "title": "Siddur Edot HaMizrach, Rosh Hodesh, Kaveh",
+ "book": "Siddur Edot HaMizrach, Rosh Hodesh, Kaveh",
+ "heTitle": "סידור נוסח עדות המזרח, סדר ראש חודש, קוה",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Edot HaMizrach",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור נוסח עדות המזרח",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  2
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Kaveh"
+ ],
+ "heTitleVariants": [
+  "קוה"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}

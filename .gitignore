@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+/build/
+/cache/fonts/
+/dist/*.html
+/dist/rubriques_traduites.csv
+/siddour_liseuse_*.epub
+/siddour_liseuse_*.html
+/rubriques_traduites.csv

@@ -1,0 +1,141 @@
+{
+ "versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "<big><b>סדר זבד הבת</b></big>",
+    "<b>יוֹנָתִ֞י</b> בְּחַגְוֵ֣י הַסֶּ֗לַע בְּסֵ֙תֶר֙ הַמַּדְרֵגָ֔ה הַרְאִ֙ינִי֙ אֶת־מַרְאַ֔יִךְ הַשְׁמִיעִ֖נִי אֶת־קוֹלֵ֑ךְ כִּי־קוֹלֵ֥ךְ עָרֵ֖ב וּמַרְאֵ֥יךְ נָאוֶֽה׃",
+    "<b>מִי שֶׁבֵּרַךְ</b> אִמוֹתֵינוּ, שָׂרָה, רִבְקָה, רָחֵל וְלֵאָה וּמִרְיָם הַנְּבִיאָה וַאֲבִיגַיִל, וְאֶסְתֵּר הַמַּלְכָּה בַּת אֲבִיחַיִל, הוּא יְבָרֵךְ אֶת הַיַּלְדָּה הַנְּעִימָה הַזֹּאת, וְיִקָּרֵא שְׁמָהּ <small>(פלונית)</small> בְּמַזָּל טוֹב וּבִשְׁעַת בְּרָכָה, וִיגַדְּלָהּ בִבְרִיאוּת שָׁלוֹם וּמְנוּחָה, וִיזַכֶּה לְאָבִיהָ וּלְאִמָּהּ לִרְאוֹת בְּשִׂמְחָתָהּ וּבְחֻפָּתָהּ, בְּבָנִים זְכָרִים, עֹשֶׁר וְכָבוֹד, דְּשֵׁנִים וְרַעֲנַנִּים יְנוּבוּן בְּשֵׂיבָה, וְכֵן יְהִי רָצוֹן וְנֹאמַר אָמֵן: "
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": null,
+   "priority": 2.0,
+   "license": "CC0",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "https://www.sefaria.org",
+   "versionTitle": " Shaliehsaboo Edition",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  },
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "תורת אמת 357",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Edot HaMizrach",
+   "versionSource": "http://www.toratemetfreeware.com/index.html?downloads",
+   "versionTitle": "Torat Emet 357",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Edot HaMizrach, Shabbat Shacharit, Zeved HaBat",
+ "heRef": "סידור נוסח עדות המזרח, שחרית של שבת, סדר זבד הבת",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Edot HaMizrach, Shabbat Shacharit, Zeved HaBat",
+ "heSectionRef": "סידור נוסח עדות המזרח, שחרית של שבת, סדר זבד הבת",
+ "firstAvailableSectionRef": "Siddur Edot HaMizrach, Shabbat Shacharit, Zeved HaBat",
+ "isSpanning": false,
+ "next": "Siddur Edot HaMizrach, Shabbat Shacharit, Shabbat Chatan",
+ "prev": "Siddur Edot HaMizrach, Shabbat Shacharit, HaGomel",
+ "title": "Siddur Edot HaMizrach, Shabbat Shacharit, Zeved HaBat",
+ "book": "Siddur Edot HaMizrach, Shabbat Shacharit, Zeved HaBat",
+ "heTitle": "סידור נוסח עדות המזרח, שחרית של שבת, סדר זבד הבת",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Edot HaMizrach",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור נוסח עדות המזרח",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  2
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Zeved HaBat"
+ ],
+ "heTitleVariants": [
+  "סדר זבד הבת"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}
