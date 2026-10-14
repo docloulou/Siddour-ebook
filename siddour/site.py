@@ -41,6 +41,8 @@ EPUB_NAME = 'siddour_liseuse_{}.epub'
 DEPOT = 'docloulou/Siddour-ebook'  # dépôt GitHub, lien « Contribuer » du pied de page
 # Adresse de contact, à l'envers et en base64 : absente en clair du dépôt comme des pages.
 # Le script de la page la reconstitue seulement quand le lecteur clique.
+# Fichiers copiés tels quels à la racine du site : validation Google Search Console, Bing…
+RACINE = Path(__file__).resolve().parent.parent / 'assets' / 'racine'
 CONTACT = 'aHZvLmJyekBrb29iZS1ydW9kZGlz'
 
 WEB_CSS = '''
@@ -81,6 +83,8 @@ button.bouton { font: inherit; cursor: pointer; }
 .annonce { position: fixed; left: 50%; bottom: calc(1.2em + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10;
            max-width: calc(100% - 2.4em); padding: .7em 1.1em; border-radius: 4px; background: #15284a;
            color: #f1e4bf; font: .9em/1.4 sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
+/* Lecture à l'écran : phonétique justifiée comme dans un livre, dernière ligne à gauche. */
+.ph { text-align: justify; text-align-last: left; -webkit-hyphens: auto; hyphens: auto; }
 @media (max-width: 34em) { .sommaire { column-count: 1; -webkit-column-count: 1; } body { font-size: 1.05em; }
                            .site-head .marque { flex-basis: 100%; } }
 '''
@@ -501,6 +505,8 @@ class Site:
         for lv in self.livres:
             shutil.copyfile(sortie / EPUB_NAME.format(lv.mode), telecharger / EPUB_NAME.format(lv.mode))
         (self.dossier / '.nojekyll').write_text('', encoding='utf-8')
+        if RACINE.is_dir():
+            shutil.copytree(RACINE, self.dossier, dirs_exist_ok=True)
 
     def index_moteurs(self) -> None:
         lignes = ['User-agent: *', 'Allow: /']

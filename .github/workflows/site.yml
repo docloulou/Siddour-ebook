@@ -1,0 +1,68 @@
+# Republication du site seule : Actions > « Republier le site » > Run workflow.
+# Pour une correction de présentation du site (mise en page, liens…) sans
+# nouvelle édition : le site garde le numéro et la date de la dernière
+# publication, et propose au téléchargement les EPUB de cette publication (dist/).
+# Aucune release, aucune étiquette ; l'application installée se met à jour.
+name: Republier le site
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publication
+  cancel-in-progress: false
+
+jobs:
+  fabriquer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Préparer GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Lire le numéro de la dernière publication
+        id: version
+        run: python3 -m siddour.publication actuelle | tee -a "$GITHUB_OUTPUT"
+
+      - name: Fabriquer le site
+        run: |
+          python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./_epub \
+            --site ./_site --site-url "${{ steps.pages.outputs.base_url }}/" --depot "${{ github.repository }}" \
+            --edition ${{ steps.version.outputs.edition }} \
+            --revision ${{ steps.version.outputs.revision }} \
+            --date ${{ steps.version.outputs.date }}
+          # Les EPUB proposés restent ceux de la release publiée.
+          cp dist/*.epub ./_site/telecharger/
+
+      - name: Envoyer le site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  site:
+    needs: fabriquer
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Publier sur GitHub Pages
+        id: deploiement
+        uses: actions/deploy-pages@v4
