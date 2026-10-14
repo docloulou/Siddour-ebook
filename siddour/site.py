@@ -50,18 +50,29 @@ CONTACT = 'aHZvLmJyekBrb29iZS1ydW9kZGlz'
 WEB_CSS = '''
 @font-face { font-family: "SiddurHebrew"; src: url("FONT_URL") format("truetype"); font-display: swap; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: 3.5em; }
+html:has(.site-head.colle) { scroll-padding-top: 6em; }
 body { margin: 0; background: #fbf9f4; color: #1d1d1d; font-size: 1.12em; }
 /* --taille : réglage « Affichage » du lecteur (1 = taille normale). */
 main { max-width: 40em; margin: 0 auto; padding: 1rem 1.2rem 3rem; background: #fff;
        font-size: calc(var(--taille, 1) * 1em); }
 a { color: #1f3a68; }
-.site-head { background: #15284a; color: #f1e4bf; font: .95em/1.4 sans-serif; }
-.site-head { padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
-.site-head .inner { max-width: 44em; margin: 0 auto; padding: .6em 1.2em; display: flex; flex-wrap: wrap;
-                    gap: .4em 1.2em; align-items: baseline; }
+/* Bandeau du site : logo doré de la couverture et nom, bouton « Affichage », puis les onglets. */
+.site-head { background: #15284a linear-gradient(180deg, #0c2644, #15284a); color: #f1e4bf;
+             font: .95em/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; border-bottom: 1px solid #a8873a;
+             padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+.site-head .inner { max-width: 44em; margin: 0 auto; padding: .6em 1.2em 0; display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto; gap: 0 1em; align-items: center; }
 .site-head a { color: #f1e4bf; text-decoration: none; }
-.site-head .marque { font-weight: bold; margin-right: auto; }
-.site-head .actif { text-decoration: underline; }
+.site-head .marque { display: flex; align-items: center; gap: .75em; justify-self: start; min-width: 0; max-width: 100%; }
+.site-head .marque img { display: block; height: 2.2em; width: auto; filter: drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
+.site-head .nom { font: 600 1.08em/1.15 Georgia, "Times New Roman", serif; letter-spacing: .02em; min-width: 0;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-head .nom small { display: block; margin-top: .15em; font: .66em/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
+                        letter-spacing: .12em; text-transform: uppercase; color: #d9b45a; }
+.site-head .menu { grid-column: 1 / -1; display: flex; gap: .3em; margin: .5em 0 0; }
+.site-head .menu a { padding: .4em .75em .45em; border-bottom: 3px solid transparent; color: rgba(241,228,191,.8); }
+.site-head .menu a:hover { color: #fff; }
+.site-head .menu a.actif { color: #fff; font-weight: 600; border-bottom-color: #d9b45a; }
 /* Bandeau qui reste en haut de l'écran : sur les pages de lecture, la barre des sections
    (précédente, aller à…, suivante) ; ailleurs, le bandeau du site lui-même. */
 .site-head.colle, .barre { position: -webkit-sticky; position: sticky; top: 0; z-index: 5; }
@@ -143,9 +154,12 @@ button.bouton { font: inherit; cursor: pointer; }
 /* Lecture à l'écran : phonétique justifiée comme dans un livre, dernière ligne à gauche. */
 .ph { text-align: justify; text-align-last: left; -webkit-hyphens: auto; hyphens: auto; }
 @media (max-width: 34em) { .sommaire { column-count: 1; -webkit-column-count: 1; } body { font-size: 1.05em; }
-                           .site-head .marque { flex-basis: 100%; } .aa span { display: none; }
-                           .site-head .inner .aa { position: absolute; right: 1.2em; top: .45em; }
+                           .aa span { display: none; } .site-head .inner { padding: .55em .9em 0; }
+                           .site-head .menu { gap: 0; margin-top: .35em; }
+                           .site-head .menu a { flex: 1 1 auto; text-align: center; padding: .4em .1em .45em; }
+                           .site-head .marque { gap: .55em; } .site-head .marque img { height: 1.9em; }
                            .barre .inner { padding: .35em .8em; } }
+@media (max-width: 22em) { .site-head .nom small { letter-spacing: .06em; } }
 '''
 
 # Script commun aux pages : inscription du service worker, annonce de mise à jour,
@@ -483,7 +497,9 @@ class Site:
                         + json.dumps(data, ensure_ascii=False).replace('</', '<\\/') + '</script>')
         # Le bandeau suit le défilement : la barre des sections quand la page en a une, sinon le bandeau du site.
         haut = ('<header class="site-head' + ('' if barre else ' colle') + '"><div class="inner"><a class="marque" href="'
-                + root + 'index.html">' + SITE_NAME + '</a>' + nav + ('' if barre else BOUTON_AA) + '</div></header>\n')
+                + root + 'index.html"><img src="' + root + 'assets/logo.png" alt="" width="107" height="36">'
+                '<span class="nom">' + SITE_NAME + '<small>Rite Edot HaMizrah</small></span></a>'
+                + ('' if barre else BOUTON_AA) + '<nav class="menu" aria-label="Menu">' + nav + '</nav></div></header>\n')
         if barre:
             haut += '<nav class="barre" aria-label="Sections"><div class="inner">' + barre + BOUTON_AA + '</div></nav>\n'
         page = ('<!doctype html>\n<html lang="fr">\n<head>\n' + '\n'.join(head) + '\n</head>\n<body>\n'
@@ -674,7 +690,7 @@ class Site:
                 im = im.convert('RGB')
                 im.thumbnail((800, 1200))
                 im.save(dossier / 'covers' / (lv.mode + '.jpg'), 'JPEG', quality=85, optimize=True, progressive=True)
-        if not (ICONES / 'papier.jpg').exists():
+        if not (ICONES / 'logo.png').exists():
             generer_icones()
         shutil.copytree(ICONES, dossier, dirs_exist_ok=True)
         telecharger = self.dossier / 'telecharger'
@@ -724,7 +740,7 @@ class Site:
         nom = (self.version.tag if self.version.edition else 'travail') + '-' + empreinte.hexdigest()[:12]
         coquille = (['index.html', 'livres.html', 'hors-ligne.html', 'manifest.webmanifest', 'assets/style.css',
                      'assets/app.js', 'assets/aujourdhui.js', 'assets/' + FONT_PATH.name]
-                    + [i['src'] for i in liste] + ['assets/icone-32.png', 'assets/icone-180.png', 'assets/papier.jpg']
+                    + [i['src'] for i in liste] + ['assets/icone-32.png', 'assets/icone-180.png', 'assets/papier.jpg', 'assets/logo.png']
                     + [p.relative_to(self.dossier).as_posix() for p in sorted((self.dossier / 'assets' / 'covers').glob('*.jpg'))]
                     + [lv.mode + '/index.html' for lv in self.livres])
         sw = (SW_JS.replace('__CACHE__', json.dumps(nom))

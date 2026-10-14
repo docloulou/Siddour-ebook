@@ -106,7 +106,7 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 
 ### Site de lecture en ligne
 
-Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
+Les trois éditions se lisent aussi dans un navigateur. En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets Livres, Hébreu, Phonétique, Bilingue. Le site comprend :
 
 - une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
 - une page **Livres** (`livres.html`) avec les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions et une case d’aide à la lecture sur liseuse tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
@@ -241,7 +241,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
-| `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture ; texture du fond « papier ancien ». |
+| `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis la couverture ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site et de la PWA. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |
 
