@@ -508,7 +508,9 @@ class ReadingLayout:
         yaale = re.match(r'אלהינו ואלהי אבותינו[, ]+יעלה', first)
         long_insert = (yaale or first.startswith('על הנסים') or first.startswith('אבינו מלכנו')
                        or p.startswith('אם שכח') or p.startswith('בתענית ציבור השליח'))
-        j = self.span_until(i + 2) if long_insert else i + 2
+        # Une consigne isolée ouvre un autre passage (« Les jours où l’on ne récite pas le Ta’hanoun »
+        # après Avinou malkénou) : l'encadré s'arrête avant elle.
+        j = self.span_until(i + 2, lambda x: {k for k, _ in self.items(x)} == {'instruction'}) if long_insert else i + 2
         body = ''.join(self.record_body(x) for x in self.records[i + 1:j])
         if yaale:
             body = self.note('À « beyom », choisir la date, puis poursuivre à « Léra’hem bo… ».') + body
