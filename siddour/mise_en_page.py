@@ -249,8 +249,17 @@ class ReadingLayout:
         return '<div id="p-' + str(i) + '">' + content + '</div>'
 
     def resume_from(self, index: int) -> str:
+        """Lien de reprise : le prochain passage récité, ou la consigne qui l'annonce
+        (condition d'un autre ajout, geste…), pour que le lecteur ne la saute pas."""
         nxt = self.next_prayer(index)
-        return '#p-' + str(nxt) if nxt is not None else ''
+        if nxt is None:
+            return ''
+        for r in self.records[index:nxt]:
+            fr = ' '.join(t for _, t in self.items(r))
+            if (r['kind'] == 'note' and re.search(r'\w', fr) and not is_technical(fr)
+                    and not REPETITION_RE.match(fr) and not AFTER_RE.match(fr)):
+                return '#p-' + str(r['i'])
+        return '#p-' + str(nxt)
 
     # --- Découpage des paragraphes de la source --------------------------------
     def items(self, r):
