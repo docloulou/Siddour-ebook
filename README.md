@@ -106,7 +106,7 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 
 ### Site de lecture en ligne
 
-Les trois éditions se lisent aussi dans un navigateur. En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets Livres, Hébreu, Phonétique, Bilingue. Le site comprend :
+Les trois éditions se lisent aussi dans un navigateur. En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets : un petit calendrier pour revenir à la page du jour, puis Livres, Hébreu, Phonétique, Bilingue. Depuis une page de prière, les onglets Hébreu, Phonétique et Bilingue ouvrent la même page dans l’autre édition. Le site comprend :
 
 - une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
 - une page **Livres** (`livres.html`) avec les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions et une case d’aide à la lecture sur liseuse tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
@@ -187,7 +187,7 @@ Il télécharge alors la nouvelle version, éditions gardées hors ligne compris
 **iPhone et iPad.** Safari n’a pas de bouton d’installation. Sur iPhone et iPad, la page d’accueil explique donc la marche à suivre : **Partager › Sur l’écran d’accueil**. Une fois installée, l’application :
 
 - s’ouvre en plein écran, avec son icône et son nom court « Siddour » ;
-- place la barre d’état sur le bandeau bleu, sans masquer le contenu sous l’encoche ;
+- place la barre d’état sur une bande bleue fixe, sans masquer le contenu sous l’encoche ; la barre des sections se colle juste dessous ;
 - affiche un écran de démarrage (le titre doré sur fond bleu), adapté à chaque modèle d’iPhone et d’iPad.
 
 **Icônes et écrans de démarrage.** Ils sont tirés de la couverture et rangés dans `assets/pwa/`. Après un changement de couverture, les régénérer avec :

@@ -10,7 +10,7 @@ GitHub Pages, puis contrôle :
    - la mise en cache « Garder hors ligne » et la lecture serveur arrêté ;
    - la mise à jour automatique après une nouvelle révision ;
    - l'aide à l'installation et la page « Aujourd'hui » sur iPhone, les livres en 2 × 2 ;
-   - la barre des sections qui suit le défilement et les réglages d'affichage.
+   - la barre des sections qui suit le défilement, les réglages d'affichage et les onglets du bandeau.
 Le script s'arrête à la première erreur.
 """
 from __future__ import annotations
@@ -170,7 +170,11 @@ def verifier_pwa(dossier: Path) -> None:
             assert pg.evaluate('document.documentElement.dataset.fond') == 'papier'
             pg.select_option('.barre select', index=0)
             pg.wait_for_url('**/' + sections[0].split('#')[0])
-            print('✓ barre des sections collée, réglages d’affichage gardés')
+            pg.click('.site-head .menu a[href$="hebreu/' + sections[0].split('#')[0] + '"]')  # même page, autre édition
+            pg.wait_for_url('**/hebreu/' + sections[0].split('#')[0])
+            pg.click('.site-head .menu a.jour')
+            pg.wait_for_url(BASE + 'index.html')
+            print('✓ barre des sections collée, réglages d’affichage gardés, onglets vers la même page et le jour')
     finally:
         arreter(srv)
 

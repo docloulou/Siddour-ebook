@@ -54,15 +54,20 @@ CONTACT = 'aHZvLmJyekBrb29iZS1ydW9kZGlz'
 
 WEB_CSS = '''
 @font-face { font-family: "SiddurHebrew"; src: url("FONT_URL") format("truetype"); font-display: swap; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: 3.5em; }
+/* Fond bleu sous la page : en application sur iPhone, la barre d'état transparente prend la couleur
+   du fond du document ; crème, elle voilait le haut du bandeau. La page garde son fond crème. */
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 3.5em; background: #15284a; }
 html:has(.site-head.colle) { scroll-padding-top: 6em; }
-body { margin: 0; background: #fbf9f4; color: #1d1d1d; font-size: 1.12em; }
+body { margin: 0; background: #fbf9f4; color: #1d1d1d; font-size: 1.12em; min-height: 100vh; min-height: 100dvh; }
+/* Bande bleue fixe sous la barre d'état (heure, batterie) : le texte défile dessous sans s'y mêler. */
+body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; z-index: 9; height: env(safe-area-inset-top);
+               background: #0c2644; pointer-events: none; }
 /* --taille : réglage « Affichage » du lecteur (1 = taille normale). */
 main { max-width: 40em; margin: 0 auto; padding: 1rem 1.2rem 3rem; background: #fff;
        font-size: calc(var(--taille, 1) * 1em); }
 a { color: #1f3a68; }
 /* Bandeau du site : logo doré de la couverture et nom, bouton « Affichage », puis les onglets. */
-.site-head { background: #15284a linear-gradient(180deg, #0c2644, #15284a); color: #f1e4bf;
+.site-head { background: #15284a linear-gradient(180deg, #0c2644, #15284a) no-repeat 0 env(safe-area-inset-top); color: #f1e4bf;
              font: .95em/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; border-bottom: 1px solid #a8873a;
              padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
 .site-head .inner { max-width: 44em; margin: 0 auto; padding: .6em 1.2em 0; display: grid;
@@ -78,12 +83,16 @@ a { color: #1f3a68; }
 .site-head .menu a { padding: .4em .75em .45em; border-bottom: 3px solid transparent; color: rgba(241,228,191,.8); }
 .site-head .menu a:hover { color: #fff; }
 .site-head .menu a.actif { color: #fff; font-weight: 600; border-bottom-color: #d9b45a; }
+/* Onglet « Aujourd'hui » : un petit calendrier, avant les livres. */
+.site-head .menu .jour { flex: 0 0 auto; display: flex; align-items: center; }
+.site-head .menu .jour svg { display: block; width: 1.25em; height: 1.25em; }
 /* Bandeau qui reste en haut de l'écran : sur les pages de lecture, la barre des sections
-   (précédente, aller à…, suivante) ; ailleurs, le bandeau du site lui-même. */
+   (précédente, aller à…, suivante) ; ailleurs, le bandeau du site lui-même.
+   La barre se colle juste sous la barre d'état de l'iPhone : pas de bande vide sous le bandeau du site. */
 .site-head.colle, .barre { position: -webkit-sticky; position: sticky; top: 0; z-index: 5; }
-.barre { background: #15284a; color: #f1e4bf; font: .95em/1.4 sans-serif; border-top: 1px solid #2c4470;
-         box-shadow: 0 1px 6px rgba(0,0,0,.25);
-         padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+.barre { top: env(safe-area-inset-top); background: #15284a; color: #f1e4bf; font: .95em/1.4 sans-serif;
+         border-top: 1px solid #2c4470; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+         padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); }
 .barre .inner { max-width: 44em; margin: 0 auto; padding: .35em 1.2em; display: flex; gap: .5em;
                 align-items: center; position: relative; }
 .barre a, .barre .vide { color: #f1e4bf; text-decoration: none; font-size: 1.5em; line-height: 1; padding: 0 .25em; }
@@ -325,6 +334,11 @@ APP_JS = r'''"use strict";
 AFFICHAGE_JS = ('<script>try{var a=JSON.parse(localStorage.getItem("siddour-affichage"))||{},d=document.documentElement;'
                 '["he","ph","fond"].forEach(function(k){if(a[k])d.dataset[k]=a[k]});'
                 'if(a.taille)d.style.setProperty("--taille",a.taille)}catch(e){}</script>')
+# Petit calendrier (onglet « Aujourd'hui » du bandeau), dessiné au trait dans la couleur du texte.
+CALENDRIER = ('<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" '
+              'stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'
+              '<path d="M7.5 14h2M11 14h2M14.5 14h2M7.5 17h2M11 17h2" stroke-width="2"/></svg>')
+
 BOUTON_AA = ('<button class="aa" type="button" aria-expanded="false" aria-controls="reglages" hidden '
              'title="Affichage : taille du texte, alignement, fond de page">Aa<span> Affichage</span></button>')
 
@@ -456,8 +470,13 @@ class Site:
         root = '../' * path.count('/') if index or not self.url else self.url
         canonical = self.abs(path.removesuffix('index.html'))
         image = self.abs(image or 'assets/covers/' + (mode or 'bilingue') + '.jpg')
-        nav = ('<a href="' + root + 'livres.html"' + (' class="actif"' if path == 'livres.html' else '') + '>Livres</a>'
-               + ''.join('<a href="' + root + m + '/index.html"' + (' class="actif"' if m == mode else '') + '>'
+        # Onglets des éditions : depuis une page d'une édition, la même page dans l'autre édition
+        # (les éditions ont les mêmes chemins de sections) ; sinon, son sommaire.
+        suite = path.removeprefix(mode + '/') if mode and path.startswith(mode + '/') else 'index.html'
+        nav = ('<a class="jour' + (' actif' if path == 'index.html' else '') + '" href="' + root + 'index.html"'
+               ' title="Aujourd’hui" aria-label="Aujourd’hui">' + CALENDRIER + '</a>'
+               '<a href="' + root + 'livres.html"' + (' class="actif"' if path == 'livres.html' else '') + '>Livres</a>'
+               + ''.join('<a href="' + root + m + '/' + suite + '"' + (' class="actif"' if m == mode else '') + '>'
                          + MENU[m] + '</a>' for m in (lv.mode for lv in self.livres)))
         head = [
             '<meta charset="utf-8">',
