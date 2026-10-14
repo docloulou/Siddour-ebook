@@ -6,7 +6,8 @@ Les fichiers produits sont versionnés dans assets/pwa/ ; le site les recopie te
 - icone-32.png, icone-180.png (iPhone, iPad), icone-192.png, icone-512.png ;
 - icone-maskable.png : variante qu'Android peut rogner en cercle ;
 - ios/demarrage-<largeur>x<hauteur>.jpg : écrans affichés par iOS à l'ouverture de l'application
-  (en portrait pour l'iPhone, dans les deux sens pour l'iPad).
+  (en portrait pour l'iPhone, dans les deux sens pour l'iPad) ;
+- papier.jpg : texture raccordable du fond « Papier ancien » proposé au lecteur.
 """
 from __future__ import annotations
 
@@ -130,7 +131,62 @@ def generer(dossier: Path = DOSSIER) -> list[Path]:
             image = lettres.resize((lw2, lh2), Image.LANCZOS)
             ecran.paste(image, ((W - lw2) // 2, (H - lh2) // 2), image)
             enregistrer(ecran, demarrage(lw, lh, r))
+    enregistrer(papier(), 'papier.jpg')
     return faits
+
+
+def papier(cote: int = 512):
+    """Papier vergé ancien : grain marbré, fibres, vergeures et pontuseaux, à peine visibles.
+
+    L'image se raccorde sur ses quatre bords (répétée en fond de page sans couture) :
+    tout est dessiné sur une mosaïque 3 × 3 dont on garde la case centrale."""
+    import random
+    from PIL import Image, ImageDraw, ImageFilter
+    alea = random.Random(1492)  # graine fixe : même fichier à chaque génération
+    grand = cote * 3
+
+    def raccord(case):
+        mosaique = Image.new(case.mode, (grand, grand))
+        for i in range(3):
+            for j in range(3):
+                mosaique.paste(case, (i * cote, j * cote))
+        return mosaique
+
+    def bruit(taille: int, flou: float):
+        case = Image.effect_noise((taille, taille), 64).resize((cote, cote), Image.BICUBIC)
+        return raccord(case).filter(ImageFilter.GaussianBlur(flou)).crop((cote, cote, 2 * cote, 2 * cote))
+
+    # Grain : taches larges et douces, puis grain fin.
+    taches = Image.blend(bruit(6, cote / 12), bruit(16, cote / 40), .5).point(lambda v: 128 + (v - 128) * 2)
+    grain = bruit(cote // 2, .6)
+    relief = Image.blend(taches, grain, .4)
+
+    # Fibres et vergeures sur la case centrale de la mosaïque, recopiées sur les bords.
+    traits = Image.new('L', (cote, cote), 128)
+    d = ImageDraw.Draw(traits)
+    for y in range(0, cote, 6):  # vergeures : lignes serrées horizontales
+        d.line((0, y, cote, y), fill=112)
+    for x in range(cote // 8, cote, cote // 2):  # pontuseaux : deux lignes verticales espacées
+        d.line((x, 0, x, cote), fill=100, width=2)
+    traits = raccord(traits)
+    d = ImageDraw.Draw(traits)
+    for _ in range(220):  # fibres : courts traits courbes, clairs ou sombres
+        x, y = alea.uniform(cote, 2 * cote), alea.uniform(cote, 2 * cote)
+        points = [(x, y)]
+        for _ in range(4):
+            x += alea.uniform(-9, 9); y += alea.uniform(-9, 9)
+            points.append((x, y))
+        teinte = alea.choice((90, 100, 165))
+        for dx in (-cote, 0, cote):
+            for dy in (-cote, 0, cote):
+                d.line([(px + dx, py + dy) for px, py in points], fill=teinte, width=1)
+    traits = traits.filter(ImageFilter.GaussianBlur(.7)).crop((cote, cote, 2 * cote, 2 * cote))
+
+    relief = Image.blend(relief, traits, .45)
+    # Teinte parchemin : le relief module légèrement une couleur ivoire chaude.
+    clair, sombre = (247, 238, 214), (226, 208, 166)
+    return Image.merge('RGB', [relief.point(lambda v, a=a, b=b: round(b + (a - b) * min(1, max(0, (v - 50) / 156))))
+                               for a, b in zip(clair, sombre)])
 
 
 if __name__ == '__main__':

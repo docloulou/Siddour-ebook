@@ -9,7 +9,8 @@ GitHub Pages, puis contrôle :
    - les critères d'installation de Chrome ;
    - la mise en cache « Garder hors ligne » et la lecture serveur arrêté ;
    - la mise à jour automatique après une nouvelle révision ;
-   - l'aide à l'installation affichée sur iPhone.
+   - l'aide à l'installation affichée sur iPhone ;
+   - la barre des sections qui suit le défilement et les réglages d'affichage.
 Le script s'arrête à la première erreur.
 """
 from __future__ import annotations
@@ -125,6 +126,21 @@ def verifier_pwa(dossier: Path) -> None:
             assert pg.is_visible('.installer-ios'), 'aide à l’installation iOS absente'
             assert pg.locator('link[rel=apple-touch-startup-image]').count() > 0
             print('✓ iPhone : aide à l’installation, écrans de démarrage déclarés')
+
+            pg.goto(BASE + 'bilingue/' + sections[3])  # section longue : la page défile
+            pg.evaluate('scrollTo(0, document.body.scrollHeight)')
+            assert pg.evaluate('scrollY > 300 && document.querySelector(".barre").getBoundingClientRect().top === 0'), \
+                'barre non collée'
+            pg.click('.barre .aa')
+            pg.click('[data-cle=fond][data-v=papier]')
+            pg.click('[data-cle=ph][data-v=center]')
+            pg.click('[data-pas="1"]')
+            pg.reload()  # réglages gardés et appliqués dès le chargement
+            assert pg.eval_on_selector('main .ph', 'p => getComputedStyle(p).textAlign') == 'center'
+            assert pg.evaluate('document.documentElement.dataset.fond') == 'papier'
+            pg.select_option('.barre select', index=0)
+            pg.wait_for_url('**/' + sections[0].split('#')[0])
+            print('✓ barre des sections collée, réglages d’affichage gardés')
     finally:
         arreter(srv)
 

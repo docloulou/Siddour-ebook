@@ -47,9 +47,11 @@ CONTACT = 'aHZvLmJyekBrb29iZS1ydW9kZGlz'
 
 WEB_CSS = '''
 @font-face { font-family: "SiddurHebrew"; src: url("FONT_URL") format("truetype"); font-display: swap; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 3.5em; }
 body { margin: 0; background: #fbf9f4; color: #1d1d1d; font-size: 1.12em; }
-main { max-width: 40em; margin: 0 auto; padding: 1em 1.2em 3em; background: #fff; }
+/* --taille : réglage « Affichage » du lecteur (1 = taille normale). */
+main { max-width: 40em; margin: 0 auto; padding: 1rem 1.2rem 3rem; background: #fff;
+       font-size: calc(var(--taille, 1) * 1em); }
 a { color: #1f3a68; }
 .site-head { background: #15284a; color: #f1e4bf; font: .95em/1.4 sans-serif; }
 .site-head { padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
@@ -58,6 +60,59 @@ a { color: #1f3a68; }
 .site-head a { color: #f1e4bf; text-decoration: none; }
 .site-head .marque { font-weight: bold; margin-right: auto; }
 .site-head .actif { text-decoration: underline; }
+/* Bandeau qui reste en haut de l'écran : sur les pages de lecture, la barre des sections
+   (précédente, aller à…, suivante) ; ailleurs, le bandeau du site lui-même. */
+.site-head.colle, .barre { position: -webkit-sticky; position: sticky; top: 0; z-index: 5; }
+.barre { background: #15284a; color: #f1e4bf; font: .95em/1.4 sans-serif; border-top: 1px solid #2c4470;
+         box-shadow: 0 1px 6px rgba(0,0,0,.25);
+         padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+.barre .inner { max-width: 44em; margin: 0 auto; padding: .35em 1.2em; display: flex; gap: .5em;
+                align-items: center; position: relative; }
+.barre a, .barre .vide { color: #f1e4bf; text-decoration: none; font-size: 1.5em; line-height: 1; padding: 0 .25em; }
+.barre .vide { opacity: .3; }
+.barre select { flex: 1; min-width: 0; font: inherit; font-size: .9em; color: #15284a; background: #f1e4bf;
+                border: 0; border-radius: 3px; padding: .3em .4em; text-overflow: ellipsis; }
+.site-head .inner { position: relative; }
+/* Bouton « Affichage » : discret mais lisible, et son panneau de réglages. */
+.aa { font: bold .95em/1.2 sans-serif; color: #f1e4bf; background: none; border: 1px solid rgba(241,228,191,.55);
+      border-radius: 1em; padding: .2em .75em; cursor: pointer; white-space: nowrap; }
+.aa span { font-weight: normal; }
+.aa[aria-expanded="true"] { background: #f1e4bf; color: #15284a; }
+.reglages { position: absolute; right: .6em; top: calc(100% + .3em); z-index: 6; width: 19em;
+            max-width: calc(100vw - 1.2em); box-sizing: border-box; padding: .8em 1em; border-radius: 6px;
+            background: #fffdf7; color: #222; border: 1px solid #d8cfb8; box-shadow: 0 4px 18px rgba(0,0,0,.25);
+            font: .9em/1.3 sans-serif; text-align: left; }
+.reglages[hidden] { display: none; }
+.reglages .ligne { display: flex; align-items: center; justify-content: space-between; gap: .6em; margin: .55em 0; }
+.reglages .ligne > span { color: #555; }
+.reglages .choix { display: flex; gap: .3em; align-items: center; }
+.reglages button { font: inherit; color: #15284a; background: #fff; border: 1px solid #c9bfa6; border-radius: 4px;
+                   min-width: 2.3em; height: 2.1em; padding: 0 .45em; cursor: pointer; }
+.reglages button[aria-pressed="true"] { border-color: #15284a; box-shadow: inset 0 0 0 1px #15284a; background: #eef1f7; }
+.reglages button svg { width: 1.15em; height: 1.15em; vertical-align: middle; }
+.reglages output { min-width: 3.2em; text-align: center; }
+.reglages .fond { width: 2.1em; padding: 0; }
+.reglages .fond[data-v="blanc"] { background: #fff; }
+.reglages .fond[data-v="ivoire"] { background: #fcf5df; }
+.reglages .fond[data-v="papier"] { background: #ecdcb4 url("papier.jpg"); }
+.reglages .remise { display: block; margin: .8em 0 0 auto; height: auto; padding: .25em .6em; font-size: .9em; color: #555; }
+/* Alignements choisis par le lecteur (par défaut : hébreu à droite, phonétique justifiée). */
+html[data-he="justify"] main .he { text-align: justify; text-align-last: auto; }
+html[data-he="center"] main .he { text-align: center; text-align-last: center; }
+html[data-he="left"] main .he { text-align: left; text-align-last: left; }
+html[data-ph="left"] main .ph { text-align: left; text-align-last: left; }
+html[data-ph="center"] main .ph { text-align: center; text-align-last: center; }
+html[data-ph="right"] main .ph { text-align: right; text-align-last: right; }
+/* Fonds : ivoire (jaune pâle) et papier ancien vergé ; blanc par défaut. */
+html[data-fond="ivoire"] body { background: #efe6cb; }
+html[data-fond="ivoire"] main { background: #fcf5df; }
+html[data-fond="papier"] body { background: #d8c79f; }
+html[data-fond="papier"] main { background: #f1e5c6 url("papier.jpg"); color: #2a2116;
+                                 box-shadow: inset 0 0 4em rgba(110,75,25,.2); }
+html[data-fond="ivoire"] .site-foot, html[data-fond="papier"] .site-foot { color: #5a5040; }
+html[data-fond="ivoire"] main .addition, html[data-fond="ivoire"] main .choice, html[data-fond="ivoire"] main .role,
+html[data-fond="papier"] main .addition, html[data-fond="papier"] main .choice, html[data-fond="papier"] main .role {
+  background: rgba(120,90,30,.07); border-color: rgba(120,90,30,.4); }
 .fil { font: .85em sans-serif; color: #666; margin: .6em 0 0; }
 .fil a { color: #666; }
 .pager { display: flex; justify-content: space-between; gap: 1em; margin: 2.5em 0 0; padding-top: 1em;
@@ -86,7 +141,9 @@ button.bouton { font: inherit; cursor: pointer; }
 /* Lecture à l'écran : phonétique justifiée comme dans un livre, dernière ligne à gauche. */
 .ph { text-align: justify; text-align-last: left; -webkit-hyphens: auto; hyphens: auto; }
 @media (max-width: 34em) { .sommaire { column-count: 1; -webkit-column-count: 1; } body { font-size: 1.05em; }
-                           .site-head .marque { flex-basis: 100%; } }
+                           .site-head .marque { flex-basis: 100%; } .aa span { display: none; }
+                           .site-head .inner .aa { position: absolute; right: 1.2em; top: .45em; }
+                           .barre .inner { padding: .35em .8em; } }
 '''
 
 # Script commun aux pages : inscription du service worker, annonce de mise à jour,
@@ -109,6 +166,74 @@ APP_JS = r'''"use strict";
       a.textContent = adresse;
       location.href = a.href;
     });
+  }
+
+  // Barre des sections : aller directement à une section choisie dans la liste.
+  const aller = document.querySelector(".barre select");
+  if (aller) aller.addEventListener("change", () => { if (aller.value) location.href = aller.value; });
+
+  // Affichage : taille du texte, alignement de l'hébreu et de la phonétique, fond de page.
+  // Le choix est gardé sur l'appareil ; le script en tête de page l'applique avant l'affichage.
+  const aa = document.querySelector(".aa");
+  if (aa) {
+    const racine = document.documentElement;
+    const TAILLES = [0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.6, 1.8, 2.1];
+    const DEFAUT = { taille: 1, he: "right", ph: "justify", fond: "blanc" };
+    let reglages = {};
+    try { reglages = JSON.parse(localStorage.getItem("siddour-affichage")) || {}; } catch (e) {}
+    const valeur = (cle) => reglages[cle] === undefined ? DEFAUT[cle] : reglages[cle];
+    const icone = (lignes) => '<svg viewBox="0 0 16 16" aria-hidden="true">' + lignes.map(([x, l], i) =>
+      '<rect x="' + x + '" y="' + (2 + i * 3.5) + '" width="' + l + '" height="1.6" rx=".8" fill="currentColor"/>').join("") + "</svg>";
+    const ALIGNEMENTS = [
+      ["right", "Aligné à droite", icone([[1, 14], [5, 10], [3, 12], [7, 8]])],
+      ["justify", "Justifié", icone([[1, 14], [1, 14], [1, 14], [1, 9]])],
+      ["center", "Centré", icone([[1, 14], [4, 8], [2, 12], [5, 6]])],
+      ["left", "Aligné à gauche", icone([[1, 14], [1, 10], [1, 12], [1, 8]])],
+    ];
+    const choix = (cle, options) => '<div class="choix" role="group">' + options.map(([v, nom, contenu, classe]) =>
+      '<button type="button" data-cle="' + cle + '" data-v="' + v + '" title="' + nom + '" aria-label="' + nom + '"'
+      + (classe ? ' class="' + classe + '"' : "") + ">" + contenu + "</button>").join("") + "</div>";
+    const panneau = document.createElement("div");
+    panneau.className = "reglages"; panneau.id = "reglages"; panneau.hidden = true;
+    panneau.setAttribute("role", "dialog"); panneau.setAttribute("aria-label", "Affichage");
+    panneau.innerHTML =
+      '<div class="ligne"><span>Taille du texte</span><div class="choix">'
+      + '<button type="button" data-pas="-1" title="Réduire" aria-label="Réduire le texte">A−</button><output></output>'
+      + '<button type="button" data-pas="1" title="Agrandir" aria-label="Agrandir le texte">A+</button></div></div>'
+      + '<div class="ligne"><span>Hébreu</span>' + choix("he", ALIGNEMENTS) + "</div>"
+      + '<div class="ligne"><span>Phonétique</span>' + choix("ph", ALIGNEMENTS) + "</div>"
+      + '<div class="ligne"><span>Fond de page</span>' + choix("fond", [["blanc", "Blanc", "", "fond"],
+        ["ivoire", "Ivoire", "", "fond"], ["papier", "Papier ancien", "", "fond"]]) + "</div>"
+      + '<button type="button" class="remise">Réglages par défaut</button>';
+    aa.parentNode.appendChild(panneau);
+    const appliquer = () => {
+      for (const cle of ["he", "ph", "fond"]) {
+        if (reglages[cle] && reglages[cle] !== DEFAUT[cle]) racine.dataset[cle] = reglages[cle];
+        else delete racine.dataset[cle];
+      }
+      if (valeur("taille") !== 1) racine.style.setProperty("--taille", valeur("taille"));
+      else racine.style.removeProperty("--taille");
+      panneau.querySelector("output").textContent = Math.round(valeur("taille") * 100) + " %";
+      panneau.querySelectorAll("[data-cle]").forEach((b) =>
+        b.setAttribute("aria-pressed", String(valeur(b.dataset.cle) === b.dataset.v)));
+      try { localStorage.setItem("siddour-affichage", JSON.stringify(reglages)); } catch (e) {}
+    };
+    panneau.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.cle) reglages[b.dataset.cle] = b.dataset.v;
+      else if (b.dataset.pas) {
+        const i = TAILLES.indexOf(valeur("taille"));
+        reglages.taille = TAILLES[Math.max(0, Math.min(TAILLES.length - 1, (i < 0 ? 2 : i) + Number(b.dataset.pas)))];
+      } else reglages = {};
+      appliquer();
+    });
+    const ouvrir = (oui) => { panneau.hidden = !oui; aa.setAttribute("aria-expanded", String(oui)); };
+    aa.addEventListener("click", () => ouvrir(panneau.hidden));
+    document.addEventListener("click", (e) => { if (!panneau.hidden && !panneau.contains(e.target) && !aa.contains(e.target)) ouvrir(false); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panneau.hidden) { ouvrir(false); aa.focus(); } });
+    appliquer();
+    aa.hidden = false;
   }
 
   if (!("serviceWorker" in navigator) || !script) return;
@@ -174,6 +299,13 @@ APP_JS = r'''"use strict";
   });
 })();
 '''
+
+# Applique les réglages d'affichage du lecteur dès la tête de page, avant le premier rendu.
+AFFICHAGE_JS = ('<script>try{var a=JSON.parse(localStorage.getItem("siddour-affichage"))||{},d=document.documentElement;'
+                '["he","ph","fond"].forEach(function(k){if(a[k])d.dataset[k]=a[k]});'
+                'if(a.taille)d.style.setProperty("--taille",a.taille)}catch(e){}</script>')
+BOUTON_AA = ('<button class="aa" type="button" aria-expanded="false" aria-controls="reglages" hidden '
+             'title="Affichage : taille du texte, alignement, fond de page">Aa<span> Affichage</span></button>')
 
 SW_JS = r'''"use strict";
 // Service worker du siddour. CACHE change à chaque publication : le navigateur
@@ -296,7 +428,7 @@ class Site:
         return self.url + path if self.url else ''
 
     def write(self, path: str, title: str, description: str, body: str, *, mode: str = '',
-              image: str = '', jsonld: list[dict] | None = None, index: bool = True) -> None:
+              image: str = '', jsonld: list[dict] | None = None, index: bool = True, barre: str = '') -> None:
         # La page 404 est servie à n'importe quelle profondeur : liens depuis la racine du site.
         root = '../' * path.count('/') if index or not self.url else self.url
         canonical = self.abs(path.removesuffix('index.html'))
@@ -323,6 +455,7 @@ class Site:
             *liens_demarrage(root),
             '<link rel="stylesheet" href="' + root + 'assets/style.css">',
             '<script src="' + root + 'assets/app.js" defer></script>',
+            AFFICHAGE_JS,
             '<meta property="og:site_name" content="' + SITE_NAME + '">',
             '<meta property="og:locale" content="fr_FR">',
             '<meta property="og:type" content="' + ('book' if mode else 'website') + '">',
@@ -344,9 +477,13 @@ class Site:
         for data in jsonld or []:
             head.append('<script type="application/ld+json">'
                         + json.dumps(data, ensure_ascii=False).replace('</', '<\\/') + '</script>')
+        # Le bandeau suit le défilement : la barre des sections quand la page en a une, sinon le bandeau du site.
+        haut = ('<header class="site-head' + ('' if barre else ' colle') + '"><div class="inner"><a class="marque" href="'
+                + root + 'index.html">' + SITE_NAME + '</a>' + nav + ('' if barre else BOUTON_AA) + '</div></header>\n')
+        if barre:
+            haut += '<nav class="barre" aria-label="Sections"><div class="inner">' + barre + BOUTON_AA + '</div></nav>\n'
         page = ('<!doctype html>\n<html lang="fr">\n<head>\n' + '\n'.join(head) + '\n</head>\n<body>\n'
-                '<header class="site-head"><div class="inner"><a class="marque" href="' + root + 'index.html">'
-                + SITE_NAME + '</a>' + nav + '</div></header>\n<main>\n' + body + '\n</main>\n'
+                + haut + '<main>\n' + body + '\n</main>\n'
                 '<footer class="site-foot"><p>' + exposants(self.version.complet) + ' · Textes issus de '
                 '<a href="https://www.sefaria.org">Sefaria</a> · '
                 '<a href="' + root + 'index.html#telecharger">Télécharger les EPUB</a></p>'
@@ -404,6 +541,16 @@ class Site:
         sequence = [(chap, href, title, content) for chap, liens in chapitres for href, title, content in liens]
         premiere = {chap['id']: liens[0][0] for chap, liens in chapitres}
 
+        def aller(prefixe: str, actuel: str = '') -> str:
+            """Liste de toutes les sections, rangées par chapitre, pour y aller directement."""
+            return ('<select aria-label="Aller à une section">'
+                    + ('' if actuel else '<option value="" selected>Aller à une section…</option>')
+                    + ''.join('<optgroup label="' + html.escape(chap['fr'], quote=True) + '">' + ''.join(
+                        '<option value="' + prefixe + h + '"' + (' selected' if h == actuel else '') + '>'
+                        + html.escape(t) + '</option>' for h, t, _ in liens) + '</optgroup>'
+                        for chap, liens in chapitres)
+                    + '</select>')
+
         book = dict(self.book_jsonld(livre), **{'@context': 'https://schema.org'})
         sommaire = make_contents([(chap['fr'], chap.get('he', ''), [(h, t) for h, t, _ in liens])
                                   for chap, liens in chapitres])
@@ -418,10 +565,10 @@ class Site:
                    + '" hidden>Garder hors ligne</button> <span></span></p>'
                    + sommaire + '<p style="text-align:center"><a href="a-propos.html">'
                    'À propos de cette édition</a></p>',
-                   mode=mode, jsonld=[book, self.breadcrumb([(SITE_NAME, ''), (EDITIONS[mode], mode + '/')])])
+                   mode=mode, barre=aller(''), jsonld=[book, self.breadcrumb([(SITE_NAME, ''), (EDITIONS[mode], mode + '/')])])
         self.write(mode + '/a-propos.html', 'À propos — ' + livre.title,
                    'Sources, licences et conventions de mise en page de l’édition ' + TITLES[mode] + ' du siddour.',
-                   web_html(make_credits(livre.title, livre.licences, mode, livre.version)), mode=mode)
+                   web_html(make_credits(livre.title, livre.licences, mode, livre.version)), mode=mode, barre=aller(''))
 
         for k, (chap, href, title, content) in enumerate(sequence):
             prev = sequence[k - 1] if k else None
@@ -438,6 +585,14 @@ class Site:
             pager = '<nav class="pager">' + (
                 '<a class="prec" rel="prev" href="' + up + prev[1] + '">← ' + html.escape(prev[2]) + '</a>' if prev else '') + (
                 '<a class="suiv" rel="next" href="' + up + nxt[1] + '">' + html.escape(nxt[2]) + ' →</a>' if nxt else '') + '</nav>'
+
+            def fleche(voisin, classe: str, signe: str, nom: str) -> str:
+                if not voisin:
+                    return '<span class="vide" aria-hidden="true">' + signe + '</span>'
+                return ('<a class="' + classe + '" href="' + up + voisin[1] + '" title="' + nom + ' : '
+                        + html.escape(voisin[2], quote=True) + '" aria-label="' + nom + '">' + signe + '</a>')
+            barre = (fleche(prev, 'prec', '‹', 'Section précédente') + aller(up, href)
+                     + fleche(nxt, 'suiv', '›', 'Section suivante'))
             page_title = title + (' — ' + chap['fr'] if title != chap['fr'] else '') + ' | ' + livre.title
             description = ('« ' + title + ' » (' + chap['fr'] + ') : texte du siddour séfarade Edot HaMizrah '
                            + TEXTE[mode] + ', avec les consignes en français. Lecture en ligne ou EPUB.')
@@ -446,7 +601,7 @@ class Site:
                       {'@context': 'https://schema.org', '@type': 'WebPage', 'name': title,
                        'inLanguage': 'fr', 'isPartOf': self.book_jsonld(livre)}]
             self.write(mode + '/' + href, page_title, description, fil + heading + web_html(content) + pager,
-                       mode=mode, jsonld=jsonld)
+                       mode=mode, jsonld=jsonld, barre=barre)
 
     def accueil(self) -> None:
         cartes = ''.join(
@@ -497,7 +652,7 @@ class Site:
                 im = im.convert('RGB')
                 im.thumbnail((800, 1200))
                 im.save(dossier / 'covers' / (lv.mode + '.jpg'), 'JPEG', quality=85, optimize=True, progressive=True)
-        if not (ICONES / 'icone-512.png').exists():
+        if not (ICONES / 'papier.jpg').exists():
             generer_icones()
         shutil.copytree(ICONES, dossier, dirs_exist_ok=True)
         telecharger = self.dossier / 'telecharger'
@@ -546,7 +701,7 @@ class Site:
         nom = (self.version.tag if self.version.edition else 'travail') + '-' + empreinte.hexdigest()[:12]
         coquille = (['index.html', 'hors-ligne.html', 'manifest.webmanifest', 'assets/style.css', 'assets/app.js',
                      'assets/' + FONT_PATH.name]
-                    + [i['src'] for i in liste] + ['assets/icone-32.png', 'assets/icone-180.png']
+                    + [i['src'] for i in liste] + ['assets/icone-32.png', 'assets/icone-180.png', 'assets/papier.jpg']
                     + [p.relative_to(self.dossier).as_posix() for p in sorted((self.dossier / 'assets' / 'covers').glob('*.jpg'))]
                     + [lv.mode + '/index.html' for lv in self.livres])
         sw = (SW_JS.replace('__CACHE__', json.dumps(nom))
