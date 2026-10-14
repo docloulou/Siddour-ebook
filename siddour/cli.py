@@ -1,0 +1,85 @@
+"""Ligne de commande : python3 siddour_ebook_liseuse.py --help"""
+from __future__ import annotations
+
+import argparse
+from datetime import date
+from pathlib import Path
+
+from .consignes import Consignes
+from .edition import FONT_PATH, build_edition, render_book
+from .phonetique import translit
+from .plan import PLAN, select_plan
+from .site import DEPOT
+from .sources import fetch_section, validate_source
+from .version import Version
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description='Siddour séfarade complet : hébreu, phonétique et bilingue, '
+                                             'avec consignes françaises intégrées.')
+    ap.add_argument('--mode', choices=['tous', 'hebreu', 'phonetique', 'bilingue'], default='tous',
+                    help='tous génère les trois ePub (défaut)')
+    ap.add_argument('--sortie', default='.', help='dossier de sortie')
+    ap.add_argument('--cache', default=str(ROOT / 'cache'))
+    ap.add_argument('--offline', action='store_true', help='utiliser uniquement les textes déjà mis en cache')
+    ap.add_argument('--quotidien', action='store_true',
+                    help='limiter aux chapitres quotidiens ; tout le plan est inclus par défaut')
+    ap.add_argument('--complet', action='store_true', help='inclure tout le plan (déjà le comportement par défaut)')
+    ap.add_argument('--chapitres', help='identifiants de chapitres séparés par des virgules')
+    ap.add_argument('--liste', action='store_true')
+    ap.add_argument('--rubriques', help='CSV facultatif de corrections : hebreu;francais')
+    ap.add_argument('--font', help='police .ttf ou .otf à embarquer')
+    ap.add_argument('--html', action='store_true', help='produire aussi les versions HTML pour relecture')
+    ap.add_argument('--edition', type=int, help='numéro d’édition imprimé dans le livre (sinon « Version de travail »)')
+    ap.add_argument('--revision', type=int, default=0, help='numéro de révision de cette édition (défaut : 0)')
+    ap.add_argument('--date', type=date.fromisoformat, default=date.today(),
+                    help='date de fabrication AAAA-MM-JJ (défaut : aujourd’hui)')
+    ap.add_argument('--site', metavar='DOSSIER', help='produire aussi le site web de lecture (GitHub Pages)')
+    ap.add_argument('--depot', default=DEPOT,
+                    help='dépôt GitHub (propriétaire/dépôt) cité dans le pied de page du site')
+    ap.add_argument('--site-url', default='', help='adresse publique du site, pour les liens canoniques et le sitemap')
+    ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
+    args = ap.parse_args(argv)
+
+    if args.liste:
+        for c in PLAN:
+            print(c['id'], ':', c['fr'], '(' + str(len(c['sections'])) + ' sections)')
+        return
+    if args.translit:
+        print(translit(args.translit))
+        return
+
+    consignes = Consignes()
+    consignes.load_overrides(args.rubriques)
+    plan = select_plan(args.chapitres, complet=not args.quotidien)
+    sources: dict[str, dict] = {}
+    failures = []
+    for chap in plan:
+        for _, ref in chap['sections']:
+            try:
+                data = fetch_section(ref, Path(args.cache), args.offline)
+                validate_source(data, ref)
+                sources[ref] = data
+            except Exception as exc:
+                failures.append(ref + ' : ' + str(exc))
+    if failures:
+        raise SystemExit('Aucun ePub produit, pour éviter une édition incomplète :\n' + '\n'.join(failures))
+
+    font = Path(args.font) if args.font else FONT_PATH
+    sortie = Path(args.sortie)
+    sortie.mkdir(parents=True, exist_ok=True)
+    modes = ['hebreu', 'phonetique', 'bilingue'] if args.mode == 'tous' else [args.mode]
+    version = Version(args.edition, args.revision, args.date)
+    livres = []
+    for mode in modes:
+        livre = render_book(plan, sources, mode, consignes, version)
+        build_edition(livre, sortie, font, args.html)
+        livres.append(livre)
+    if args.site:
+        from .site import build_site
+        build_site(livres, Path(args.site), sortie, args.site_url, args.depot)
+    cp = sortie / 'rubriques_traduites.csv'
+    consignes.export(cp)
+    print('CSV :', cp)

@@ -1,0 +1,67 @@
+body { font-family: Georgia, serif; margin: 0 3%; line-height: 1.45; color: #000; }
+h1 { font-size: 1.4em; text-align: center; margin: 1em 0; }
+h2 { font-size: 1.2em; border-bottom: 1px solid #000; padding-bottom: .3em; }
+h3 { font-size: 1.08em; text-align: center; margin: 1.2em 0 .6em; }
+h4 { font: bold .87em sans-serif; margin: 1em 0 .45em; }
+h1,h2,h3,h4 { page-break-after: avoid; break-after: avoid; }
+.he { text-align: right; font-family: "SiddurHebrew", "Noto Serif Hebrew", "DejaVu Sans", serif;
+      font-size: 1.22em; line-height: 1.65; margin: .45em 0 .15em; }
+.ph { text-align: left; font-size: 1em; line-height: 1.5; margin: .2em 0 .65em; }
+.pair { margin-bottom: .8em; }
+.he.kavana { font-size: .9em; color: #555; margin-top: 0; }
+.rubrique { text-align: left; font-style: italic; font-size: .86em; line-height: 1.4;
+            color: #444; margin: .9em 0 .1em; page-break-inside: avoid; break-inside: avoid; }
+.rubrique.before { page-break-after: avoid; break-after: avoid; }
+.rubrique.after { margin: .05em 0 .8em; page-break-before: avoid; break-before: avoid; }
+.variante { font-size: .92em; }
+.variante-label { font-style: italic; font-size: .85em; color: #444; }
+.repetition { font-style: italic; font-size: .8em; color: #444; white-space: nowrap; }
+.addition,.choice,.role { border-left: 3px solid #999; background: #f5f5f5;
+                         padding: .3em .7em; margin: .9em 0; }
+.addition .addition,.addition .choice,.role .addition { border: 0; background: none; padding: 0; margin: .45em 0; }
+.insertion { border-left: 2px solid #bbb; padding-left: .5em; margin: .45em 0; }
+.insertion .he,.insertion .ph { margin-top: .1em; }
+.role-label { font: bold .83em sans-serif; margin: .8em 0 .15em; page-break-after: avoid; break-after: avoid; }
+.optional-word { font-weight: normal; }
+.join-label { font: .8em sans-serif; margin: .15em 0; page-break-after: avoid; break-after: avoid; }
+.card-head { font: bold .8em/1.35 sans-serif; color: #333; margin: .1em 0 .35em; page-break-after: avoid; break-after: avoid; }
+.card-rule,.resume { font: .8em/1.4 sans-serif; text-align: left; margin: .35em 0; }
+.card-rule { page-break-after: avoid; break-after: avoid; }
+.resume { border-top: 1px dotted #888; padding-top: .3em; page-break-before: avoid; break-before: avoid; }
+.alternative { margin: .55em 0; }
+.alternative-label { font: bold .83em sans-serif; margin: .2em 0; page-break-after: avoid; break-after: avoid; }
+.reference { font: .74em sans-serif; }
+.note-ref { font: .7em sans-serif; vertical-align: super; line-height: 0; text-decoration: none; padding: 0 .1em; }
+.note-markers { white-space: nowrap; }
+.notes { border-top: 1px solid #999; margin-top: 1.5em; font-size: .83em; line-height: 1.45; }
+.notes h3 { font-size: 1em; text-align: left; }
+.notes p { margin: .5em 0; }
+.credits { font-size: .88em; }
+a { color: #000; }
+
+/* Introduction */
+.intro { text-indent: 1.2em; text-align: justify; line-height: 1.5; margin: 0 0 .7em; }
+.intro.fin { text-indent: 0; text-align: center; font-style: italic; margin-top: 1.4em; }
+
+/* Sommaire sur deux colonnes (une seule colonne si la liseuse ne gère pas column-count). */
+.sommaire { column-count: 2; column-gap: 1.6em; column-rule: 1px solid #ccc;
+            -webkit-column-count: 2; -webkit-column-gap: 1.6em; -webkit-column-rule: 1px solid #ccc;
+            font-size: .9em; line-height: 1.3; }
+.sommaire a { text-decoration: none; color: inherit; }
+.sommaire-bloc { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid;
+                 margin: 0 0 .8em; }
+.sommaire-chap { font-weight: bold; margin: 0; text-indent: 0; }
+.sommaire-num { display: inline-block; min-width: 1.4em; color: #8a6d1f; }
+.sommaire-he { display: block; font-weight: normal; font-family: "SiddurHebrew", serif;
+               color: #666; font-size: .95em; margin-left: 1.4em; text-align: left; }
+.sommaire-sections { list-style: none; margin: .15em 0 0 1.4em; padding: 0; font-size: .92em; }
+.sommaire-sections li { margin: .1em 0; }
+
+/* Couverture */
+.couverture { margin: 0; padding: 0; text-align: center; }
+.couverture img { max-width: 100%; max-height: 100vh; height: auto; }
+
+/* Repère d'édition en bas de l'introduction */
+.colophon { margin-top: 2.5em; padding-top: .6em; border-top: 1px solid #ccc; text-align: center;
+            font: .8em/1.4 sans-serif; color: #555; }
+.colophon p { margin: .1em 0; text-indent: 0; }
