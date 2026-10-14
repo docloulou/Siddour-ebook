@@ -87,6 +87,7 @@ Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
 - une page d’accueil avec les couvertures, la lecture en ligne et les EPUB à télécharger ;
 - un sommaire par édition ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
+- une application installable qui se lit hors connexion et se met à jour à chaque publication (voir plus bas).
 
 Pour le référencement, chaque page porte :
 
@@ -98,6 +99,23 @@ Pour le référencement, chaque page porte :
 Le site fournit aussi `sitemap.xml` et `robots.txt`.
 
 Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools.
+
+#### Application installable (PWA)
+
+Le site s’installe comme une application, sur téléphone comme sur ordinateur : menu du navigateur, puis **Installer l’application** ou **Ajouter à l’écran d’accueil**. Il fournit pour cela :
+
+- un manifeste (`manifest.webmanifest`) avec les icônes, dont une version adaptée aux icônes rondes d’Android, et un raccourci vers chaque édition ;
+- un service worker (`sw.js`).
+
+**Lecture hors connexion.** Les pages déjà lues restent disponibles. Le bouton **Garder hors ligne**, sur le sommaire de chaque édition, enregistre toute l’édition sur l’appareil.
+
+**Mise à jour automatique.** Le nom du cache du service worker combine l’étiquette de la publication (`edition-1-revision-2`) et une empreinte de tout le site. Chaque nouvelle édition ou révision modifie donc `sw.js`. Le navigateur détecte ce changement :
+
+- à l’ouverture d’une page ;
+- au retour sur l’application ;
+- toutes les heures si elle reste ouverte.
+
+Il télécharge alors la nouvelle version, éditions gardées hors ligne comprises, puis recharge la page. Un message indique le nouveau numéro, par exemple « Siddour mis à jour : 1ʳᵉ édition, révision 1 ».
 
 La numérotation suit celle d’un livre imprimé : *1ʳᵉ édition*, puis *1ʳᵉ édition, révision 1*, *révision 2*… Une nouvelle édition remet les révisions à zéro, par exemple *2ᵉ édition*.
 
@@ -126,7 +144,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
 | `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
-| `siddour/site.py` | Site web de lecture et métadonnées de référencement. |
+| `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils de l’action de publication (`.github/workflows/publier.yml`). |
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :

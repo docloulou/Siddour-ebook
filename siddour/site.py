@@ -5,10 +5,15 @@ Arborescence produite :
     <mode>/index.html                  sommaire de l'édition
     <mode>/<chapitre>/<section>.html   une page par section, comme dans l'EPUB
     telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html
+    manifest.webmanifest, sw.js, hors-ligne.html   application installable (PWA)
 Les ancres internes (notes, « Suite de la prière ») restent propres à chaque page.
+
+Le service worker porte le numéro de l'édition et une empreinte du contenu : toute
+nouvelle publication le modifie, le navigateur l'installe et la page se recharge.
 """
 from __future__ import annotations
 
+import hashlib
 import html
 import io
 import json
@@ -62,8 +67,174 @@ a { color: #1f3a68; }
           text-decoration: none; }
 .bouton.second { background: none; color: #15284a; border: 1px solid #15284a; }
 .accroche { text-align: center; font-style: italic; color: #444; }
+button.bouton { font: inherit; cursor: pointer; }
+.hors-ligne { text-align: center; font-size: .95em; color: #555; }
+.hors-ligne span { display: block; margin-top: .3em; font: .85em/1.4 sans-serif; }
+.annonce { position: fixed; left: 50%; bottom: 1.2em; transform: translateX(-50%); z-index: 10;
+           max-width: calc(100% - 2.4em); padding: .7em 1.1em; border-radius: 4px; background: #15284a;
+           color: #f1e4bf; font: .9em/1.4 sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
 @media (max-width: 34em) { .sommaire { column-count: 1; -webkit-column-count: 1; } body { font-size: 1.05em; }
                            .site-head .marque { flex-basis: 100%; } }
+'''
+
+# Script commun aux pages : inscription du service worker, annonce de mise à jour,
+# bouton « Garder hors ligne » sur le sommaire de chaque édition.
+APP_JS = r'''"use strict";
+(() => {
+  const VERSION = __VERSION__;
+  const script = document.currentScript;
+  if (!("serviceWorker" in navigator) || !script) return;
+  const annonce = (texte) => {
+    const div = document.createElement("div");
+    div.className = "annonce"; div.setAttribute("role", "status"); div.textContent = texte;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 6000);
+  };
+  try {
+    if (sessionStorage.getItem("siddour-maj")) {
+      sessionStorage.removeItem("siddour-maj");
+      annonce("Siddour mis à jour : " + VERSION);
+    }
+  } catch (e) {}
+
+  // Nouvelle édition ou révision : le nouveau service worker prend la main, on recharge.
+  const avait = !!navigator.serviceWorker.controller;
+  let recharge = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!avait || recharge) return;
+    recharge = true;
+    try { sessionStorage.setItem("siddour-maj", "1"); } catch (e) {}
+    location.reload();
+  });
+  navigator.serviceWorker.register(new URL("../sw.js", script.src), { updateViaCache: "none" }).then((reg) => {
+    const verifier = () => reg.update().catch(() => {});
+    setInterval(verifier, 3600 * 1000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) verifier(); });
+  }).catch(() => {});
+
+  const bouton = document.querySelector("[data-hors-ligne]");
+  if (!bouton || !("caches" in window)) return;
+  const mode = bouton.dataset.horsLigne;
+  const etat = document.querySelector(".hors-ligne span");
+  const marque = new URL("../hors-ligne/" + mode, script.src).href;
+  let garde = false;
+  const afficher = (oui) => {
+    garde = oui;
+    bouton.textContent = oui ? "Ne plus garder hors ligne" : "Garder hors ligne";
+    etat.textContent = oui ? "✓ Cette édition se lit sans connexion." : "";
+  };
+  caches.open("siddour-reglages").then((c) => c.match(marque)).then((r) => afficher(!!r));
+  bouton.hidden = false;
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    const m = e.data || {};
+    if (m.mode !== mode) return;
+    if (m.type === "progression") etat.textContent = "Téléchargement : " + m.n + " / " + m.total + " pages…";
+    if (m.type === "fini") {
+      bouton.disabled = false;
+      if (m.ok) afficher(m.garde);
+      else etat.textContent = "Téléchargement interrompu ; réessayer avec une connexion.";
+    }
+  });
+  bouton.addEventListener("click", () => {
+    bouton.disabled = true;
+    navigator.serviceWorker.ready.then((reg) => reg.active.postMessage({ type: garde ? "retirer" : "garder", mode }));
+  });
+})();
+'''
+
+SW_JS = r'''"use strict";
+// Service worker du siddour. CACHE change à chaque publication : le navigateur
+// détecte la nouvelle version, l'installe et remplace l'ancienne.
+const CACHE = "siddour-" + __CACHE__;
+const REGLAGES = "siddour-reglages";
+const COQUILLE = __COQUILLE__;
+const EDITIONS = __EDITIONS__;
+const base = self.registration.scope;
+const url = (p) => new URL(p, base).href;
+const marque = (mode) => url("hors-ligne/" + mode);
+
+async function garder(cache, mode, client) {
+  const pages = EDITIONS[mode];
+  let erreurs = 0;
+  for (let i = 0; i < pages.length; i += 8) {
+    await Promise.all(pages.slice(i, i + 8).map((p) =>
+      cache.add(new Request(url(p), { cache: "reload" })).catch(() => { erreurs += 1; })));
+    if (client) client.postMessage({ type: "progression", mode, n: Math.min(i + 8, pages.length), total: pages.length });
+  }
+  return erreurs === 0;
+}
+
+self.addEventListener("install", (e) => e.waitUntil((async () => {
+  const cache = await caches.open(CACHE);
+  await cache.addAll(COQUILLE.map((p) => new Request(url(p), { cache: "reload" })));
+  // Les éditions gardées hors ligne sont rechargées dans leur nouvelle version.
+  const reglages = await caches.open(REGLAGES);
+  for (const mode of Object.keys(EDITIONS)) {
+    if (await reglages.match(marque(mode))) await garder(cache, mode);
+  }
+  await self.skipWaiting();
+})()));
+
+self.addEventListener("activate", (e) => e.waitUntil((async () => {
+  for (const nom of await caches.keys()) {
+    if (nom.startsWith("siddour-") && nom !== CACHE && nom !== REGLAGES) await caches.delete(nom);
+  }
+  await self.clients.claim();
+})()));
+
+async function page(e) {
+  try {
+    const reponse = await fetch(e.request);
+    if (reponse.ok && !reponse.redirected) {
+      const copie = reponse.clone();
+      e.waitUntil(caches.open(CACHE).then((c) => c.put(e.request, copie)));
+    }
+    return reponse;
+  } catch (err) {
+    const u = new URL(e.request.url);
+    u.search = ""; u.hash = "";
+    return (await caches.match(u.href, { cacheName: CACHE }))
+      || (u.pathname.endsWith("/") && await caches.match(u.href + "index.html", { cacheName: CACHE }))
+      || caches.match(url("hors-ligne.html"), { cacheName: CACHE });
+  }
+}
+
+async function fichier(e) {
+  const trouve = await caches.match(e.request, { cacheName: CACHE });
+  if (trouve) return trouve;
+  const reponse = await fetch(e.request);
+  if (reponse.ok) {
+    const copie = reponse.clone();
+    e.waitUntil(caches.open(CACHE).then((c) => c.put(e.request, copie)));
+  }
+  return reponse;
+}
+
+self.addEventListener("fetch", (e) => {
+  const r = e.request;
+  // Les EPUB se téléchargent toujours depuis le réseau.
+  if (r.method !== "GET" || !r.url.startsWith(base) || new URL(r.url).pathname.endsWith(".epub")) return;
+  e.respondWith(r.mode === "navigate" ? page(e) : fichier(e));
+});
+
+self.addEventListener("message", (e) => {
+  const { type, mode } = e.data || {};
+  if (!EDITIONS[mode] || !e.source) return;
+  e.waitUntil((async () => {
+    const reglages = await caches.open(REGLAGES);
+    const cache = await caches.open(CACHE);
+    if (type === "garder") {
+      const ok = await garder(cache, mode, e.source);
+      if (ok) await reglages.put(marque(mode), new Response("1"));
+      e.source.postMessage({ type: "fini", mode, ok, garde: ok });
+    } else if (type === "retirer") {
+      await reglages.delete(marque(mode));
+      const coquille = new Set(COQUILLE);
+      await Promise.all(EDITIONS[mode].filter((p) => !coquille.has(p)).map((p) => cache.delete(url(p))));
+      e.source.postMessage({ type: "fini", mode, ok: true, garde: false });
+    }
+  })());
+});
 '''
 
 
@@ -85,6 +256,7 @@ class Site:
         self.livres, self.dossier, self.url = livres, dossier, url.rstrip('/') + '/' if url else ''
         self.version = livres[0].version
         self.pages: list[str] = []  # chemins pour le sitemap
+        self.par_edition: dict[str, list[str]] = {}  # pages à garder hors ligne
 
     def abs(self, path: str) -> str:
         return self.url + path if self.url else ''
@@ -105,9 +277,12 @@ class Site:
             '<meta name="description" content="' + html.escape(description, quote=True) + '">',
             '<meta name="robots" content="' + ('index, follow' if index else 'noindex') + '">',
             '<meta name="theme-color" content="#15284a">',
-            '<link rel="icon" type="image/png" href="' + root + 'assets/icone.png">',
-            '<link rel="apple-touch-icon" href="' + root + 'assets/icone.png">',
+            '<link rel="icon" type="image/png" sizes="192x192" href="' + root + 'assets/icone-192.png">',
+            '<link rel="apple-touch-icon" href="' + root + 'assets/icone-180.png">',
+            '<link rel="manifest" href="' + root + 'manifest.webmanifest">',
+            '<meta name="apple-mobile-web-app-title" content="Siddour">',
             '<link rel="stylesheet" href="' + root + 'assets/style.css">',
+            '<script src="' + root + 'assets/app.js" defer></script>',
             '<meta property="og:site_name" content="' + SITE_NAME + '">',
             '<meta property="og:locale" content="fr_FR">',
             '<meta property="og:type" content="' + ('book' if mode else 'website') + '">',
@@ -141,6 +316,8 @@ class Site:
         target.write_text(page, encoding='utf-8')
         if index:
             self.pages.append(path)
+        if mode:
+            self.par_edition.setdefault(mode, []).append(path)
 
     # -- Données structurées (schema.org) -------------------------------------------------
     def book_jsonld(self, livre: Livre) -> dict:
@@ -194,7 +371,9 @@ class Site:
         self.write(mode + '/index.html', livre.title + ' — lire en ligne',
                    'Sommaire du siddour séfarade ' + TEXTE[mode] + ', avec consignes en français : '
                    + ', '.join(chap['fr'] for chap, _ in chapitres[:8]) + '…',
-                   intro + sommaire + '<p style="text-align:center"><a href="a-propos.html">'
+                   intro + '<p class="hors-ligne"><button class="bouton second" data-hors-ligne="' + mode
+                   + '" hidden>Garder hors ligne</button> <span></span></p>'
+                   + sommaire + '<p style="text-align:center"><a href="a-propos.html">'
                    'À propos de cette édition</a></p>',
                    mode=mode, jsonld=[book, self.breadcrumb([(SITE_NAME, ''), (EDITIONS[mode], mode + '/')])])
         self.write(mode + '/a-propos.html', 'À propos — ' + livre.title,
@@ -251,6 +430,11 @@ class Site:
         self.write('404.html', 'Page introuvable — ' + SITE_NAME, SITE_DESCRIPTION,
                    '<h1>Page introuvable</h1><p style="text-align:center">'
                    '<a class="bouton" href="' + (self.url or 'index.html') + '">Retour à l’accueil</a></p>', index=False)
+        self.write('hors-ligne.html', 'Hors connexion — ' + SITE_NAME, SITE_DESCRIPTION,
+                   '<h1>Hors connexion</h1><p>Cette page n’a pas encore été enregistrée sur cet appareil. '
+                   'Les pages déjà lues restent disponibles ; pour lire une édition entière sans connexion, '
+                   'ouvrir son sommaire et choisir « Garder hors ligne ».</p><p style="text-align:center">'
+                   '<a class="bouton" href="' + (self.url or 'index.html') + '">Retour à l’accueil</a></p>', index=False)
 
     def assets(self, sortie: Path) -> None:
         from PIL import Image
@@ -268,10 +452,8 @@ class Site:
                 im = im.convert('RGB')
                 im.thumbnail((800, 1200))
                 im.save(dossier / 'covers' / (lv.mode + '.jpg'), 'JPEG', quality=85, optimize=True, progressive=True)
-                if not (dossier / 'icone.png').exists():
-                    # Icône : le haut de la couverture (le titre), en carré.
-                    w = im.width
-                    im.crop((0, 0, w, w)).resize((192, 192), Image.LANCZOS).save(dossier / 'icone.png', optimize=True)
+        if cover_image('bilingue'):
+            icones(cover_image('bilingue')[1], dossier)
         telecharger = self.dossier / 'telecharger'
         telecharger.mkdir(exist_ok=True)
         for lv in self.livres:
@@ -291,6 +473,58 @@ class Site:
             lignes.append('Sitemap: ' + self.abs('sitemap.xml'))
         (self.dossier / 'robots.txt').write_text('\n'.join(lignes) + '\n', encoding='utf-8')
 
+    # -- Application installable (PWA) -----------------------------------------------------
+    def pwa(self) -> None:
+        liste = [{'src': 'assets/icone-' + n + '.png', 'sizes': s + 'x' + s, 'type': 'image/png', 'purpose': p}
+                  for n, s, p in (('192', '192', 'any'), ('512', '512', 'any'), ('maskable', '512', 'maskable'))]
+        manifest = {
+            'id': './', 'name': SITE_NAME, 'short_name': 'Siddour', 'description': SITE_DESCRIPTION,
+            'lang': 'fr', 'dir': 'ltr', 'start_url': './', 'scope': './', 'display': 'standalone',
+            'background_color': '#fbf9f4', 'theme_color': '#15284a', 'categories': ['books', 'education'],
+            'icons': liste,
+            'shortcuts': [{'name': EDITIONS[lv.mode], 'short_name': MENU[lv.mode], 'url': lv.mode + '/index.html',
+                           'icons': liste[:1]} for lv in self.livres],
+        }
+        (self.dossier / 'manifest.webmanifest').write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=1), encoding='utf-8')
+        (self.dossier / 'assets' / 'app.js').write_text(
+            APP_JS.replace('__VERSION__', json.dumps(self.version.complet, ensure_ascii=False)), encoding='utf-8')
+
+        # Le nom du cache combine l'édition et une empreinte de tout le site :
+        # une nouvelle révision, comme une simple correction, déclenche la mise à jour.
+        empreinte = hashlib.sha256()
+        for f in sorted(p for p in self.dossier.rglob('*') if p.is_file()):
+            empreinte.update(f.relative_to(self.dossier).as_posix().encode() + b'\0' + f.read_bytes())
+        nom = (self.version.tag if self.version.edition else 'travail') + '-' + empreinte.hexdigest()[:12]
+        coquille = (['index.html', 'hors-ligne.html', 'manifest.webmanifest', 'assets/style.css', 'assets/app.js',
+                     'assets/' + FONT_PATH.name]
+                    + [i['src'] for i in liste] + ['assets/icone-180.png']
+                    + [p.relative_to(self.dossier).as_posix() for p in sorted((self.dossier / 'assets' / 'covers').glob('*.jpg'))]
+                    + [lv.mode + '/index.html' for lv in self.livres])
+        sw = (SW_JS.replace('__CACHE__', json.dumps(nom))
+              .replace('__COQUILLE__', json.dumps(coquille))
+              .replace('__EDITIONS__', json.dumps(self.par_edition, ensure_ascii=False)))
+        (self.dossier / 'sw.js').write_text(sw, encoding='utf-8')
+        self.cache = nom
+
+
+def icones(couverture: bytes, dossier: Path) -> None:
+    """Icônes de l'application : le titre de la couverture, en carré, sans le cadre doré."""
+    from PIL import Image, ImageDraw, ImageFilter
+    with Image.open(io.BytesIO(couverture)) as im:
+        im = im.convert('RGB')
+        k = im.width / 400
+        carre = im.crop(tuple(int(v * k) for v in (20, 20, 380, 380)))
+    for taille in (180, 192, 512):
+        carre.resize((taille, taille), Image.LANCZOS).save(dossier / ('icone-' + str(taille) + '.png'), optimize=True)
+    # Version « maskable » : le lanceur Android peut la rogner en cercle ; le titre reste dans la zone sûre.
+    fond = carre.resize((64, 64)).filter(ImageFilter.GaussianBlur(12)).resize((512, 512), Image.BICUBIC)
+    s = 380
+    fondu = Image.new('L', (s, s), 0)
+    ImageDraw.Draw(fondu).rectangle((14, 14, s - 14, s - 14), fill=255)
+    fond.paste(carre.resize((s, s), Image.LANCZOS), ((512 - s) // 2,) * 2, fondu.filter(ImageFilter.GaussianBlur(10)))
+    fond.save(dossier / 'icone-maskable.png', optimize=True)
+
 
 def build_site(livres: list[Livre], dossier: Path, sortie: Path, url: str = '') -> Path:
     if dossier.exists():
@@ -302,5 +536,6 @@ def build_site(livres: list[Livre], dossier: Path, sortie: Path, url: str = '') 
         site.edition(livre)
     site.accueil()
     site.index_moteurs()
-    print('Site :', dossier, '|', len(site.pages), 'pages', '|', date_fr(site.version.jour))
+    site.pwa()
+    print('Site :', dossier, '|', len(site.pages), 'pages', '|', date_fr(site.version.jour), '| cache', site.cache)
     return dossier
