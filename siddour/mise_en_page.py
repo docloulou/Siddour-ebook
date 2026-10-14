@@ -249,8 +249,17 @@ class ReadingLayout:
         return '<div id="p-' + str(i) + '">' + content + '</div>'
 
     def resume_from(self, index: int) -> str:
+        """Lien de reprise : le prochain passage récité, ou la consigne qui l'annonce
+        (condition d'un autre ajout, geste…), pour que le lecteur ne la saute pas."""
         nxt = self.next_prayer(index)
-        return '#p-' + str(nxt) if nxt is not None else ''
+        if nxt is None:
+            return ''
+        for r in self.records[index:nxt]:
+            fr = ' '.join(t for _, t in self.items(r))
+            if (r['kind'] == 'note' and re.search(r'\w', fr) and not is_technical(fr)
+                    and not REPETITION_RE.match(fr) and not AFTER_RE.match(fr)):
+                return '#p-' + str(r['i'])
+        return '#p-' + str(nxt)
 
     # --- Découpage des paragraphes de la source --------------------------------
     def items(self, r):
@@ -475,11 +484,13 @@ class ReadingLayout:
                                               resume=self.resume_from(j), css='role')))
             return j
         # Barékhénou / Barékh alénou : deux versions d'une même bénédiction.
+        # L'ashkénaze présente de même « Morid hatal / Machiv haroua’h », dans Me’hayé hamétim.
         if p == 'בקיץ' and i + 3 < len(self.records) and self.records[i + 2]['plain'] == 'בחורף':
             body = ('<p class="alternative-label">En été</p>' + self.record_body(self.records[i + 1])
                     + '<p class="alternative-label">En hiver</p>' + self.record_body(self.records[i + 3]))
-            out.append(self.block(i, self.box(body, 'Bénédiction de l’année · une seule version',
-                                              resume=self.resume_from(i + 4), css='choice')))
+            title = ('Une seule formule selon la saison' if self.records[i + 1]['plain'].startswith('מוריד הטל')
+                     else 'Bénédiction de l’année · une seule version')
+            out.append(self.block(i, self.box(body, title, resume=self.resume_from(i + 4), css='choice')))
             return i + 4
         if p.startswith('בקיץ') and 'בחורף' in p and 'מוריד הטל' in p:
             body = ''.join('<p class="alternative-label">' + html.escape(t) + '</p>' if k == 'instruction'
@@ -498,8 +509,11 @@ class ReadingLayout:
         first, p = nxt['plain'], r['plain']
         yaale = re.match(r'אלהינו ואלהי אבותינו[, ]+יעלה', first)
         long_insert = (yaale or first.startswith('על הנסים') or first.startswith('אבינו מלכנו')
-                       or p.startswith('אם שכח') or p.startswith('בתענית ציבור השליח'))
-        j = self.span_until(i + 2) if long_insert else i + 2
+                       or p.startswith('אם שכח') or p.startswith('בתענית ציבור השליח')
+                       or p.startswith('ויש מוסיפים פסוקים'))
+        # Une consigne isolée ouvre un autre passage (« Les jours où l’on ne récite pas le Ta’hanoun »
+        # après Avinou malkénou) : l'encadré s'arrête avant elle.
+        j = self.span_until(i + 2, lambda x: {k for k, _ in self.items(x)} == {'instruction'}) if long_insert else i + 2
         body = ''.join(self.record_body(x) for x in self.records[i + 1:j])
         if yaale:
             body = self.note('À « beyom », choisir la date, puis poursuivre à « Léra’hem bo… ».') + body
