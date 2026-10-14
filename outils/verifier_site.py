@@ -9,7 +9,7 @@ GitHub Pages, puis contrôle :
    - les critères d'installation de Chrome ;
    - la mise en cache « Garder hors ligne » et la lecture serveur arrêté ;
    - la mise à jour automatique après une nouvelle révision ;
-   - l'aide à l'installation affichée sur iPhone ;
+   - l'aide à l'installation et la page « Aujourd'hui » sur iPhone, les livres en 2 × 2 ;
    - la barre des sections qui suit le défilement et les réglages d'affichage.
 Le script s'arrête à la première erreur.
 """
@@ -51,6 +51,12 @@ def verifier_liens(site: Path) -> None:
                 cible /= 'index.html'
             assert cible.exists(), f'lien cassé dans {page.relative_to(site)} : {lien}'
             liens += 1
+    # Pages du siddour proposées par l'accueil « Aujourd'hui » (liens écrits par le script).
+    cibles = json.loads(re.search(r'id="cibles">(.*?)</script>', (site / 'index.html').read_text(encoding='utf-8')).group(1))
+    for chemin in cibles.values():
+        for mode in ('hebreu', 'phonetique', 'bilingue'):
+            assert (site / mode / chemin).exists(), f'accueil : page absente {mode}/{chemin}'
+    liens += len(cibles) * 3
     sw = (site / 'sw.js').read_text(encoding='utf-8')
     for nom in ('COQUILLE', 'EDITIONS'):
         valeur = json.loads(re.search(nom + r' = (.*);', sw).group(1))
@@ -126,6 +132,25 @@ def verifier_pwa(dossier: Path) -> None:
             assert pg.is_visible('.installer-ios'), 'aide à l’installation iOS absente'
             assert pg.locator('link[rel=apple-touch-startup-image]').count() > 0
             print('✓ iPhone : aide à l’installation, écrans de démarrage déclarés')
+
+            # Sans réponse de Hebcal (hors connexion), les prières du jour s'affichent quand même.
+            iphone.route('https://www.hebcal.com/**', lambda route: route.abort())
+            pg.reload()
+            pg.wait_for_selector('.prieres li a.nom')
+            assert pg.get_attribute('.prieres li a.nom', 'href').startswith('bilingue/')
+            assert pg.is_visible('.etat-donnees') and pg.is_visible('.vers-livres')
+            pg.click('[data-ouvrir-reglages]')
+            pg.click('.villes button:has-text("Jérusalem")')
+            pg.click('.segments [data-edition=hebreu]')
+            pg.click('.reglages-jour .ok')
+            pg.reload()  # ville et édition gardées sur l'appareil
+            pg.wait_for_selector('.prieres li a.nom')
+            assert pg.text_content('.lieu .ville').startswith('Jérusalem')
+            assert pg.get_attribute('.prieres li a.nom', 'href').startswith('hebreu/')
+            pg.goto(BASE + 'livres.html')
+            hauts = pg.eval_on_selector_all('.editions > *', 'l => l.map(x => Math.round(x.getBoundingClientRect().top))')
+            assert len(hauts) == 4 and hauts[0] == hauts[1] < hauts[2] == hauts[3], f'livres hors 2 × 2 : {hauts}'
+            print('✓ accueil « Aujourd’hui » (réglages gardés), livres en 2 × 2')
 
             pg.goto(BASE + 'bilingue/' + sections[3])  # section longue : la page défile
             pg.evaluate('scrollTo(0, document.body.scrollHeight)')
