@@ -134,23 +134,28 @@ def verifier_pwa(dossier: Path) -> None:
             print('✓ iPhone : aide à l’installation, écrans de démarrage déclarés')
 
             # Sans réponse de Hebcal (hors connexion), les prières du jour s'affichent quand même.
+            # À la première visite, l'édition est demandée une seule fois.
             iphone.route('https://www.hebcal.com/**', lambda route: route.abort())
             pg.reload()
+            pg.wait_for_selector('.premier-choix[open]')
+            pg.click('.premier-choix [data-edition=phonetique]')
             pg.wait_for_selector('.prieres li a.nom')
-            assert pg.get_attribute('.prieres li a.nom', 'href').startswith('bilingue/')
+            assert pg.get_attribute('.prieres li a.nom', 'href').startswith('phonetique/')
             assert pg.is_visible('.etat-donnees') and pg.is_visible('.vers-livres')
             pg.click('[data-ouvrir-reglages]')
             pg.click('.villes button:has-text("Jérusalem")')
-            pg.click('.segments [data-edition=hebreu]')
             pg.click('.reglages-jour .ok')
-            pg.reload()  # ville et édition gardées sur l'appareil
+            pg.click('.bouton-edition')  # choix discret de l'édition, dans « Prières du jour »
+            pg.click('.choix-edition [data-edition=hebreu]')
+            pg.reload()  # ville et édition gardées sur l'appareil, sans redemander l'édition
             pg.wait_for_selector('.prieres li a.nom')
+            assert not pg.is_visible('.premier-choix'), 'édition redemandée'
             assert pg.text_content('.lieu .ville').startswith('Jérusalem')
             assert pg.get_attribute('.prieres li a.nom', 'href').startswith('hebreu/')
             pg.goto(BASE + 'livres.html')
             hauts = pg.eval_on_selector_all('.editions > *', 'l => l.map(x => Math.round(x.getBoundingClientRect().top))')
             assert len(hauts) == 4 and hauts[0] == hauts[1] < hauts[2] == hauts[3], f'livres hors 2 × 2 : {hauts}'
-            print('✓ accueil « Aujourd’hui » (réglages gardés), livres en 2 × 2')
+            print('✓ accueil « Aujourd’hui » (édition demandée une fois, réglages gardés), livres en 2 × 2')
 
             pg.goto(BASE + 'bilingue/' + sections[3])  # section longue : la page défile
             pg.evaluate('scrollTo(0, document.body.scrollHeight)')

@@ -4,7 +4,9 @@ Tout est calculé dans le navigateur du lecteur :
 - la date hébraïque par le calendrier hébraïque du navigateur (Intl), même hors connexion ;
 - les horaires (zmanim), le Chabbat, les fêtes et les jeûnes par l'API de Hebcal.com
   (https://www.hebcal.com/home/developer-apis, données sous licence CC BY 4.0) ;
-- la recherche de ville par l'API de géocodage d'Open-Meteo (noms en français, fuseau horaire).
+- la recherche de ville par l'API de géocodage d'Open-Meteo (noms en français, fuseau horaire) ;
+- le nom de la ville trouvée par « Utiliser ma position » par l'API de BigDataCloud.
+L'édition du siddour (hébreu, phonétique, bilingue) est demandée une seule fois, à la première visite.
 Les réglages (ville, allumage, sortie de Chabbat, édition) restent dans le localStorage ;
 la dernière réponse de Hebcal y est gardée pour un affichage hors connexion.
 """
@@ -104,19 +106,43 @@ AUJOURDHUI_CSS = '''
 .vers-livres span { flex: 1; }
 .vers-livres small { display: block; opacity: .85; }
 .vers-livres::after { content: "›"; font-size: 1.6em; line-height: 1; }
-/* Réglages de la page : ville, horaires de Chabbat, édition du siddour. */
+/* Choix de l'édition : pastilles du panneau « Prières du jour » et de la première visite. */
+.segments { display: flex; flex-wrap: wrap; gap: .35em; margin: .4em 0; }
+.segments button { font: inherit; font-size: .88em; cursor: pointer; border: 1px solid #c9bfa6; border-radius: 1em;
+                   background: #fff; color: #15284a; padding: .25em .75em; }
+.segments button[aria-pressed="true"] { border-color: #15284a; background: #eef1f7; box-shadow: inset 0 0 0 1px #15284a; }
+.choix-edition { margin: -.1em 0 .5em; padding: .5em .6em; background: #faf6ea; border-radius: 6px; font-size: .9em; }
+.choix-edition[hidden] { display: none; }
+.choix-edition p { margin: 0; color: #555; }
+.choix-edition .segments { margin: .35em 0 0; }
+.premier-choix { box-sizing: border-box; width: calc(100% - 2em); max-width: 23em; border: 0; border-radius: 12px;
+                 padding: 1.2em 1.1em 1em; background: #fff; color: #1d1d1d; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+                 font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.4; }
+.premier-choix[open] { position: fixed; inset: 0; margin: auto; height: fit-content; z-index: 100; }
+.premier-choix::backdrop { background: rgba(21, 40, 74, .55); }
+.premier-choix h2 { border: 0; margin: 0 0 .2em; padding: 0; font-size: 1.15em; color: #15284a; text-align: center; }
+.premier-choix p { margin: .3em 0 .8em; text-align: center; color: #555; }
+.premier-choix .options { display: grid; gap: .5em; }
+.premier-choix .options button { display: flex; justify-content: space-between; align-items: baseline; gap: .8em;
+                 font: inherit; text-align: left; cursor: pointer; padding: .7em .9em; border: 1px solid #c9bfa6;
+                 border-radius: 8px; background: #fff; color: #15284a; }
+.premier-choix .options button:hover, .premier-choix .options button:focus-visible { border-color: #15284a;
+                 background: #eef1f7; }
+.premier-choix .ex { color: #666; font-size: .88em; }
+.premier-choix .ex[lang=he] { font-family: "SiddurHebrew", "Noto Serif Hebrew", serif; font-size: 1.2em; color: #5a4a1d; }
+.premier-choix .discret { margin: .9em 0 0; }
+/* Réglages de la page : ville et horaires de Chabbat. */
 .reglages-jour { scroll-margin-top: 6em; }
 .reglages-jour[hidden] { display: none; }
 .reglages-jour label, .reglages-jour .etiquette { display: block; font-weight: 600; font-size: .9em; margin: .7em 0 .25em; }
 .reglages-jour input[type=search], .reglages-jour select { box-sizing: border-box; width: 100%; font: inherit;
               padding: .45em .6em; border: 1px solid #c9bfa6; border-radius: 6px; background: #fff; color: #1d1d1d; }
-.reglages-jour .resultats li button, .reglages-jour .villes button, .reglages-jour .segments button,
-.reglages-jour .actions button { font: inherit; font-size: .88em; cursor: pointer; border: 1px solid #c9bfa6;
+.reglages-jour .resultats li button, .reglages-jour .villes button, .reglages-jour .actions button { font: inherit; font-size: .88em; cursor: pointer; border: 1px solid #c9bfa6;
               border-radius: 1em; background: #fff; color: #15284a; padding: .25em .75em; }
 .reglages-jour .resultats { margin: .3em 0; }
 .reglages-jour .resultats li button { display: block; width: 100%; text-align: left; border-radius: 6px; margin: .2em 0; }
-.reglages-jour .villes, .reglages-jour .segments { display: flex; flex-wrap: wrap; gap: .35em; margin: .4em 0; }
-.reglages-jour button[aria-pressed="true"] { border-color: #15284a; background: #eef1f7; box-shadow: inset 0 0 0 1px #15284a; }
+.reglages-jour .villes { display: flex; flex-wrap: wrap; gap: .35em; margin: .4em 0; }
+.reglages-jour .villes button[aria-pressed="true"] { border-color: #15284a; background: #eef1f7; box-shadow: inset 0 0 0 1px #15284a; }
 .reglages-jour .actions { display: flex; justify-content: space-between; gap: .5em; margin-top: 1em; }
 .reglages-jour .actions .ok { background: #15284a; color: #f1e4bf; border-color: #15284a; }
 .reglages-jour .etat { font-size: .82em; color: #666; min-height: 1.2em; margin: .2em 0; }
@@ -147,6 +173,7 @@ AUJOURDHUI_JS = r'''"use strict";
   const CIBLES = JSON.parse(document.getElementById("cibles").textContent);
   const HEBCAL = "https://www.hebcal.com/";
   const GEO = "https://geocoding-api.open-meteo.com/v1/search";
+  const GEO_INVERSE = "https://api.bigdatacloud.net/data/reverse-geocode-client";
   const CLE = "siddour-jour", CLE_CACHE = "siddour-jour-cache";
   const PARIS = { nom: "Paris", pays: "France", cc: "FR", lat: 48.85341, lon: 2.3488, tz: "Europe/Paris" };
   const VILLES = [PARIS,
@@ -535,6 +562,45 @@ AUJOURDHUI_JS = r'''"use strict";
     fetes(donnees, aujourdhui);
   }
   actualiser(true);
+
+  // -- Édition du siddour : demandée à la première visite, modifiable dans « Prières du jour » --
+  const choix = $(".choix-edition");
+  const majEdition = () => {
+    const m = edition();
+    $(".bouton-edition").textContent = EDITIONS[m] + " ▾";
+    $(".bouton-edition").setAttribute("aria-label", "Édition du siddour : " + EDITIONS[m] + ". Changer");
+    choix.querySelectorAll("[data-edition]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.edition === m)));
+  };
+  const choisirEdition = (m) => {
+    reglages.edition = EDITIONS[m] ? m : "bilingue";
+    enregistrer(); majEdition();
+    const maintenant = new Date();
+    prieres(donnees, jourIso(maintenant), maintenant);
+  };
+  majEdition();
+  $(".bouton-edition").addEventListener("click", (e) => {
+    choix.hidden = !choix.hidden;
+    e.currentTarget.setAttribute("aria-expanded", String(!choix.hidden));
+  });
+  choix.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-edition]");
+    if (!b) return;
+    choisirEdition(b.dataset.edition);
+    choix.hidden = true; $(".bouton-edition").setAttribute("aria-expanded", "false");
+  });
+  const accueil = $(".premier-choix");
+  if (!reglages.edition) {
+    // Une seule fois : le choix (ou « Bilingue » si la fenêtre est fermée) est enregistré.
+    const fermer = () => { if (accueil.open && accueil.close) accueil.close(); accueil.removeAttribute("open"); accueil.hidden = true; };
+    accueil.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-edition]");
+      if (b) { choisirEdition(b.dataset.edition); fermer(); }
+    });
+    accueil.addEventListener("cancel", () => { choisirEdition("bilingue"); });
+    accueil.hidden = false;
+    if (accueil.showModal) accueil.showModal(); else accueil.setAttribute("open", "");
+  }
+
   setInterval(() => actualiser(false), 60 * 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) actualiser(false); });
   addEventListener("online", () => { if (!donnees) actualiser(true); });
@@ -548,7 +614,6 @@ AUJOURDHUI_JS = r'''"use strict";
     $(".lieu-choisi").textContent = l.nom + (l.pays ? ", " + l.pays : "");
     panneau.querySelectorAll(".villes button").forEach((b, i) =>
       b.setAttribute("aria-pressed", String(VILLES[i].lat === l.lat && VILLES[i].lon === l.lon)));
-    panneau.querySelectorAll(".segments button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.edition === (brouillon.edition || "bilingue"))));
     $("#reglage-bougies").value = brouillon.bougies || "";
     $("#reglage-sortie").value = brouillon.sortie || "";
   };
@@ -564,10 +629,6 @@ AUJOURDHUI_JS = r'''"use strict";
     if (!b) return;
     brouillon.lieu = VILLES[[...b.parentNode.children].indexOf(b)];
     remplir();
-  });
-  $(".segments").addEventListener("click", (e) => {
-    const b = e.target.closest("button");
-    if (b) { brouillon.edition = b.dataset.edition; remplir(); }
   });
   const etat = $(".reglages-jour .etat");
   let resultats = [], minuteur = 0;
@@ -593,15 +654,46 @@ AUJOURDHUI_JS = r'''"use strict";
     brouillon.lieu = { nom: v.name, pays: v.country || "", cc: v.country_code || "", lat: v.latitude, lon: v.longitude, tz: v.timezone };
     $(".resultats").innerHTML = ""; $("#reglage-ville").value = ""; remplir();
   });
-  $(".position").addEventListener("click", () => {
+  // Position de l'appareil. Sur iPhone, l'autorisation du site ne suffit pas : le Service de
+  // localisation doit aussi être permis à Safari (sinon refus immédiat, code 1).
+  const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const localiser = (precis) => new Promise((ok, ko) => navigator.geolocation.getCurrentPosition(ok, ko,
+    { enableHighAccuracy: precis, timeout: precis ? 30000 : 15000, maximumAge: precis ? 0 : 600e3 }));
+  async function nommer(lat, lon) {
+    try {
+      const arret = new AbortController(); setTimeout(() => arret.abort(), 8000);
+      const r = await fetch(GEO_INVERSE + "?localityLanguage=fr&latitude=" + lat + "&longitude=" + lon,
+        { signal: arret.signal }).then((x) => x.json());
+      let pays = r.countryName || "";
+      try { pays = new Intl.DisplayNames(["fr"], { type: "region" }).of(r.countryCode) || pays; } catch (e) {}
+      return { nom: r.city || r.locality || "", pays, cc: r.countryCode || "" };
+    } catch (e) { return { nom: "", pays: "", cc: "" }; }
+  }
+  $(".position").addEventListener("click", async () => {
     if (!navigator.geolocation) { etat.textContent = "Position indisponible sur cet appareil."; return; }
+    if (!window.isSecureContext) { etat.textContent = "La position demande une adresse sécurisée (https)."; return; }
     etat.textContent = "Localisation…";
-    navigator.geolocation.getCurrentPosition((p) => {
-      const tzLocal = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      brouillon.lieu = { nom: "Ma position", pays: "", cc: tzLocal === "Asia/Jerusalem" ? "IL" : "",
-        lat: Math.round(p.coords.latitude * 1e4) / 1e4, lon: Math.round(p.coords.longitude * 1e4) / 1e4, tz: tzLocal };
-      etat.textContent = ""; remplir();
-    }, () => { etat.textContent = "Position refusée ou indisponible."; }, { timeout: 15000, maximumAge: 3600e3 });
+    let p = null;
+    try { p = await localiser(false); } catch (e) {
+      // Code 1 : refus. Codes 2 et 3 (introuvable, délai dépassé) : nouvel essai avec le GPS.
+      if (e.code !== 1) { etat.textContent = "Localisation… (précise)"; try { p = await localiser(true); } catch (e2) { e = e2; } }
+      if (!p) {
+        etat.textContent = e.code === 1
+          ? "Position refusée. " + (iOS ? "Sur iPhone : Réglages › Confidentialité et sécurité › Service de localisation"
+            + " › Sites Safari (ou Safari) › « Lorsque l’app est active ». Sinon, choisir la ville ci-dessus."
+            : "Autoriser la position pour ce site dans le navigateur, ou choisir la ville ci-dessus.")
+          : e.code === 3 ? "La position met trop de temps à venir. Réessayer, ou choisir la ville ci-dessus."
+          : "Position introuvable pour le moment. Réessayer, ou choisir la ville ci-dessus.";
+        return;
+      }
+    }
+    const lat = Math.round(p.coords.latitude * 1e4) / 1e4, lon = Math.round(p.coords.longitude * 1e4) / 1e4;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    etat.textContent = "Position trouvée, recherche du nom de la ville…";
+    const n = await nommer(lat, lon);
+    brouillon.lieu = { nom: n.nom || "Ma position", pays: n.pays, cc: n.cc || (tz === "Asia/Jerusalem" ? "IL" : ""), lat, lon, tz };
+    remplir();
+    etat.textContent = "📍 " + brouillon.lieu.nom + (n.pays ? ", " + n.pays : "") + " : appuyer sur Enregistrer.";
   });
   $("#reglage-bougies").addEventListener("change", (e) => { brouillon.bougies = e.target.value; });
   $("#reglage-sortie").addEventListener("change", (e) => { brouillon.sortie = e.target.value; });
@@ -631,8 +723,8 @@ def corps(cibles: dict[str, str], couverture: str, sous_titre: str) -> str:
         '<ul class="puces" hidden></ul>'
         '<p class="installer-ios" hidden>Sur iPhone ou iPad, pour installer le siddour comme une application : '
         'bouton <b>Partager</b>, puis <b>Sur l’écran d’accueil</b>.</p>'
-        '<section class="carte reglages-jour" id="reglages-jour" hidden aria-label="Réglages">'
-        '<h2>Réglages</h2>'
+        '<section class="carte reglages-jour" id="reglages-jour" hidden aria-label="Ville et horaires">'
+        '<h2>Ville et horaires</h2>'
         '<span class="etiquette">Ville : <span class="lieu-choisi"></span></span>'
         '<div class="villes"></div>'
         '<label for="reglage-ville">Autre ville</label>'
@@ -646,13 +738,16 @@ def corps(cibles: dict[str, str], couverture: str, sous_titre: str) -> str:
         '<label for="reglage-sortie">Sortie de Chabbat et des fêtes</label>'
         '<select id="reglage-sortie"><option value="">Tombée de la nuit (3 étoiles)</option>'
         '<option value="72">Rabbénou Tam (72 min après le coucher du soleil)</option></select>'
-        '<span class="etiquette">Édition du siddour ouverte par les liens</span>'
-        '<div class="segments">' + editions + '</div>'
         '<div class="actions"><button type="button" class="annuler">Annuler</button>'
         '<button type="button" class="ok">Enregistrer</button></div>'
         '<p class="discret">Les réglages restent sur cet appareil.</p>'
         '</section>'
-        '<section class="carte" id="prieres"><h2>Prières du jour</h2><ul class="prieres"></ul>'
+        '<section class="carte" id="prieres"><h2>Prières du jour <small>'
+        '<button type="button" class="lien bouton-edition" aria-expanded="false" aria-controls="choix-edition">'
+        'Bilingue ▾</button></small></h2>'
+        '<div class="choix-edition" id="choix-edition" hidden><p>Ouvrir les prières dans l’édition :</p>'
+        '<div class="segments">' + editions + '</div></div>'
+        '<ul class="prieres"></ul>'
         '<div class="raccourcis"></div></section>'
         '<p class="etat-donnees discret" hidden>Horaires indisponibles : vérifier la connexion.</p>'
         '<section class="carte" id="horaires"><h2>Horaires du jour</h2><ol class="zmanim"></ol>'
@@ -662,6 +757,12 @@ def corps(cibles: dict[str, str], couverture: str, sous_titre: str) -> str:
         '<section class="carte" id="fetes"><h2>Prochaines fêtes et jeûnes</h2><ul class="fetes"></ul></section>'
         '<a class="vers-livres" href="livres.html"><img src="' + couverture + '" alt="" width="52" height="78">'
         '<span><b>Le siddour : lire en ligne ou télécharger</b><small>' + html.escape(sous_titre) + '</small></span></a>'
+        '<dialog class="premier-choix" aria-labelledby="premier-choix-titre" hidden>'
+        '<h2 id="premier-choix-titre">Bienvenue</h2><p>Comment lire les prières ?</p><div class="options">'
+        '<button type="button" data-edition="hebreu"><b>Hébreu</b><span class="ex" lang="he" dir="rtl">בָּרוּךְ אַתָּה</span></button>'
+        '<button type="button" data-edition="phonetique"><b>Phonétique</b><span class="ex">Baroukh ata</span></button>'
+        '<button type="button" data-edition="bilingue"><b>Bilingue</b><span class="ex">hébreu puis phonétique</span></button>'
+        '</div><p class="discret">Modifiable ensuite à côté de « Prières du jour ».</p></dialog>'
         '<noscript><p>Activer JavaScript pour afficher la date hébraïque et les horaires du jour.</p></noscript>'
         '</div>'
         '<script type="application/json" id="cibles">' + json.dumps(cibles, ensure_ascii=False) + '</script>'

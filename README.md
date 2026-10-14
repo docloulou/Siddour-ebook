@@ -155,12 +155,15 @@ L’accueil montre la journée du lecteur, comme un calendrier de synagogue :
 
 Les horaires et le calendrier viennent de l’[API de Hebcal.com](https://www.hebcal.com/home/developer-apis) (licence CC BY 4.0). La date hébraïque est calculée par le navigateur, même sans connexion.
 
+À la première visite, une fenêtre demande une seule fois l’édition à ouvrir par les liens : hébreu, phonétique ou bilingue. Si on la ferme sans choisir, l’édition bilingue est retenue. On change ensuite d’édition par le petit bouton à droite du titre **Prières du jour**.
+
 Le lien **Changer de ville** ouvre les réglages :
 
-- la ville, choisie parmi une liste ou cherchée par son nom (géocodage d’[Open-Meteo](https://open-meteo.com)) ou par la position de l’appareil ;
+- la ville, choisie parmi une liste, cherchée par son nom (géocodage d’[Open-Meteo](https://open-meteo.com)) ou trouvée par la position de l’appareil (nom de la ville par [BigDataCloud](https://www.bigdatacloud.com)) ;
 - l’allumage des bougies : 18 minutes avant le coucher du soleil par défaut, 40 à Jérusalem ;
-- la sortie de Chabbat : tombée de la nuit ou Rabbénou Tam ;
-- l’édition ouverte par les liens.
+- la sortie de Chabbat : tombée de la nuit ou Rabbénou Tam.
+
+Sur iPhone, autoriser le site ne suffit pas toujours : le Service de localisation doit aussi être permis à Safari (Réglages › Confidentialité et sécurité › Service de localisation › Sites Safari). En cas de refus, la page l’indique.
 
 Pour Israël, le calendrier suit l’usage israélien (un seul jour de fête). Les réglages et la dernière réponse de Hebcal sont gardés dans le stockage du navigateur (`localStorage`), ce qui permet un affichage hors connexion. La page et son script sont dans `siddour/aujourdhui.py`.
 
@@ -200,7 +203,7 @@ python3 -m siddour.icones
 - la lecture hors connexion ;
 - la mise à jour automatique après une nouvelle révision ;
 - l’aide affichée sur iPhone ;
-- la page « Aujourd’hui » (liens vers le siddour, réglages gardés) et les livres en 2 × 2 sur iPhone ;
+- la page « Aujourd’hui » (édition demandée une seule fois, liens vers le siddour, réglages gardés) et les livres en 2 × 2 sur iPhone ;
 - la barre des sections qui suit le défilement et les réglages d’affichage gardés d’une page à l’autre.
 
 Les contrôles dans le navigateur demandent Playwright (`pip install playwright`).
