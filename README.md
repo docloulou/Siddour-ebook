@@ -22,6 +22,8 @@ source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
+Pillow sert à recompresser les couvertures en JPEG ; sans lui, le PNG d’origine est intégré tel quel.
+
 Sous Windows, activer l’environnement avec `.venv\Scripts\Activate.ps1` dans PowerShell, puis utiliser `python` si `python3` n’est pas disponible.
 
 ## Régénérer les livres
@@ -74,6 +76,12 @@ Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
 - `data/consignes_locales.csv` : consigne dont le sens dépend du passage (section Sefaria et numéro de paragraphe), par exemple un « אומרים » qui désigne l’officiant.
 
 Une consigne absente de ces tables bloque la génération et est listée, pour qu’aucun hébreu non traduit n’apparaisse dans les livres.
+
+### Contenu de chaque EPUB
+
+Couverture (`assets/covers/siddour_<mode>.png`), sommaire sur deux colonnes, introduction, page « À propos de cette édition » (sources, licences, conventions), puis les 26 chapitres. Le texte de l’introduction et les métadonnées sont dans `siddour/edition.py`.
+
+Métadonnées : titre, identifiant, langues (hébreu et français), auteur et éditeur, date, description, sujets, source Sefaria, droits et licences, série « Siddour séfarade pour liseuse » avec le numéro de l’édition (EPUB 3 et Calibre), couverture, date de modification et informations d’accessibilité. Les trois livres passent EPUBCheck 5.1 sans erreur.
 
 ### Conventions de mise en page
 

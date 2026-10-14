@@ -1,6 +1,6 @@
 """Plan de l'ebook : chapitres et sections, reliés aux textes de Sefaria.
 
-Index calqué sur celui du Sidour Torah-Box (rite séfarade).
+Index des prières du rite séfarade (Edot HaMizrah).
 
 - "quotidien": True  -> inclus avec --quotidien (prières de la journée)
 - ref : chemin dans le Siddur Edot HaMizrach ; une ref qui commence par "@"
@@ -126,7 +126,7 @@ PLAN = [
      "sections": [("Zéved habat", "Shabbat Shacharit, Zeved HaBat")]},
 ]
 
-# Entrées de l'index Torah-Box sans équivalent dans le Siddur Edot HaMizrach de Sefaria
+# Entrées souhaitables sans équivalent dans le Siddur Edot HaMizrach de Sefaria
 # (à compléter par d'autres sources libres si besoin) :
 #   Seli'hot (Eloul), Téhilim (livre entier : "@Psalms N|..." si besoin), Téfilot diverses,
 #   Iguérèt haRamban, Kivré tsadikim, Tikoun Hocha'ana Rabba, Hatarat nédarim,

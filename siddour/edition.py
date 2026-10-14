@@ -23,12 +23,53 @@ EDITION_NOTES = {
 }
 
 
+COVERS = ROOT / 'assets' / 'covers'
+SERIES = 'Siddour séfarade pour liseuse'
+SERIES_POSITION = {'hebreu': '1', 'phonetique': '2', 'bilingue': '3'}
+DESCRIPTION = {
+    'hebreu': 'Siddour complet du rite séfarade (Edot HaMizrah), textes en hébreu vocalisé, '
+              'consignes en français : prières de la semaine, Chabbat, fêtes, jeûnes, '
+              'bénédictions et cycle de la vie.',
+    'phonetique': 'Siddour complet du rite séfarade (Edot HaMizrah) en phonétique française, '
+                  'consignes en français : prières de la semaine, Chabbat, fêtes, jeûnes, '
+                  'bénédictions et cycle de la vie.',
+    'bilingue': 'Siddour complet du rite séfarade (Edot HaMizrah) : chaque passage en hébreu '
+                'vocalisé suivi de sa phonétique, consignes en français : prières de la semaine, '
+                'Chabbat, fêtes, jeûnes, bénédictions et cycle de la vie.',
+}
+FONT_NOTICE = 'La police Noto Serif Hebrew est distribuée sous SIL Open Font License 1.1.'
+SUBJECTS = ['Prière juive', 'Siddour', 'Rite séfarade', 'Edot HaMizrah', 'Liturgie', 'Judaïsme']
+
+INTRODUCTION = (
+    '<h1>Introduction</h1>'
+    '<p class="intro">Ce siddour est né d’un souhait simple : que chacun puisse avoir sur soi, '
+    'où qu’il soit, un livre de prière aussi complet que possible. Le voyageur loin de sa '
+    'synagogue, celui qui part pour quelques jours et ne peut emporter ses livres, celui qui '
+    'veut retrouver la prière d’un moment ou d’une fête sans chercher dans plusieurs volumes : '
+    'tous trouveront ici, dans une liseuse ou un téléphone, les offices de la semaine, '
+    'du Chabbat et des fêtes, les jeûnes, les bénédictions et les étapes de la vie.</p>'
+    '<p class="intro">Le texte suit le rite séfarade (Edot HaMizrah). Les consignes sont '
+    'traduites en français et placées juste avant le passage qu’elles concernent, pour que '
+    'l’on sache toujours quoi dire, quand et comment, même sans connaître l’hébreu des '
+    'rubriques. Trois éditions sont proposées : en hébreu, en phonétique, ou chaque passage '
+    'en hébreu suivi de sa phonétique.</p>'
+    '<p class="intro">Il faut pourtant le dire avec humilité : un fichier n’est qu’un '
+    'compagnon de route. Depuis des siècles, c’est le livre de papier, copié, imprimé, '
+    'relié, usé par les mains des pères puis transmis aux enfants, qui a porté les paroles '
+    'saintes à travers les âges et les générations. Aucun écran ne remplace ce siddour '
+    'de famille dont les pages gardent la trace de ceux qui ont prié avant nous. Ce livre '
+    'numérique ne prétend pas prendre sa place ; il voudrait seulement accompagner ceux qui '
+    'sont loin de lui, jusqu’à ce qu’ils le retrouvent.</p>'
+    '<p class="intro fin">Que nos prières soient agréées.</p>'
+)
+
+
 def make_credits(title: str, licences: set[str], mode: str) -> str:
     items = ''.join('<li>' + html.escape(x) + '</li>' for x in sorted(licences))
     note = ('La phonétique est générée automatiquement selon des conventions françaises '
             'et peut comporter des approximations. ') if mode != 'hebreu' else ''
-    return ('<h1>' + html.escape(title) + '</h1>'
-            '<p class="credits">' + EDITION_NOTES[mode] + '</p>'
+    return ('<h1>À propos de cette édition</h1>'
+            '<p class="credits"><b>' + html.escape(title) + '.</b> ' + EDITION_NOTES[mode] + '</p>'
             '<p class="credits">Rite séfarade (Edot HaMizrah). Textes issus de Sefaria.</p>'
             '<ul class="credits">' + items + '</ul>'
             '<p class="credits">' + note
@@ -36,9 +77,86 @@ def make_credits(title: str, licences: set[str], mode: str) -> str:
               'Une variante brève est donnée entre crochets, dans la phrase, avec sa condition. '
               'Les ajouts plus longs sont encadrés et proposent un lien vers la suite de la prière. '
               'Les sources et les précisions techniques sont en notes numérotées, en fin de section. '
-              'Les consignes françaises traduisent cette source et ses usages, notamment ceux du Ben Ich ’Haï. '
-              'Le classement reprend le plan fourni, inspiré de l’index du Sidour Torah-Box ; '
-              'il ne constitue pas une reproduction de cette édition.</p>')
+              'Les consignes françaises traduisent cette source et ses usages, notamment ceux du Ben Ich ’Haï.</p>'
+            + ('<p class="credits">' + FONT_NOTICE + '</p>' if mode != 'phonetique' else ''))
+
+
+def make_contents(chapters: list[tuple[str, str, list[str]]]) -> str:
+    """Sommaire sur deux colonnes : chapitres numérotés et leurs sections (liens)."""
+    blocks = []
+    for ci, (fr, he, hrefs_titles) in enumerate(chapters, 1):
+        first = hrefs_titles[0][0]
+        head = ('<p class="sommaire-chap"><a href="' + first + '"><span class="sommaire-num">'
+                + str(ci) + '</span> ' + html.escape(fr) + '</a>'
+                + (' <span class="sommaire-he" lang="he" dir="rtl">' + html.escape(he) + '</span>' if he else '')
+                + '</p>')
+        subs = ''
+        if len(hrefs_titles) > 1:
+            subs = '<ul class="sommaire-sections">' + ''.join(
+                '<li><a href="' + href + '">' + html.escape(t) + '</a></li>' for href, t in hrefs_titles) + '</ul>'
+        blocks.append('<div class="sommaire-bloc">' + head + subs + '</div>')
+    return '<h1>Sommaire</h1><div class="sommaire">' + ''.join(blocks) + '</div>'
+
+
+def cover_image(mode: str) -> tuple[str, bytes] | None:
+    """Couverture de l'édition, recompressée en JPEG si Pillow est disponible."""
+    path = COVERS / ('siddour_' + mode + '.png')
+    if not path.exists():
+        return None
+    try:
+        import io
+        from PIL import Image
+    except ImportError:
+        return 'images/cover.png', path.read_bytes()
+    with Image.open(path) as im:
+        im = im.convert('RGB')
+        if im.height > 1600:
+            im = im.resize((round(im.width * 1600 / im.height), 1600), Image.LANCZOS)
+        out = io.BytesIO()
+        im.save(out, 'JPEG', quality=88, optimize=True, progressive=True)
+    return 'images/cover.jpg', out.getvalue()
+
+
+def cover_page(cover: tuple[str, bytes], title: str) -> str:
+    """Image en pleine page, proportions conservées, quelle que soit la taille de l'écran."""
+    return ('<div class="couverture"><img src="../' + cover[0] + '" alt="'
+            + html.escape(title, quote=True) + '"/></div>')
+
+
+def add_metadata(book, title: str, mode: str, licences: set[str]) -> None:
+    from datetime import date
+    book.set_identifier('urn:siddour-ebook:edot-hamizrah:' + mode)
+    book.set_title(title)
+    # Langue principale du texte récité, puis celle des consignes.
+    main, other = ('he', 'fr') if mode == 'hebreu' else ('fr', 'he')
+    book.set_language(main)
+    book.add_metadata('DC', 'language', other)
+    book.add_author('Siddour-ebook', uid='creator')
+    book.add_metadata('DC', 'contributor', 'Sefaria (textes sources)')
+    book.add_metadata('DC', 'publisher', 'Siddour-ebook')
+    book.add_metadata('DC', 'date', date.today().isoformat())
+    book.add_metadata('DC', 'description', DESCRIPTION[mode])
+    for subject in SUBJECTS:
+        book.add_metadata('DC', 'subject', subject)
+    book.add_metadata('DC', 'source', 'Sefaria, Siddur Edot HaMizrach (https://www.sefaria.org)')
+    book.add_metadata('DC', 'rights', 'Textes : Sefaria. ' + ' ; '.join(sorted(licences))
+                      + ('. ' + FONT_NOTICE if mode != 'phonetique' else '.'))
+    book.add_metadata(None, 'meta', SERIES, {'property': 'belongs-to-collection', 'id': 'collection'})
+    book.add_metadata(None, 'meta', 'series', {'refines': '#collection', 'property': 'collection-type'})
+    book.add_metadata(None, 'meta', SERIES_POSITION[mode], {'refines': '#collection', 'property': 'group-position'})
+    # Calibre lit encore ces métadonnées EPUB 2 pour la série.
+    book.add_prefix('schema', 'http://schema.org/')
+    book.add_metadata(None, 'meta', '', {'name': 'calibre:series', 'content': SERIES})
+    book.add_metadata(None, 'meta', '', {'name': 'calibre:series_index', 'content': SERIES_POSITION[mode]})
+    # Accessibilité (schema.org), lue par les catalogues et certaines liseuses.
+    for prop, value in [('schema:accessMode', 'textual'), ('schema:accessModeSufficient', 'textual'),
+                        ('schema:accessibilityFeature', 'structuralNavigation'),
+                        ('schema:accessibilityFeature', 'tableOfContents'),
+                        ('schema:accessibilityHazard', 'none'),
+                        ('schema:accessibilitySummary',
+                         'Texte structuré par chapitres et sections, avec sommaire, '
+                         'notes liées et langue hébraïque balisée.')]:
+        book.add_metadata(None, 'meta', value, {'property': prop})
 
 
 def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consignes,
@@ -61,10 +179,10 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
     from ebooklib import epub
     title = 'Siddour séfarade : ' + TITLES[mode]
     book = epub.EpubBook()
-    book.set_identifier('siddour-edot-hamizrah-liseuse-' + mode)
-    book.set_title(title)
-    book.set_language('he' if mode == 'hebreu' else 'fr')
-    book.add_metadata('DC', 'rights', 'Textes : Sefaria. ' + ' ; '.join(sorted(licences)))
+    add_metadata(book, title, mode, licences)
+    cover = cover_image(mode)
+    if cover:
+        book.set_cover(cover[0], cover[1], create_page=False)
     css = CSS
     if font and mode != 'phonetique':
         media = 'font/ttf' if font.suffix.lower() == '.ttf' else 'font/otf'
@@ -84,24 +202,41 @@ def build_edition(plan: list[dict], sources: dict, mode: str, consignes: Consign
         book.add_item(p)
         return p
 
-    credits = make_credits(title, licences, mode)
-    intro = page('presentation', 'Présentation', credits)
-    spine = ['nav', intro]
-    toc = [intro]
-    htmlparts = [credits]
+    # Les pages de chapitre sont créées d'abord pour connaître leurs liens ;
+    # l'ordre de lecture est fixé ensuite par la spine.
+    chapter_pages = []
     for ci, (chap_title, sections) in enumerate(chapters, 1):
         pages = []
-        htmlparts.append('<h1>' + html.escape(chap_title) + '</h1>')
         for si, (section_title, content) in enumerate(sections, 1):
             heading = '<h1>' + html.escape(chap_title) + '</h1>' if si == 1 else ''
             pages.append(page(f'c{ci:02d}_{si:02d}', section_title, heading + content))
-            htmlparts.append(content)
+        chapter_pages.append(pages)
+    contents = make_contents([
+        (chap['fr'], chap.get('he', ''), [(p.file_name.removeprefix('text/'), p.title) for p in pages])
+        for chap, pages in zip(plan, chapter_pages)])
+    credits = make_credits(title, licences, mode)
+    sommaire = page('sommaire', 'Sommaire', contents)
+    intro = page('introduction', 'Introduction', INTRODUCTION)
+    about = page('a-propos', 'À propos de cette édition', credits)
+    spine = [sommaire, intro, about]
+    guide = []
+    if cover:
+        couverture = page('couverture', 'Couverture', cover_page(cover, title))
+        spine.insert(0, couverture)
+        guide.append({'type': 'cover', 'title': 'Couverture', 'href': couverture.file_name})
+    toc = [intro, about]
+    htmlparts = [contents, INTRODUCTION, credits]
+    for (chap_title, sections), pages in zip(chapters, chapter_pages):
+        htmlparts.append('<h1>' + html.escape(chap_title) + '</h1>')
+        htmlparts.extend(content for _, content in sections)
         spine.extend(pages)
         toc.append((epub.Section(chap_title, href=pages[0].file_name), pages))
+    book.guide = guide + [{'type': 'toc', 'title': 'Sommaire', 'href': sommaire.file_name},
+                  {'type': 'text', 'title': 'Introduction', 'href': intro.file_name}]
     book.spine = spine
     book.toc = toc
     book.add_item(epub.EpubNcx())
-    book.add_item(epub.EpubNav())
+    book.add_item(epub.EpubNav())  # navigation de la liseuse (hors ordre de lecture)
 
     path = Path(sortie) / ('siddour_liseuse_' + mode + '.epub')
     temp = path.with_suffix('.epub.tmp')

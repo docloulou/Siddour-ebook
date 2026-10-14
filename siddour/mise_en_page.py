@@ -238,8 +238,8 @@ class ReadingLayout:
 
     def box(self, body: str, label: str = '', rule: str = '', resume: str = '', css: str = 'addition') -> str:
         head = '<p class="card-head">' + self.with_citations(label) + '</p>' if label else ''
-        rule = '<p class="card-rule">' + rule + '</p>' if rule else ''
-        end = '<p class="resume"><a href="' + html.escape(resume) + '">Suite de la prière</a></p>' if resume else ''
+        rule = '<p class="card-rule" lang="fr" dir="ltr">' + rule + '</p>' if rule else ''
+        end = '<p class="resume" lang="fr" dir="ltr"><a href="' + html.escape(resume) + '">Suite de la prière</a></p>' if resume else ''
         return '<div class="' + css + '">' + head + rule + body + end + '</div>'
 
     def block(self, i: int, content: str) -> str:
