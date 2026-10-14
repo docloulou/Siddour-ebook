@@ -1,0 +1,67 @@
+"""Ligne de commande : python3 siddour_ebook_liseuse.py --help"""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+from .consignes import Consignes
+from .edition import FONT_PATH, build_edition
+from .phonetique import translit
+from .plan import PLAN, select_plan
+from .sources import fetch_section, validate_source
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description='Siddour séfarade complet : hébreu, phonétique et bilingue, '
+                                             'avec consignes françaises intégrées.')
+    ap.add_argument('--mode', choices=['tous', 'hebreu', 'phonetique', 'bilingue'], default='tous',
+                    help='tous génère les trois ePub (défaut)')
+    ap.add_argument('--sortie', default='.', help='dossier de sortie')
+    ap.add_argument('--cache', default=str(ROOT / 'cache'))
+    ap.add_argument('--offline', action='store_true', help='utiliser uniquement les textes déjà mis en cache')
+    ap.add_argument('--quotidien', action='store_true',
+                    help='limiter aux chapitres quotidiens ; tout le plan est inclus par défaut')
+    ap.add_argument('--complet', action='store_true', help='inclure tout le plan (déjà le comportement par défaut)')
+    ap.add_argument('--chapitres', help='identifiants de chapitres séparés par des virgules')
+    ap.add_argument('--liste', action='store_true')
+    ap.add_argument('--rubriques', help='CSV facultatif de corrections : hebreu;francais')
+    ap.add_argument('--font', help='police .ttf ou .otf à embarquer')
+    ap.add_argument('--html', action='store_true', help='produire aussi les versions HTML pour relecture')
+    ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
+    args = ap.parse_args(argv)
+
+    if args.liste:
+        for c in PLAN:
+            print(c['id'], ':', c['fr'], '(' + str(len(c['sections'])) + ' sections)')
+        return
+    if args.translit:
+        print(translit(args.translit))
+        return
+
+    consignes = Consignes()
+    consignes.load_overrides(args.rubriques)
+    plan = select_plan(args.chapitres, complet=not args.quotidien)
+    sources: dict[str, dict] = {}
+    failures = []
+    for chap in plan:
+        for _, ref in chap['sections']:
+            try:
+                data = fetch_section(ref, Path(args.cache), args.offline)
+                validate_source(data, ref)
+                sources[ref] = data
+            except Exception as exc:
+                failures.append(ref + ' : ' + str(exc))
+    if failures:
+        raise SystemExit('Aucun ePub produit, pour éviter une édition incomplète :\n' + '\n'.join(failures))
+
+    font = Path(args.font) if args.font else FONT_PATH
+    sortie = Path(args.sortie)
+    sortie.mkdir(parents=True, exist_ok=True)
+    modes = ['hebreu', 'phonetique', 'bilingue'] if args.mode == 'tous' else [args.mode]
+    for mode in modes:
+        build_edition(plan, sources, mode, consignes, sortie, font, args.html)
+    cp = sortie / 'rubriques_traduites.csv'
+    consignes.export(cp)
+    print('CSV :', cp)
