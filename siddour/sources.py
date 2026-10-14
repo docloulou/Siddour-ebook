@@ -119,6 +119,11 @@ def fetch_section(ref: str, cache_dir: Path, offline: bool, book: str = BOOK) ->
 _YOM_TOV = (loose('ביום') + r' <small><small>(ביום טוב[^<]*)</small> (' + loose('טוב') + r')</small> ('
             + loose('מקרא') + ' ' + loose('קדש') + ' ' + loose('הזה') + r'\.?)')
 _YOM_TOV_FIX = r'<small><small>\1</small> בְּיוֹם \2 \3</small>'
+# Oubli de « טל ומטר » : les incipits cités dans la consigne étaient vocalisés.
+_TAL_OUMATAR = ('<small>אם שכח לומר ' + loose('טל') + ' ' + loose('ומטר') + ' [^<]*</small>',
+                '<small>אם שכח לומר טל ומטר ונזכר קודם שהתחיל תקע אומרו במקום שנזכר. התחיל לומר תקע יאמרנה '
+                'בשומע תפלה. ואם לא נזכר בש"ת יאמרנה בין ש"ת לרצה. שכח גם שם אם נזכר קודם שעקר רגליו חוזר '
+                'לברכת השנים ויתחיל ברך עלינו ויתפלל כסדר. ואם עקר רגליו חוזר לראש התפלה.</small>')
 
 SOURCE_FIXES = {
     # Lettre parasite à la fin de l'invitation au zimoun.
@@ -129,6 +134,9 @@ SOURCE_FIXES = {
     # Consigne de lecture : « אלהיכם » se lie à « אמת » ; les deux mots cités étaient vocalisés.
     'Weekday, Shacharit, Blessings of the Shema': [('<small>יש לצרף [^<]*</small>', '<small>יש לצרף אלהיכם לאמת</small>')],
     'Weekday, Maariv, Blessings of the Shema': [('<small>יש לצרף [^<]*</small>', '<small>יש לצרף אלהיכם לאמת</small>')],
+    'Weekday, Shacharit, Amidah': [_TAL_OUMATAR],
+    'Weekday, Minchah, Amida': [_TAL_OUMATAR],
+    'Weekday, Maariv, Amidah': [_TAL_OUMATAR],
     # Titre de la seconde seli'ha, sur quatre lignes.
     'Festivals, Selichot, Fast of Gedalia': [('^סליחות לימי התשובה<br>.*<br>סליחה ב$', '<big>סליחה ב</big>')],
     # Textes à réciter que Daat donne sans voyelles.
