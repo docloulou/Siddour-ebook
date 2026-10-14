@@ -1,0 +1,111 @@
+{
+ "versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "ברוך אתה יי אלהינו מלך העולם, אשר יצר אתכם בדין, וזן וכלכל אתכם בדין, והמית אתכם בדין, ויודע מספר כלכם בדין, והוא עתיד להחיותכם ולקים אתכם בדין. ברוך אתה ד', מחיה המתים."
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Ashkenaz",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Ashkenaz, Berachot, Asher Yatzar Etchem Badin",
+ "heRef": "סידור אשכנז, ברכות, מחיה המתים",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Ashkenaz, Berachot, Asher Yatzar Etchem Badin",
+ "heSectionRef": "סידור אשכנז, ברכות, מחיה המתים",
+ "firstAvailableSectionRef": "Siddur Ashkenaz, Berachot, Asher Yatzar Etchem Badin",
+ "isSpanning": false,
+ "next": "Siddur Ashkenaz, Berachot, Tefillat HaDerech",
+ "prev": "Siddur Ashkenaz, Berachot, Birkhot Hamitzvot",
+ "title": "Siddur Ashkenaz, Berachot, Asher Yatzar Etchem Badin",
+ "book": "Siddur Ashkenaz, Berachot, Asher Yatzar Etchem Badin",
+ "heTitle": "סידור אשכנז, ברכות, מחיה המתים",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Ashkenaz",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור אשכנז",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  1
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Asher Yatzar Etchem Badin",
+  "אשר יצר אתכם בדין"
+ ],
+ "heTitleVariants": [
+  "מחיה המתים"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}

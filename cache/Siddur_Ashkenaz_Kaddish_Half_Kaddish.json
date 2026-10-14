@@ -1,0 +1,113 @@
+{
+ "versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "<em><small>חזן:</small></em> יִתְגַּדַּל וְיִתְקַדַּשׁ שְׁמֵהּ רַבָּא. [<em><small>קהל:</small></em> אמן] <br> בְּעָלְמָא דִּי בְרָא כִרְעוּתֵהּ וְיַמְלִיךְ מַלְכוּתֵהּ בְּחַיֵּיכון וּבְיומֵיכון וּבְחַיֵּי דְכָל בֵּית יִשרָאֵל בַּעֲגָלָא וּבִזְמַן קָרִיב, וְאִמְרוּ אָמֵן: [<em><small>קהל:</small></em> אמן] <br> <em><small>קהל וחזן:</small></em> יְהֵא שְׁמֵהּ רַבָּא מְבָרַךְ לְעָלַם וּלְעָלְמֵי עָלְמַיָּא: <br> יִתְבָּרַךְ וְיִשְׁתַּבַּח וְיִתְפָּאַר וְיִתְרומַם וְיִתְנַשּא וְיִתְהַדָּר וְיִתְעַלֶּה וְיִתְהַלָּל שְׁמֵהּ דְּקֻדְשָׁא. בְּרִיךְ הוּא. [<em><small>קהל:</small></em> בריך הוא:] <br> לְעֵלָּא <em><small>בעשי\"ת לְעֵלָּא לְעֵלָּא מִכָּל</small></em> מִן כָּל בִּרְכָתָא וְשִׁירָתָא תֻּשְׁבְּחָתָא וְנֶחֱמָתָא דַּאֲמִירָן בְּעָלְמָא. וְאִמְרוּ אָמֵן: [<em><small>קהל:</small></em> אמן]"
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Ashkenaz",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Ashkenaz, Kaddish, Half Kaddish",
+ "heRef": "סידור אשכנז, קדיש, חצי קדיש",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Ashkenaz, Kaddish, Half Kaddish",
+ "heSectionRef": "סידור אשכנז, קדיש, חצי קדיש",
+ "firstAvailableSectionRef": "Siddur Ashkenaz, Kaddish, Half Kaddish",
+ "isSpanning": false,
+ "next": "Siddur Ashkenaz, Kaddish, Mourner's Kaddish",
+ "prev": "Siddur Ashkenaz, Berachot, Havinenu",
+ "title": "Siddur Ashkenaz, Kaddish, Half Kaddish",
+ "book": "Siddur Ashkenaz, Kaddish, Half Kaddish",
+ "heTitle": "סידור אשכנז, קדיש, חצי קדיש",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Ashkenaz",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור אשכנז",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  1
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Kaddish Le'ela",
+  "Reader's Kaddish",
+  "Half Kaddish"
+ ],
+ "heTitleVariants": [
+  "חצי קדיש",
+  "קדיש לעלא"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}
