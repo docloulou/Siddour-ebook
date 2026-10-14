@@ -10,7 +10,7 @@ GitHub Pages, puis contrôle :
    - la mise en cache « Garder hors ligne » et la lecture serveur arrêté ;
    - la mise à jour automatique après une nouvelle révision ;
    - l'aide à l'installation et la page « Aujourd'hui » sur iPhone, les livres en 2 × 2 ;
-   - la barre des sections qui suit le défilement et les réglages d'affichage.
+   - la barre des sections qui suit le défilement, les réglages d'affichage et les onglets du bandeau.
 Le script s'arrête à la première erreur.
 """
 from __future__ import annotations
@@ -134,23 +134,28 @@ def verifier_pwa(dossier: Path) -> None:
             print('✓ iPhone : aide à l’installation, écrans de démarrage déclarés')
 
             # Sans réponse de Hebcal (hors connexion), les prières du jour s'affichent quand même.
+            # À la première visite, l'édition est demandée une seule fois.
             iphone.route('https://www.hebcal.com/**', lambda route: route.abort())
             pg.reload()
+            pg.wait_for_selector('.premier-choix[open]')
+            pg.click('.premier-choix [data-edition=phonetique]')
             pg.wait_for_selector('.prieres li a.nom')
-            assert pg.get_attribute('.prieres li a.nom', 'href').startswith('bilingue/')
+            assert pg.get_attribute('.prieres li a.nom', 'href').startswith('phonetique/')
             assert pg.is_visible('.etat-donnees') and pg.is_visible('.vers-livres')
             pg.click('[data-ouvrir-reglages]')
             pg.click('.villes button:has-text("Jérusalem")')
-            pg.click('.segments [data-edition=hebreu]')
             pg.click('.reglages-jour .ok')
-            pg.reload()  # ville et édition gardées sur l'appareil
+            pg.click('.bouton-edition')  # choix discret de l'édition, dans « Prières du jour »
+            pg.click('.choix-edition [data-edition=hebreu]')
+            pg.reload()  # ville et édition gardées sur l'appareil, sans redemander l'édition
             pg.wait_for_selector('.prieres li a.nom')
+            assert not pg.is_visible('.premier-choix'), 'édition redemandée'
             assert pg.text_content('.lieu .ville').startswith('Jérusalem')
             assert pg.get_attribute('.prieres li a.nom', 'href').startswith('hebreu/')
             pg.goto(BASE + 'livres.html')
             hauts = pg.eval_on_selector_all('.editions > *', 'l => l.map(x => Math.round(x.getBoundingClientRect().top))')
             assert len(hauts) == 4 and hauts[0] == hauts[1] < hauts[2] == hauts[3], f'livres hors 2 × 2 : {hauts}'
-            print('✓ accueil « Aujourd’hui » (réglages gardés), livres en 2 × 2')
+            print('✓ accueil « Aujourd’hui » (édition demandée une fois, réglages gardés), livres en 2 × 2')
 
             pg.goto(BASE + 'bilingue/' + sections[3])  # section longue : la page défile
             pg.evaluate('scrollTo(0, document.body.scrollHeight)')
@@ -165,7 +170,11 @@ def verifier_pwa(dossier: Path) -> None:
             assert pg.evaluate('document.documentElement.dataset.fond') == 'papier'
             pg.select_option('.barre select', index=0)
             pg.wait_for_url('**/' + sections[0].split('#')[0])
-            print('✓ barre des sections collée, réglages d’affichage gardés')
+            pg.click('.site-head .menu a[href$="hebreu/' + sections[0].split('#')[0] + '"]')  # même page, autre édition
+            pg.wait_for_url('**/hebreu/' + sections[0].split('#')[0])
+            pg.click('.site-head .menu a.jour')
+            pg.wait_for_url(BASE + 'index.html')
+            print('✓ barre des sections collée, réglages d’affichage gardés, onglets vers la même page et le jour')
     finally:
         arreter(srv)
 

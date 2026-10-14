@@ -7,7 +7,8 @@ Les fichiers produits sont versionnés dans assets/pwa/ ; le site les recopie te
 - icone-maskable.png : variante qu'Android peut rogner en cercle ;
 - ios/demarrage-<largeur>x<hauteur>.jpg : écrans affichés par iOS à l'ouverture de l'application
   (en portrait pour l'iPhone, dans les deux sens pour l'iPad) ;
-- papier.jpg : texture raccordable du fond « Papier ancien » proposé au lecteur.
+- papier.jpg : texture raccordable du fond « Papier ancien » proposé au lecteur ;
+- logo.png : le mot סידור doré de la couverture, en haut de chaque page.
 """
 from __future__ import annotations
 
@@ -87,6 +88,19 @@ def texte_dore():
     return zone
 
 
+def logo(hauteur: int = 120):
+    """Le mot סידור doré de la couverture, détouré, pour le bandeau du site (affiché à 1/3 de sa taille)."""
+    from PIL import Image
+    with Image.open(COUVERTURE) as im:
+        im = im.convert('RGB')
+        k = im.width / 400
+        zone = im.crop(tuple(int(v * k) for v in (70, 82, 340, 182)))
+    zone.putalpha(zone.convert('L').point(lambda v: max(0, min(255, (v - 70) * 3))))
+    zone = zone.crop(zone.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox())
+    zone = zone.resize((zone.width * hauteur // zone.height, hauteur), Image.LANCZOS)
+    return zone.quantize(64, method=Image.Quantize.FASTOCTREE)  # 64 couleurs : 8 Ko au lieu de 45
+
+
 def adouci(image, marge: int, flou: int):
     """Masque qui fond les bords de l'image dans l'arrière-plan."""
     from PIL import Image, ImageDraw, ImageFilter
@@ -132,6 +146,7 @@ def generer(dossier: Path = DOSSIER) -> list[Path]:
             ecran.paste(image, ((W - lw2) // 2, (H - lh2) // 2), image)
             enregistrer(ecran, demarrage(lw, lh, r))
     enregistrer(papier(), 'papier.jpg')
+    enregistrer(logo(), 'logo.png')
     return faits
 
 

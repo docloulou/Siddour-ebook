@@ -106,7 +106,7 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 
 ### Site de lecture en ligne
 
-Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
+Les trois éditions se lisent aussi dans un navigateur. En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets : un petit calendrier pour revenir à la page du jour, puis Livres, Hébreu, Phonétique, Bilingue. Depuis une page de prière, les onglets Hébreu, Phonétique et Bilingue ouvrent la même page dans l’autre édition. Le site comprend :
 
 - une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
 - une page **Livres** (`livres.html`) avec les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions et une case d’aide à la lecture sur liseuse tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
@@ -130,7 +130,7 @@ Pour le référencement, chaque page porte :
 - les balises Open Graph et Twitter pour les aperçus de partage ;
 - des données structurées schema.org : `Book` avec ses trois éditions, `BreadcrumbList` et `WebPage`.
 
-Le site fournit aussi `sitemap.xml` et `robots.txt`.
+Le site fournit aussi `sitemap.xml` et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`).
 
 Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools :
 
@@ -155,12 +155,15 @@ L’accueil montre la journée du lecteur, comme un calendrier de synagogue :
 
 Les horaires et le calendrier viennent de l’[API de Hebcal.com](https://www.hebcal.com/home/developer-apis) (licence CC BY 4.0). La date hébraïque est calculée par le navigateur, même sans connexion.
 
+À la première visite, une fenêtre demande une seule fois l’édition à ouvrir par les liens : hébreu, phonétique ou bilingue. Si on la ferme sans choisir, l’édition bilingue est retenue. On change ensuite d’édition par le petit bouton à droite du titre **Prières du jour**.
+
 Le lien **Changer de ville** ouvre les réglages :
 
-- la ville, choisie parmi une liste ou cherchée par son nom (géocodage d’[Open-Meteo](https://open-meteo.com)) ou par la position de l’appareil ;
+- la ville, choisie parmi une liste, cherchée par son nom (géocodage d’[Open-Meteo](https://open-meteo.com)) ou trouvée par la position de l’appareil (nom de la ville par [BigDataCloud](https://www.bigdatacloud.com)) ;
 - l’allumage des bougies : 18 minutes avant le coucher du soleil par défaut, 40 à Jérusalem ;
-- la sortie de Chabbat : tombée de la nuit ou Rabbénou Tam ;
-- l’édition ouverte par les liens.
+- la sortie de Chabbat : tombée de la nuit ou Rabbénou Tam.
+
+Sur iPhone, autoriser le site ne suffit pas toujours : le Service de localisation doit aussi être permis à Safari (Réglages › Confidentialité et sécurité › Service de localisation › Sites Safari). En cas de refus, la page l’indique.
 
 Pour Israël, le calendrier suit l’usage israélien (un seul jour de fête). Les réglages et la dernière réponse de Hebcal sont gardés dans le stockage du navigateur (`localStorage`), ce qui permet un affichage hors connexion. La page et son script sont dans `siddour/aujourdhui.py`.
 
@@ -184,7 +187,7 @@ Il télécharge alors la nouvelle version, éditions gardées hors ligne compris
 **iPhone et iPad.** Safari n’a pas de bouton d’installation. Sur iPhone et iPad, la page d’accueil explique donc la marche à suivre : **Partager › Sur l’écran d’accueil**. Une fois installée, l’application :
 
 - s’ouvre en plein écran, avec son icône et son nom court « Siddour » ;
-- place la barre d’état sur le bandeau bleu, sans masquer le contenu sous l’encoche ;
+- place la barre d’état sur une bande bleue fixe, sans masquer le contenu sous l’encoche ; la barre des sections se colle juste dessous ;
 - affiche un écran de démarrage (le titre doré sur fond bleu), adapté à chaque modèle d’iPhone et d’iPad.
 
 **Icônes et écrans de démarrage.** Ils sont tirés de la couverture et rangés dans `assets/pwa/`. Après un changement de couverture, les régénérer avec :
@@ -200,7 +203,7 @@ python3 -m siddour.icones
 - la lecture hors connexion ;
 - la mise à jour automatique après une nouvelle révision ;
 - l’aide affichée sur iPhone ;
-- la page « Aujourd’hui » (liens vers le siddour, réglages gardés) et les livres en 2 × 2 sur iPhone ;
+- la page « Aujourd’hui » (édition demandée une seule fois, liens vers le siddour, réglages gardés) et les livres en 2 × 2 sur iPhone ;
 - la barre des sections qui suit le défilement et les réglages d’affichage gardés d’une page à l’autre.
 
 Les contrôles dans le navigateur demandent Playwright (`pip install playwright`).
@@ -238,7 +241,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
-| `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture ; texture du fond « papier ancien ». |
+| `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis la couverture ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site et de la PWA. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |
 
