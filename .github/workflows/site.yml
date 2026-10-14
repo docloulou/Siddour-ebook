@@ -3,10 +3,19 @@
 # nouvelle édition : le site garde le numéro et la date de la dernière
 # publication, et propose au téléchargement les EPUB de cette publication (dist/).
 # Aucune release, aucune étiquette ; l'application installée se met à jour.
+#
+# Essai d'une branche : lancer l'action depuis main en donnant le nom de la
+# branche. Le site publié devient celui de la branche (application installée
+# comprise) ; relancer l'action sans branche pour revenir à main.
 name: Republier le site
 
 on:
   workflow_dispatch:
+    inputs:
+      branche:
+        description: "Branche à publier pour l'essayer (vide = la branche choisie ci-dessus, en principe main)"
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -23,6 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.branche || github.ref }}
           fetch-depth: 0
 
       - name: Préparer GitHub Pages

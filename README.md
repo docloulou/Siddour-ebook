@@ -102,6 +102,8 @@ Pour une correction qui ne touche que le site (mise en page, liens…), lancer l
 
 Une correction du texte des livres demande en revanche une nouvelle révision, pour que les EPUB et le site restent identiques.
 
+**Essayer une branche.** Dans **Republier le site**, le champ « Branche à publier » publie le site d’une autre branche, par exemple avant de fusionner une pull request. Garder `main` dans « Use workflow from ». Le site en ligne devient alors celui de la branche, application installée comprise. Pour revenir à `main`, relancer l’action avec le champ vide.
+
 ### Site de lecture en ligne
 
 Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
