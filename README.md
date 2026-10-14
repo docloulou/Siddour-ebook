@@ -130,7 +130,7 @@ Pour le référencement, chaque page porte :
 - les balises Open Graph et Twitter pour les aperçus de partage ;
 - des données structurées schema.org : `Book` avec ses trois éditions, `BreadcrumbList` et `WebPage`.
 
-Le site fournit aussi `sitemap.xml` et `robots.txt`.
+Le site fournit aussi `sitemap.xml` et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`).
 
 Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools :
 

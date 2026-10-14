@@ -38,6 +38,11 @@ EDITIONS = {'hebreu': 'Édition hébraïque', 'phonetique': 'Édition phonétiqu
             'bilingue': 'Édition hébreu et phonétique'}
 TEXTE = {'hebreu': 'en hébreu vocalisé', 'phonetique': 'en phonétique',
          'bilingue': 'en hébreu vocalisé et en phonétique'}
+# Robots des IA, autorisés explicitement dans robots.txt (en plus de « User-agent: * »).
+ROBOTS_IA = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User',
+             'anthropic-ai', 'Google-Extended', 'GoogleOther', 'Applebot-Extended', 'PerplexityBot',
+             'Perplexity-User', 'Meta-ExternalAgent', 'Meta-ExternalFetcher', 'CCBot', 'Amazonbot',
+             'Bytespider', 'cohere-ai', 'MistralAI-User', 'DuckAssistBot', 'YouBot', 'Diffbot']
 MENU = {'hebreu': 'Hébreu', 'phonetique': 'Phonétique', 'bilingue': 'Bilingue'}
 EPUB_NAME = 'siddour_liseuse_{}.epub'
 DEPOT = 'docloulou/Siddour-ebook'  # dépôt GitHub, lien « Contribuer » du pied de page
@@ -702,7 +707,13 @@ class Site:
             shutil.copytree(RACINE, self.dossier, dirs_exist_ok=True)
 
     def index_moteurs(self) -> None:
-        lignes = ['User-agent: *', 'Allow: /']
+        # Tout est permis, aux moteurs de recherche comme aux robots des IA (entraînement, recherche,
+        # réponses) : les textes sont libres et le siddour gagne à être trouvé. Les robots d'IA sont
+        # nommés pour que l'autorisation reste explicite, même pour ceux qui ne lisent que leur nom.
+        lignes = ['# Siddour séfarade : exploration et réutilisation permises à tous, IA comprises.',
+                  '# Textes : Sefaria (licences indiquées sur chaque édition).', '',
+                  'User-agent: *', 'Allow: /', '']
+        lignes += ['User-agent: ' + robot for robot in ROBOTS_IA] + ['Allow: /', '']
         if self.url:
             jour = self.version.jour.isoformat()
             urls = ''.join('<url><loc>' + html.escape(self.abs(p.removesuffix('index.html'))) + '</loc><lastmod>'
