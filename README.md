@@ -106,7 +106,8 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 
 Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
 
-- une page d’accueil avec les couvertures, la lecture en ligne et les EPUB à télécharger ;
+- une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
+- une page **Livres** (`livres.html`) avec les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions et une case d’aide à la lecture sur liseuse tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
 - un sommaire par édition ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
 - une barre qui reste en haut de l’écran pendant la lecture : section précédente ‹, liste de toutes les sections rangées par chapitre pour y aller directement, section suivante ›. Sur les pages sans sections (accueil…), c’est le bandeau du site qui reste en haut.
@@ -136,11 +137,36 @@ Pour un meilleur référencement, déclarer le site et son sitemap dans Google S
 
 Tout fichier placé dans `assets/racine/` est copié tel quel à la racine du site (fichiers de validation, etc.).
 
+#### Page d’accueil « Aujourd’hui »
+
+L’accueil montre la journée du lecteur, comme un calendrier de synagogue :
+
+- la date grégorienne et la date hébraïque, en français et en hébreu, avec la date hébraïque qui commence au coucher du soleil ;
+- les **prières du jour** :
+  - Cha’harit, Min’ha et Arvit, avec un lien vers la page du siddour. La prière du moment est mise en évidence.
+  - Les ajouts du jour : lundi et jeudi, Roch ’Hodech, ’Hol hamoèd, ’Hanouka, Pourim, jeûnes, compte de l’omer, Havdala.
+  - Le Chabbat et les jours de fête, dont les offices ne sont pas encore dans ce siddour, sont signalés sans lien.
+- les **horaires du jour** (zmanim), chacun avec une ligne d’explication : aube, téfilines, Chéma, Amida, ’hatsot, Min’ha, coucher du soleil, tombée de la nuit, milieu de la nuit ;
+- les horaires du prochain **Chabbat** (allumage, sortie, paracha) ;
+- les **prochaines fêtes et jeûnes**, avec leurs heures d’allumage, de début et de fin ;
+- un lien bien visible vers la page des livres.
+
+Les horaires et le calendrier viennent de l’[API de Hebcal.com](https://www.hebcal.com/home/developer-apis) (licence CC BY 4.0). La date hébraïque est calculée par le navigateur, même sans connexion.
+
+Le lien **Changer de ville** ouvre les réglages :
+
+- la ville, choisie parmi une liste ou cherchée par son nom (géocodage d’[Open-Meteo](https://open-meteo.com)) ou par la position de l’appareil ;
+- l’allumage des bougies : 18 minutes avant le coucher du soleil par défaut, 40 à Jérusalem ;
+- la sortie de Chabbat : tombée de la nuit ou Rabbénou Tam ;
+- l’édition ouverte par les liens.
+
+Pour Israël, le calendrier suit l’usage israélien (un seul jour de fête). Les réglages et la dernière réponse de Hebcal sont gardés dans le stockage du navigateur (`localStorage`), ce qui permet un affichage hors connexion. La page et son script sont dans `siddour/aujourdhui.py`.
+
 #### Application installable (PWA)
 
 Le site s’installe comme une application, sur téléphone comme sur ordinateur : menu du navigateur, puis **Installer l’application** ou **Ajouter à l’écran d’accueil**. Il fournit pour cela :
 
-- un manifeste (`manifest.webmanifest`) avec les icônes, dont une version adaptée aux icônes rondes d’Android, et un raccourci vers chaque édition ;
+- un manifeste (`manifest.webmanifest`) avec les icônes, dont une version adaptée aux icônes rondes d’Android, et un raccourci vers chaque édition et vers la page des livres ;
 - un service worker (`sw.js`).
 
 **Lecture hors connexion.** Les pages déjà lues restent disponibles. Le bouton **Garder hors ligne**, sur le sommaire de chaque édition, enregistre toute l’édition sur l’appareil.
@@ -172,6 +198,7 @@ python3 -m siddour.icones
 - la lecture hors connexion ;
 - la mise à jour automatique après une nouvelle révision ;
 - l’aide affichée sur iPhone ;
+- la page « Aujourd’hui » (liens vers le siddour, réglages gardés) et les livres en 2 × 2 sur iPhone ;
 - la barre des sections qui suit le défilement et les réglages d’affichage gardés d’une page à l’autre.
 
 Les contrôles dans le navigateur demandent Playwright (`pip install playwright`).
@@ -208,6 +235,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
+| `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
 | `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site et de la PWA. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |

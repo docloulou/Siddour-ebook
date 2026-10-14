@@ -1,7 +1,8 @@
 """Site web de lecture (GitHub Pages) : les trois éditions consultables dans un navigateur.
 
 Arborescence produite :
-    index.html                         accueil : couvertures, lecture en ligne, téléchargements
+    index.html                         accueil « Aujourd'hui » : date hébraïque, prières et horaires du jour
+    livres.html                        les éditions : lecture en ligne, téléchargements EPUB
     <mode>/index.html                  sommaire de l'édition
     <mode>/<chapitre>/<section>.html   une page par section, comme dans l'EPUB
     telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html
@@ -24,6 +25,7 @@ from pathlib import Path
 
 from .edition import (CSS, DESCRIPTION, FONT_PATH, INTRODUCTION, SUBJECTS, TITLES, Livre, cover_image,
                       exposants, make_contents, make_credits)
+from .aujourdhui import AUJOURDHUI_CSS, AUJOURDHUI_JS, CIBLES, LIVRES_CSS, corps
 from .icones import DOSSIER as ICONES, generer as generer_icones, liens_demarrage
 from .version import date_fr
 
@@ -423,6 +425,8 @@ class Site:
         self.version = livres[0].version
         self.pages: list[str] = []  # chemins pour le sitemap
         self.par_edition: dict[str, list[str]] = {}  # pages à garder hors ligne
+        # Chemin de chaque section dans une édition : (chapitre, titre) ; (chapitre, None) = début du chapitre.
+        self.chemins: dict[tuple[str, str | None], str] = {}
 
     def abs(self, path: str) -> str:
         return self.url + path if self.url else ''
@@ -433,9 +437,9 @@ class Site:
         root = '../' * path.count('/') if index or not self.url else self.url
         canonical = self.abs(path.removesuffix('index.html'))
         image = self.abs(image or 'assets/covers/' + (mode or 'bilingue') + '.jpg')
-        nav = ''.join(
-            '<a href="' + root + m + '/index.html"' + (' class="actif"' if m == mode else '') + '>'
-            + MENU[m] + '</a>' for m in (lv.mode for lv in self.livres))
+        nav = ('<a href="' + root + 'livres.html"' + (' class="actif"' if path == 'livres.html' else '') + '>Livres</a>'
+               + ''.join('<a href="' + root + m + '/index.html"' + (' class="actif"' if m == mode else '') + '>'
+                         + MENU[m] + '</a>' for m in (lv.mode for lv in self.livres)))
         head = [
             '<meta charset="utf-8">',
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
@@ -486,7 +490,7 @@ class Site:
                 + haut + '<main>\n' + body + '\n</main>\n'
                 '<footer class="site-foot"><p>' + exposants(self.version.complet) + ' · Textes issus de '
                 '<a href="https://www.sefaria.org">Sefaria</a> · '
-                '<a href="' + root + 'index.html#telecharger">Télécharger les EPUB</a></p>'
+                '<a href="' + root + 'livres.html#telecharger">Télécharger les EPUB</a></p>'
                 '<p>Projet libre et collaboratif : <a href="' + self.github + '">contribuer sur GitHub</a> · '
                 '<a href="' + self.github + '/issues">signaler une erreur</a>'
                 '<span class="contact" data-c="' + CONTACT + '" hidden> · <a href="#">nous écrire</a></span></p></footer>\n'
@@ -537,6 +541,8 @@ class Site:
                     nom += '-2'
                 vus.add(nom)
                 liens.append((chap['id'] + '/' + nom + '.html', title, content))
+                self.chemins.setdefault((chap['id'], title), liens[-1][0])
+            self.chemins.setdefault((chap['id'], None), liens[0][0])
             chapitres.append((chap, liens))
         sequence = [(chap, href, title, content) for chap, liens in chapitres for href, title, content in liens]
         premiere = {chap['id']: liens[0][0] for chap, liens in chapitres}
@@ -604,29 +610,44 @@ class Site:
                        mode=mode, jsonld=jsonld, barre=barre)
 
     def accueil(self) -> None:
-        cartes = ''.join(
-            '<div class="edition-carte"><a href="' + lv.mode + '/index.html"><img src="assets/covers/' + lv.mode
-            + '.jpg" alt="Couverture : ' + html.escape(lv.title, quote=True) + '" width="400" height="600"'
-            + (' loading="lazy"' if i else '') + '></a><h2>' + EDITIONS[lv.mode] + '</h2>'
-            '<p>Textes ' + TEXTE[lv.mode] + '</p>'
-            '<p><a class="bouton" href="' + lv.mode + '/index.html">Lire en ligne</a></p>'
-            '<p><a href="telecharger/' + EPUB_NAME.format(lv.mode) + '" download>Télécharger l’EPUB</a></p></div>'
-            for i, lv in enumerate(self.livres))
-        body = ('<h1>' + SITE_NAME + '</h1><p class="accroche">' + TAGLINE + '</p>'
-                '<p class="installer-ios" hidden>Sur iPhone ou iPad, pour installer le siddour comme une '
-                'application : bouton <b>Partager</b>, puis <b>Sur l’écran d’accueil</b>.</p>'
-                '<section id="telecharger"><div class="editions">' + cartes + '</div>'
-                '<p class="accroche">' + exposants(self.version.complet) + '</p></section>'
-                + web_html(INTRODUCTION).replace('<h1>', '<h2>').replace('</h1>', '</h2>'))
+        # Accueil : la journée (date hébraïque, prières, horaires), puis un lien vers les livres.
+        cibles = {cle: self.chemins[cible] for cle, cible in CIBLES.items() if cible in self.chemins}
+        couverture = next((p for p in ('assets/covers/' + m + '.jpg' for m in ('bilingue', *(lv.mode for lv in self.livres)))
+                           if (self.dossier / p).exists()), 'assets/icone-192.png')
+        sous_titre = ' · '.join(MENU[lv.mode] for lv in self.livres) + ' — en ligne ou en EPUB pour liseuse'
         site = {'@context': 'https://schema.org', '@type': 'WebSite', 'name': SITE_NAME,
                 'description': SITE_DESCRIPTION, 'inLanguage': 'fr'}
         if self.url:
             site['url'] = self.url
+        self.write('index.html', SITE_NAME + ' — prières et horaires du jour, siddour en ligne',
+                   'Date hébraïque, prières du jour et horaires (zmanim) pour sa ville, Chabbat, fêtes et jeûnes à venir. '
+                   'Puis le siddour séfarade complet à lire en ligne ou en EPUB.',
+                   corps(cibles, couverture, sous_titre) + '<script src="assets/aujourdhui.js" defer></script>',
+                   jsonld=[site])
+
+        # Livres : les éditions en 2 × 2 sur téléphone, avec une case d'aide à la lecture sur liseuse.
+        cartes = ''.join(
+            '<div class="edition-carte"><a href="' + lv.mode + '/index.html"><img src="assets/covers/' + lv.mode
+            + '.jpg" alt="Couverture : ' + html.escape(lv.title, quote=True) + '" width="400" height="600"'
+            + (' loading="lazy"' if i > 1 else '') + '></a><h2>' + MENU[lv.mode] + '</h2>'
+            '<p class="texte">Textes ' + TEXTE[lv.mode] + '</p>'
+            '<p class="actions"><a class="bouton" href="' + lv.mode + '/index.html">Lire</a>'
+            '<a class="bouton second" href="telecharger/' + EPUB_NAME.format(lv.mode) + '" download>EPUB</a></p></div>'
+            for i, lv in enumerate(self.livres))
+        aide = ('<div class="edition-carte carte-aide"><h2>Sur liseuse</h2>'
+                '<p>Télécharger l’EPUB, puis l’ouvrir sur sa liseuse (Kobo, PocketBook, Apple Livres…) '
+                'ou l’envoyer sur Kindle avec « Send to Kindle ».</p>'
+                '<p>Les éditions se lisent aussi en ligne, même sans connexion une fois gardées.</p>'
+                '<p><a href="' + self.github + '/releases">Toutes les versions</a></p></div>')
+        body = ('<h1>' + SITE_NAME + '</h1><p class="accroche">' + TAGLINE + '</p>'
+                '<section id="telecharger"><div class="editions">' + cartes + aide + '</div>'
+                '<p class="accroche">' + exposants(self.version.complet) + '</p></section>'
+                + web_html(INTRODUCTION).replace('<h1>', '<h2>').replace('</h1>', '</h2>'))
         work = {'@context': 'https://schema.org', '@type': 'Book', 'name': 'Siddour séfarade (Edot HaMizrah)',
                 'description': SITE_DESCRIPTION, 'genre': 'Liturgie juive', 'keywords': ', '.join(SUBJECTS),
                 'workExample': [self.book_jsonld(lv) for lv in self.livres]}
-        self.write('index.html', SITE_NAME + ' — siddour Edot HaMizrah en ligne et en EPUB',
-                   SITE_DESCRIPTION, body, jsonld=[site, work])
+        self.write('livres.html', 'Le siddour en ligne et en EPUB — ' + SITE_NAME,
+                   SITE_DESCRIPTION, body, jsonld=[work, self.breadcrumb([(SITE_NAME, ''), ('Livres', 'livres.html')])])
         self.write('404.html', 'Page introuvable — ' + SITE_NAME, SITE_DESCRIPTION,
                    '<h1>Page introuvable</h1><p style="text-align:center">'
                    '<a class="bouton" href="' + (self.url or 'index.html') + '">Retour à l’accueil</a></p>', index=False)
@@ -643,7 +664,8 @@ class Site:
         shutil.copyfile(FONT_PATH, dossier / FONT_PATH.name)
         # Feuille du livre d'abord, puis les règles propres au web qui la complètent.
         font_face, web = WEB_CSS.replace('FONT_URL', FONT_PATH.name).split('\n', 2)[1:]
-        (dossier / 'style.css').write_text(font_face + '\n' + CSS + web, encoding='utf-8')
+        (dossier / 'style.css').write_text(font_face + '\n' + CSS + web + AUJOURDHUI_CSS + LIVRES_CSS, encoding='utf-8')
+        (dossier / 'aujourdhui.js').write_text(AUJOURDHUI_JS, encoding='utf-8')
         for lv in self.livres:
             cover = cover_image(lv.mode)
             if not cover:
@@ -686,7 +708,8 @@ class Site:
             'background_color': '#fbf9f4', 'theme_color': '#15284a', 'categories': ['books', 'education'],
             'icons': liste,
             'shortcuts': [{'name': EDITIONS[lv.mode], 'short_name': MENU[lv.mode], 'url': lv.mode + '/index.html',
-                           'icons': liste[:1]} for lv in self.livres],
+                           'icons': liste[:1]} for lv in self.livres]
+                         + [{'name': 'Les livres', 'short_name': 'Livres', 'url': 'livres.html', 'icons': liste[:1]}],
         }
         (self.dossier / 'manifest.webmanifest').write_text(
             json.dumps(manifest, ensure_ascii=False, indent=1), encoding='utf-8')
@@ -699,8 +722,8 @@ class Site:
         for f in sorted(p for p in self.dossier.rglob('*') if p.is_file()):
             empreinte.update(f.relative_to(self.dossier).as_posix().encode() + b'\0' + f.read_bytes())
         nom = (self.version.tag if self.version.edition else 'travail') + '-' + empreinte.hexdigest()[:12]
-        coquille = (['index.html', 'hors-ligne.html', 'manifest.webmanifest', 'assets/style.css', 'assets/app.js',
-                     'assets/' + FONT_PATH.name]
+        coquille = (['index.html', 'livres.html', 'hors-ligne.html', 'manifest.webmanifest', 'assets/style.css',
+                     'assets/app.js', 'assets/aujourdhui.js', 'assets/' + FONT_PATH.name]
                     + [i['src'] for i in liste] + ['assets/icone-32.png', 'assets/icone-180.png', 'assets/papier.jpg']
                     + [p.relative_to(self.dossier).as_posix() for p in sorted((self.dossier / 'assets' / 'covers').glob('*.jpg'))]
                     + [lv.mode + '/index.html' for lv in self.livres])
