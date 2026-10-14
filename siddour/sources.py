@@ -142,7 +142,10 @@ SOURCE_FIXES = {
     # Textes à réciter que Daat donne sans voyelles.
     'Shabbat, Havdalah': [('^כן תהיה לנו:$', 'כֵּן תִּהְיֶה לָּנוּ:')],
     # Mesure de la 'halla : l'équivalent en grammes manque, il ne reste que l'unité.
-    'Berachot, Birkhot Hamitzvot': [('<small> ?גרם</small> ?', '')],
+    # Les consignes de la 'halla et de la mezouza, sans balise, précèdent le texte à dire.
+    'Berachot, Birkhot Hamitzvot': [('<small> ?גרם</small> ?', ''),
+                                    (r'^(ואחר כך לוקחת דבר מועט ואומרת):[\u00ad-]*\s*', r'<small>\1</small> '),
+                                    ('^(ואחר שיקבענה ינשקנה ויאמר) - ', r'<small>\1</small> ')],
     'Berachot, Asher Yatzar Etchem Badin': [(
         '^ברוך אתה יי .*מחיה המתים\\.$',
         'בָּרוּךְ אַתָּה יְיָ אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם, אֲשֶׁר יָצַר אֶתְכֶם בַּדִּין, וְזָן וְכִלְכֵּל אֶתְכֶם בַּדִּין, '
