@@ -5,7 +5,9 @@
 Fabrique le site dans un dossier temporaire, servi sous /Siddour-ebook/ comme sur
 GitHub Pages, puis contrôle :
 1. les liens internes et les fichiers listés dans le service worker ;
-2. avec Playwright (facultatif : pip install playwright) :
+2. le référencement : titre et description propres à chaque page, un seul h1, canonique,
+   image de partage et données structurées sur les pages du sitemap ;
+3. avec Playwright (facultatif : pip install playwright) :
    - les critères d'installation de Chrome ;
    - la mise en cache « Garder hors ligne » et la lecture serveur arrêté ;
    - la mise à jour automatique après une nouvelle révision ;
@@ -15,6 +17,7 @@ Le script s'arrête à la première erreur.
 """
 from __future__ import annotations
 
+import html
 import json
 import os
 import re
@@ -65,6 +68,37 @@ def verifier_liens(site: Path) -> None:
         for chemin in valeur if isinstance(valeur, list) else sum(valeur.values(), []):
             assert (site / chemin).exists(), f'{nom} : fichier absent {chemin}'
     print(f'✓ {liens} liens internes, fichiers du service worker présents')
+
+
+def verifier_referencement(site: Path) -> None:
+    """Titre et description propres à chaque page, un seul h1, canonique et données structurées
+    sur les pages indexables, qui sont exactement celles du sitemap."""
+    titres, descriptions, indexables = {}, {}, set()
+    for page in site.rglob('*.html'):
+        texte, nom = page.read_text(encoding='utf-8'), page.relative_to(site).as_posix()
+        if '<head>' not in texte:
+            continue  # fichier de validation de la Search Console
+        titre = re.findall(r'<title>(.*?)</title>', texte)
+        description = [html.unescape(d) for d in re.findall(r'<meta name="description" content="([^"]*)"', texte)]
+        assert len(titre) == 1 and len(description) == 1, f'{nom} : titre ou description absent ou en double'
+        assert len(description[0]) <= 160, f'{nom} : description de {len(description[0])} caractères'
+        assert titres.setdefault(titre[0], nom) == nom, f'titre en double : {nom} et {titres[titre[0]]}'
+        assert descriptions.setdefault(description[0], nom) == nom, \
+            f'description en double : {nom} et {descriptions[description[0]]}'
+        assert len(re.findall(r'<h1[ >]', texte)) == 1, f'{nom} : un seul h1 attendu'
+        if 'content="noindex' in texte:
+            assert 'rel="canonical"' not in texte, f'{nom} : canonique sur une page exclue'
+            continue
+        adresse = BASE + re.sub(r'(^|/)index\.html$', r'\1', nom)
+        assert f'<link rel="canonical" href="{adresse}">' in texte, f'{nom} : canonique attendue {adresse}'
+        assert re.search(r'property="og:image" content="https?://', texte), f'{nom} : og:image absente'
+        donnees = re.findall(r'<script type="application/ld\+json">(.*?)</script>', texte, re.S)
+        assert len(donnees) == 1 and json.loads(donnees[0])['@graph'], f'{nom} : données structurées'
+        indexables.add(adresse)
+    sitemap = set(re.findall(r'<loc>([^<]+)</loc>', (site / 'sitemap.xml').read_text(encoding='utf-8')))
+    assert sitemap == indexables, f'sitemap et pages indexables diffèrent : {sorted(sitemap ^ indexables)[:5]}'
+    print(f'✓ {len(titres)} pages : titres et descriptions uniques, un h1, '
+          f'{len(indexables)} pages indexables dans le sitemap')
 
 
 def serveur(dossier: Path) -> subprocess.Popen:
@@ -206,6 +240,7 @@ def main() -> None:
         dossier = Path(tmp)
         fabriquer(dossier, 0, '2026-01-01')
         verifier_liens(dossier / 'www' / 'Siddour-ebook')
+        verifier_referencement(dossier / 'www' / 'Siddour-ebook')
         verifier_pwa(dossier)
 
 

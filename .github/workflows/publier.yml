@@ -129,3 +129,10 @@ jobs:
       - name: Publier sur GitHub Pages
         id: deploiement
         uses: actions/deploy-pages@v4
+
+      # Bing, Yandex… réexplorent aussitôt les pages du sitemap ; un refus ne bloque pas la publication.
+      - uses: actions/checkout@v4
+
+      - name: Signaler les pages aux moteurs (IndexNow)
+        continue-on-error: true
+        run: python3 -m siddour.publication indexnow --site "${{ steps.deploiement.outputs.page_url }}"

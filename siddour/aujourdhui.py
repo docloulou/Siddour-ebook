@@ -107,6 +107,9 @@ AUJOURDHUI_CSS = '''
 .vers-livres span { flex: 1; }
 .vers-livres small { display: block; opacity: .85; }
 .vers-livres::after { content: "›"; font-size: 1.6em; line-height: 1; }
+/* Présentation du siddour, sous le lien vers les livres. */
+.presentation p, .presentation li { font-size: .92em; color: #333; margin: .4em 0; }
+.presentation li b { color: #15284a; }
 /* Choix de l'édition : pastilles du panneau « Prières du jour » et de la première visite. */
 .segments { display: flex; flex-wrap: wrap; gap: .35em; margin: .4em 0; }
 .segments button { font: inherit; font-size: .88em; cursor: pointer; border: 1px solid #c9bfa6; border-radius: 1em;
@@ -736,11 +739,12 @@ AUJOURDHUI_JS = r'''"use strict";
 '''
 
 
-def corps(cibles: dict[str, dict], couverture: str, sous_titre: str) -> str:
+def corps(cibles: dict[str, dict], couverture: str, sous_titre: str, presentation: str = '') -> str:
     """Contenu de la page d'accueil ; le script remplit les cartes au chargement.
 
     cibles : pour chaque rite, {"nom", "prefixe", "modes", "pages"}, où pages associe
     une clé de CIBLES au chemin de la page dans l'édition. Le premier rite est celui par défaut.
+    presentation : texte fixe sous le lien vers les livres, lisible sans script (moteurs de recherche).
     """
     editions = ''.join('<button type="button" data-edition="' + m + '">' + nom + '</button>'
                        for m, nom in (('hebreu', 'Hébreu'), ('phonetique', 'Phonétique'), ('bilingue', 'Bilingue')))
@@ -796,6 +800,7 @@ def corps(cibles: dict[str, dict], couverture: str, sous_titre: str) -> str:
         '<section class="carte" id="fetes"><h2>Prochaines fêtes et jeûnes</h2><ul class="fetes"></ul></section>'
         '<a class="vers-livres" href="livres.html"><img src="' + couverture + '" alt="" width="52" height="78">'
         '<span><b>Le siddour : lire en ligne ou télécharger</b><small>' + html.escape(sous_titre) + '</small></span></a>'
+        + presentation +
         '<dialog class="premier-choix" aria-labelledby="premier-choix-titre" hidden>'
         '<h2 id="premier-choix-titre">Bienvenue</h2>'
         + ('<p>Quel rite suivez-vous ?</p>' + rites if rites else '')

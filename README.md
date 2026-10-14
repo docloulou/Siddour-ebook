@@ -145,17 +145,28 @@ Les six éditions se lisent aussi dans un navigateur. Le rite séfarade est à l
 
 Pour le référencement, chaque page porte :
 
-- un titre et une description propres ;
-- une adresse canonique ;
-- les balises Open Graph et Twitter pour les aperçus de partage ;
-- des données structurées schema.org : `Book` avec ses six éditions, `BreadcrumbList` et `WebPage`.
+- **un titre propre**, le sujet en tête, puis le chapitre et le rite : « Modé ani en hébreu — Bénédictions du matin | Siddour séfarade ». Au-delà de 70 caractères, le chapitre est omis, sauf si le nom de la section revient dans plusieurs chapitres (« Amida en phonétique — Prière du soir | Siddour séfarade ») ;
+- **une description propre**, 160 caractères au plus : la section, son chapitre, l’édition, puis le début du texte de la prière (« Modé ani (Bénédictions du matin) en hébreu, siddour séfarade : « מודה אני לפניך מלך חי וקים… » Consignes en français. »). L’hébreu y est sans voyelles ni cantillation, comme le tape un internaute ;
+- **des mots-clés** (`<meta name="keywords">`) : la section, son chapitre en français et en hébreu, le rite, l’édition, puis siddour, sidour, siddur, livre de prière juif. Google les ignore ; Bing, Yandex et Qwant s’en servent encore un peu ;
+- **un seul titre `h1`** : le nom de l’édition sur le sommaire, celui de la section sur ses pages (le chapitre passe au-dessus, sans changer l’affichage) ;
+- **une adresse canonique**, les liens `prev` / `next` vers les sections voisines et la consigne `robots` qui autorise les grands aperçus. La page 404 et la page hors connexion sont exclues (`noindex`), sans canonique ;
+- **les balises Open Graph et Twitter** : type `book` pour les sommaires, `article` pour les sections, avec l’image, ses dimensions et son texte alternatif. Les éditions montrent leur couverture ; l’accueil et la page des livres, une image de partage au format paysage (`assets/partage.jpg`, 1200 × 630), fabriquée avec le site à partir du logo et de trois couvertures ;
+- **des données structurées schema.org**, en un seul graphe relié par identifiants : `WebSite` et l’éditeur (`Organization`) sur toutes les pages, `CollectionPage` et `Book` avec ses six éditions sur la page des livres, `Book` sur chaque sommaire, `Chapter` rattaché à son `Book` sur chaque section, `AboutPage` pour « À propos », `BreadcrumbList` partout sauf l’accueil.
 
-Le site fournit aussi `sitemap.xml` et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`).
+La police hébraïque est préchargée sur les éditions qui contiennent de l’hébreu. Sur l’accueil, sous le lien vers les livres, un court texte présente le siddour en ligne et mène aux six sommaires.
+
+Le site fournit aussi `sitemap.xml` (avec les images des pages) et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`). Sur une page de projet GitHub (`owner.github.io/depot/`), les robots ne lisent que le `robots.txt` du domaine, pas celui du site : il faut donc déclarer le sitemap soi-même.
 
 Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools :
 
-- **Google Search Console** : propriété de type « Préfixe de l’URL », avec l’adresse du site. Le fichier de validation HTML est dans `assets/racine/`.
+- **Google Search Console** : propriété de type « Préfixe de l’URL », avec l’adresse du site. Le fichier de validation HTML est dans `assets/racine/`. Soumettre ensuite `sitemap.xml` (Sitemaps > Ajouter).
 - **Bing Webmaster Tools** : importer le site depuis Google Search Console. Bing reprend alors la validation et le sitemap.
+
+**IndexNow.** Après chaque déploiement, les actions signalent toutes les pages du sitemap à IndexNow : Bing, Yandex, Seznam ou Naver les réexplorent sans attendre leur prochain passage. La clé (`INDEXNOW`, `siddour/publication.py`) est publiée dans `<clé>.txt` à la racine du site. Un refus n’arrête pas la publication. Pour le faire à la main :
+
+```bash
+python3 -m siddour.publication indexnow --site https://docloulou.github.io/Siddour-ebook/
+```
 
 Tout fichier placé dans `assets/racine/` est copié tel quel à la racine du site (fichiers de validation, etc.).
 
@@ -219,6 +230,7 @@ python3 -m siddour.icones
 **Vérification.** La commande suivante fabrique le site dans un dossier temporaire et contrôle :
 
 - les liens ;
+- le référencement : titre et description propres à chaque page, un seul `h1`, canonique, image de partage et données structurées sur chaque page du sitemap ;
 - l’installabilité selon Chrome ;
 - la lecture hors connexion ;
 - la mise à jour automatique après une nouvelle révision ;
@@ -264,8 +276,8 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
 | `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis le titre commun des couvertures ; texture du fond « papier ancien ». |
-| `outils/verifier_site.py` | Vérification du site et de la PWA. |
-| `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |
+| `outils/verifier_site.py` | Vérification du site, de son référencement et de la PWA. |
+| `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`), dont le signalement IndexNow. |
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
 

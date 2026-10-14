@@ -6,7 +6,7 @@ Arborescence produite :
     <mode>/index.html                  sommaire d'une édition séfarade
     <mode>/<chapitre>/<section>.html   une page par section, comme dans l'EPUB
     ashkenaze/<mode>/...               les éditions ashkénazes, rangées de la même façon
-    telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html
+    telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html, <clé IndexNow>.txt
     manifest.webmanifest, sw.js, hors-ligne.html   application installable (PWA)
 Les ancres internes (notes, « Suite de la prière ») restent propres à chaque page.
 
@@ -22,10 +22,14 @@ import json
 import re
 import shutil
 import unicodedata
+from collections import Counter
 from pathlib import Path
+from urllib.parse import urljoin
 
 from .edition import (CSS, FONT_PATH, TITLES, Livre, cover_image, description, exposants, introduction,
                       make_contents, make_credits)
+from .hebreu import NIKUD_RE
+from .publication import INDEXNOW
 from .rites import Rite
 from .aujourdhui import AUJOURDHUI_CSS, AUJOURDHUI_JS, CIBLES, LIVRES_CSS, corps
 from .icones import DOSSIER as ICONES, generer as generer_icones, liens_demarrage
@@ -33,9 +37,10 @@ from .version import date_fr
 
 SITE_NAME = 'Siddour séfarade et ashkénaze'
 TAGLINE = 'Le livre de prière des rites séfarade (Edot HaMizrah) et ashkénaze, à lire en ligne ou sur liseuse'
-SITE_DESCRIPTION = ('Siddour séfarade (Edot HaMizrah) et ashkénaze à lire en ligne ou à télécharger en EPUB : '
-                    'hébreu vocalisé, phonétique ou les deux, avec les consignes en français. '
-                    'Prières de la semaine, Chabbat, fêtes, jeûnes, bénédictions et cycle de la vie.')
+# Descriptions : 160 caractères au plus, ce que les moteurs affichent sous le titre.
+SITE_DESCRIPTION = ('Siddour séfarade (Edot HaMizrah) et ashkénaze gratuit, à lire en ligne ou en EPUB pour liseuse : '
+                    'hébreu vocalisé, phonétique ou les deux, consignes en français.')
+LIMITE_TITRE, LIMITE_DESCRIPTION = 70, 160
 EDITIONS = {'hebreu': 'Édition hébraïque', 'phonetique': 'Édition phonétique',
             'bilingue': 'Édition hébreu et phonétique'}
 TEXTE = {'hebreu': 'en hébreu vocalisé', 'phonetique': 'en phonétique',
@@ -46,6 +51,14 @@ ROBOTS_IA = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Sea
              'Perplexity-User', 'Meta-ExternalAgent', 'Meta-ExternalFetcher', 'CCBot', 'Amazonbot',
              'Bytespider', 'cohere-ai', 'MistralAI-User', 'DuckAssistBot', 'YouBot', 'Diffbot']
 MENU = {'hebreu': 'Hébreu', 'phonetique': 'Phonétique', 'bilingue': 'Bilingue'}
+# Le texte de l'édition en peu de mots, pour les titres des pages.
+EN = {'hebreu': 'en hébreu', 'phonetique': 'en phonétique', 'bilingue': 'en hébreu et phonétique'}
+# Mots-clés (balise keywords) : Google les ignore, Bing, Yandex ou Qwant s'en servent encore un peu.
+# Les mots communs à toutes les pages, puis ceux de chaque édition ; chaque page y ajoute les siens.
+MOTS_CLES = ('siddour', 'sidour', 'siddur', 'livre de prière juif', 'prière juive')
+MOTS_EDITION = {'hebreu': ('siddour hébreu', 'hébreu vocalisé', 'tefila'),
+                'phonetique': ('siddour phonétique', 'prière en phonétique', 'translittération'),
+                'bilingue': ('siddour bilingue', 'hébreu et phonétique', 'translittération')}
 DEPOT = 'docloulou/Siddour-ebook'  # dépôt GitHub, lien « Contribuer » du pied de page
 # Adresse de contact, à l'envers et en base64 : absente en clair du dépôt comme des pages.
 # Le script de la page la reconstitue seulement quand le lecteur clique.
@@ -142,6 +155,12 @@ html[data-fond="ivoire"] main .addition, html[data-fond="ivoire"] main .choice, 
 html[data-fond="papier"] main .addition, html[data-fond="papier"] main .choice, html[data-fond="papier"] main .role {
   background: rgba(120,90,30,.07); border-color: rgba(120,90,30,.4); }
 .fil { font: .85em sans-serif; color: #666; margin: .6em 0 0; }
+/* Pages de section : le chapitre garde l'aspect d'un grand titre, la section (titre de niveau 1 de la page)
+   celui d'un titre de niveau 2 du livre. Sommaire : « Sommaire » garde l'aspect d'un grand titre. */
+main .titre-chapitre, main h2.sommaire-titre { font-size: 1.4em; font-weight: bold; text-align: center; margin: 1em 0;
+                                              border: 0; padding: 0; }
+main h1.titre-section { font-size: 1.2em; text-align: inherit; margin: .83em 0; border-bottom: 1px solid #000;
+                        padding-bottom: .3em; }
 .fil a { color: #666; }
 .pager { display: flex; justify-content: space-between; gap: 1em; margin: 2.5em 0 0; padding-top: 1em;
          border-top: 1px solid #ddd; font: .92em/1.4 sans-serif; }
@@ -459,6 +478,38 @@ def slug(text: str) -> str:
     return re.sub(r'[^a-z0-9]+', '-', text).strip('-') or 'section'
 
 
+def couper(texte: str, n: int) -> str:
+    """Le texte en n caractères au plus, coupé après un mot et terminé par « … » s'il est coupé."""
+    if len(texte) <= n:
+        return texte
+    return texte[:n].rsplit(' ', 1)[0][:n - 1].rstrip(',;:.־ ') + '…'
+
+
+def incipit(content: str, classe: str) -> str:
+    """Début du premier paragraphe récité (classe he ou ph), en texte brut, pour les descriptions.
+    L'hébreu y est sans voyelles, comme on le cherche, et le Tétragramme s'écrit ה'."""
+    morceaux = []
+    # Un premier paragraphe court (un verset, un titre de psaume) est complété par les suivants.
+    for m in re.finditer(r'<p class="' + classe + r'"[^>]*>(.*?)</p>', content, re.S):
+        # Sans les renvois de notes ni les variantes ([Une femme : מוֹדָה]).
+        texte = re.sub(r'<a class="note-ref".*?</a>|<span class="variante">.*?\]</span>', '', m.group(1), flags=re.S)
+        texte = html.unescape(re.sub(r'<[^>]+>', '', texte))
+        if classe == 'he':
+            texte = NIKUD_RE.sub('', unicodedata.normalize('NFC', texte.replace('־', ' '))).replace('יהוה', "ה'")
+        morceaux.append(' '.join(texte.split()))
+        if sum(map(len, morceaux)) >= LIMITE_DESCRIPTION:
+            break
+    return ' '.join(morceaux).rstrip(':.,; ')
+
+
+def mots_cles(*groupes) -> str:
+    """Mots-clés d'une page : les siens d'abord, puis les communs ; sans doublon, douze au plus."""
+    vus = {}
+    for mot in (m for g in (*groupes, MOTS_CLES) for m in g if m):
+        vus.setdefault(mot.lower(), mot)
+    return ', '.join(list(vus.values())[:12])
+
+
 def web_html(content: str) -> str:
     """Le XHTML des sections, avec les rôles ARIA du web à la place des attributs EPUB."""
     content = content.replace('epub:type="noteref"', 'role="doc-noteref"')
@@ -473,6 +524,8 @@ class Site:
         self.version = livres[0].version
         self.rites: list[Rite] = list(dict.fromkeys(lv.rite for lv in livres))
         self.pages: list[str] = []  # chemins pour le sitemap
+        self.images: dict[str, list[str]] = {}  # images de chaque page, pour le sitemap
+        self.tailles: dict[str, tuple[int, int]] = {}  # dimensions des images de partage
         self.par_edition: dict[str, list[str]] = {}  # pages à garder hors ligne, par édition
         # Chemin de chaque section dans les éditions d'un rite : (chapitre, titre) ; (chapitre, None) = début du chapitre.
         self.chemins: dict[str, dict[tuple[str, str | None], str]] = {r.code: {} for r in self.rites}
@@ -493,12 +546,21 @@ class Site:
         return EDITIONS[livre.mode] + (' (' + livre.rite.adjectif + ')' if len(self.rites) > 1 else '')
 
     def write(self, path: str, title: str, description: str, body: str, *, livre: Livre | None = None,
-              image: str = '', jsonld: list[dict] | None = None, index: bool = True, barre: str = '') -> None:
+              image: str = '', jsonld: list[dict] | None = None, index: bool = True, barre: str = '',
+              mots: str = '', og_type: str = 'website', og: list[tuple[str, str]] | None = None,
+              voisins: tuple[str | None, str | None] = (None, None)) -> None:
         # La page 404 est servie à n'importe quelle profondeur : liens depuis la racine du site.
         root = '../' * path.count('/') if index or not self.url else self.url
-        canonical = self.abs(path.removesuffix('index.html'))
+        # Pas d'adresse canonique pour les pages exclues de l'index (404, hors connexion).
+        canonical = self.abs(path.removesuffix('index.html')) if index else ''
         cle = self.cle(livre) if livre else ''
-        image = self.abs(image or 'assets/covers/' + (cle or 'bilingue') + '.jpg')
+        # Image de partage : la couverture de l'édition, sinon l'image du site (format paysage des réseaux).
+        image = image or ('assets/covers/' + cle + '.jpg' if livre else 'assets/partage.jpg')
+        if image not in self.tailles:
+            image = 'assets/covers/' + (cle or 'bilingue') + '.jpg'
+        largeur, hauteur = self.tailles.get(image, (0, 0))
+        alt = ('Couverture du ' + livre.title if livre else 'Couvertures des éditions du ' + SITE_NAME.lower())
+        image = self.abs(image)
         # Onglets des éditions : depuis une page d'une édition, la même page dans les autres éditions
         # du rite (elles ont les mêmes chemins de sections) ; ailleurs, leur sommaire, dans le rite choisi
         # par le lecteur (le script de la page récrit ces liens ; le premier rite par défaut).
@@ -514,12 +576,25 @@ class Site:
             nom = html.escape(rite.nom) + '<small>' + html.escape(rite.sous_titre) + '</small>'
         else:
             nom = 'Siddour<small>' + ' · '.join(r.court for r in self.rites) + '</small>'
+
+        def meta(attribut: str, nom: str, valeur: str) -> str:
+            return '<meta ' + attribut + '="' + nom + '" content="' + html.escape(valeur, quote=True) + '">'
         head = [
             '<meta charset="utf-8">',
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
             '<title>' + html.escape(title) + '</title>',
-            '<meta name="description" content="' + html.escape(description, quote=True) + '">',
-            '<meta name="robots" content="' + ('index, follow' if index else 'noindex') + '">',
+            meta('name', 'description', description),
+            # Grandes images et extraits sans limite dans les résultats ; les pages techniques restent hors index.
+            meta('name', 'robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+                 if index else 'noindex, follow'),
+        ]
+        if mots:
+            head.append(meta('name', 'keywords', mots))
+        if canonical:
+            head.append('<link rel="canonical" href="' + canonical + '">')
+        # Sections voisines : ordre de lecture du livre, pour les moteurs qui s'en servent encore.
+        head += ['<link rel="' + rel + '" href="' + href + '">' for rel, href in zip(('prev', 'next'), voisins) if href]
+        head += [
             '<meta name="theme-color" content="#15284a">',
             '<link rel="icon" type="image/png" sizes="32x32" href="' + root + 'assets/icone-32.png">',
             '<link rel="icon" type="image/png" sizes="192x192" href="' + root + 'assets/icone-192.png">',
@@ -532,29 +607,42 @@ class Site:
             '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">',
             *liens_demarrage(root),
             '<link rel="stylesheet" href="' + root + 'assets/style.css">',
+        ]
+        # Police hébraïque demandée dès la tête de page : le texte s'affiche sans changer de police en cours de route.
+        if livre and livre.mode != 'phonetique':
+            head.append('<link rel="preload" href="' + root + 'assets/' + FONT_PATH.name
+                        + '" as="font" type="font/ttf" crossorigin>')
+        head += [
             '<script src="' + root + 'assets/app.js" defer></script>',
             AFFICHAGE_JS,
-            '<meta property="og:site_name" content="' + SITE_NAME + '">',
-            '<meta property="og:locale" content="fr_FR">',
-            '<meta property="og:type" content="' + ('book' if livre else 'website') + '">',
-            '<meta property="og:title" content="' + html.escape(title, quote=True) + '">',
-            '<meta property="og:description" content="' + html.escape(description, quote=True) + '">',
-            '<meta name="twitter:card" content="summary">',
-            '<meta name="twitter:title" content="' + html.escape(title, quote=True) + '">',
-            '<meta name="twitter:description" content="' + html.escape(description, quote=True) + '">',
+            # Aperçus des réseaux sociaux et messageries (Open Graph, X/Twitter).
+            meta('property', 'og:site_name', SITE_NAME),
+            meta('property', 'og:locale', 'fr_FR'),
+            meta('property', 'og:type', og_type),
+            meta('property', 'og:title', title),
+            meta('property', 'og:description', description),
         ]
         if canonical:
-            head += ['<link rel="canonical" href="' + canonical + '">',
-                     '<meta property="og:url" content="' + canonical + '">']
+            head.append(meta('property', 'og:url', canonical))
         if image:
-            head += ['<meta property="og:image" content="' + image + '">',
-                     '<meta property="og:image:alt" content="Couverture du siddour">',
-                     '<meta name="twitter:image" content="' + image + '">']
-        if livre:
-            head += ['<meta property="book:tag" content="' + html.escape(t, quote=True) + '">' for t in livre.rite.sujets]
-        for data in jsonld or []:
+            head += [meta('property', 'og:image', image),
+                     meta('property', 'og:image:type', 'image/jpeg')]
+            if largeur:
+                head += [meta('property', 'og:image:width', str(largeur)),
+                         meta('property', 'og:image:height', str(hauteur))]
+            head.append(meta('property', 'og:image:alt', alt))
+        head += [meta('property', p, v) for p, v in og or []]
+        # Grande image pour l'image paysage du site ; vignette pour une couverture (format portrait).
+        head += [meta('name', 'twitter:card', 'summary_large_image' if largeur > hauteur else 'summary'),
+                 meta('name', 'twitter:title', title),
+                 meta('name', 'twitter:description', description)]
+        if image:
+            head += [meta('name', 'twitter:image', image), meta('name', 'twitter:image:alt', alt)]
+        # Données structurées : un seul graphe par page, relié au site et à son éditeur par leurs @id.
+        if jsonld is not None:
+            graphe = {'@context': 'https://schema.org', '@graph': self.graphe_commun() + jsonld}
             head.append('<script type="application/ld+json">'
-                        + json.dumps(data, ensure_ascii=False).replace('</', '<\\/') + '</script>')
+                        + json.dumps(graphe, ensure_ascii=False).replace('</', '<\\/') + '</script>')
         # Le bandeau suit le défilement : la barre des sections quand la page en a une, sinon le bandeau du site.
         haut = ('<header class="site-head' + ('' if barre else ' colle') + '"><div class="inner"><a class="marque" href="'
                 + root + 'index.html"><img src="' + root + 'assets/logo.png" alt="" width="107" height="36">'
@@ -576,32 +664,117 @@ class Site:
         target.write_text(page, encoding='utf-8')
         if index:
             self.pages.append(path)
+            # Images de la page (couvertures), pour le sitemap des images.
+            self.images[path] = [urljoin(self.abs(path), src) for src in re.findall(r'<img src="([^"]+\.jpg)"', body)]
         if livre:
             self.par_edition.setdefault(cle, []).append(path)
 
     # -- Données structurées (schema.org) -------------------------------------------------
+    def ident(self, path: str, nom: str) -> str:
+        """@id d'un nœud du graphe : l'adresse de la page et un nom de fragment."""
+        return self.url + path + '#' + nom
+
+    def graphe_commun(self) -> list[dict]:
+        """Le site et son éditeur, en tête du graphe de chaque page."""
+        site = {'@type': 'WebSite', '@id': self.ident('', 'site'), 'name': SITE_NAME,
+                'alternateName': ['Siddour en ligne', 'Sidour', 'Siddur'], 'description': SITE_DESCRIPTION,
+                'inLanguage': 'fr', 'publisher': {'@id': self.ident('', 'editeur')}}
+        editeur = {'@type': 'Organization', '@id': self.ident('', 'editeur'), 'name': 'Siddour-ebook',
+                   'url': self.github, 'sameAs': [self.github]}
+        if self.url:
+            site['url'] = self.url
+            editeur['logo'] = {'@type': 'ImageObject', 'url': self.abs('assets/icone-512.png'),
+                               'width': 512, 'height': 512}
+        return [site, editeur]
+
+    def page_jsonld(self, path: str, type_: str, title: str, description: str, image: str = '', **autres) -> dict:
+        """La page elle-même (WebPage, AboutPage…), rattachée au site."""
+        adresse = self.abs(path.removesuffix('index.html'))
+        data = {'@type': type_, '@id': self.ident(path.removesuffix('index.html'), 'page'), 'name': title,
+                'description': description, 'inLanguage': 'fr', 'isPartOf': {'@id': self.ident('', 'site')},
+                'dateModified': self.version.jour.isoformat()}
+        if adresse:
+            data['url'] = adresse
+            if image:
+                data['primaryImageOfPage'] = {'@type': 'ImageObject', 'url': self.abs(image)}
+        return dict(data, **autres)
+
+    # -- Titres, descriptions et mots-clés des pages d'une édition ---------------------------
+    @staticmethod
+    def titres_sections(livre: Livre, sequence: list) -> list[str]:
+        """Titre de chaque section : la section et le texte de l'édition, puis le chapitre et le rite.
+        Le chapitre tombe quand le titre dépasse LIMITE_TITRE et que la section se reconnaît sans lui."""
+        nombre = Counter(title for _, _, title, _ in sequence)
+        titres = []
+        for chap, _, title, _ in sequence:
+            court = title + ' ' + EN[livre.mode] + ' | ' + livre.rite.nom
+            long = title + ' ' + EN[livre.mode] + ' — ' + chap['fr'] + ' | ' + livre.rite.nom
+            titres.append(court if title == chap['fr'] or (len(long) > LIMITE_TITRE and nombre[title] == 1) else long)
+        # Deux sections de même titre dans un chapitre : numérotées, pour que chaque page ait son titre.
+        vus: Counter = Counter()
+        for i, titre in enumerate(titres):
+            vus[titre] += 1
+            if vus[titre] > 1:
+                titres[i] = titre.replace(' | ', ' (' + str(vus[titre]) + ') | ', 1)
+        return titres
+
+    @staticmethod
+    def description_section(livre: Livre, chap: str, title: str, content: str) -> str:
+        """La section, l'édition et le rite, puis le début du texte récité : ce qui distingue la page."""
+        mode, rite = livre.mode, livre.rite
+        tete = title + ('' if title == chap else ' — ' + chap if '(' in chap + title else ' (' + chap + ')')
+        consignes = 'class="rubrique' in content
+        debut = tete + ' ' + EN[mode] + ', ' + rite.nom[0].lower() + rite.nom[1:] + ' : '
+        fin = ' Consignes en français.' if consignes else ''
+        textes = [x for x in (incipit(content, c) for c in {'hebreu': ('he',), 'phonetique': ('ph',),
+                                                              'bilingue': ('he', 'ph')}[mode]) if x]
+        # Chaque citation prend « » (4 caractères), séparées par « – » (3).
+        reste = LIMITE_DESCRIPTION - len(debut) - len(fin) - 4 * len(textes) - 3 * max(len(textes) - 1, 0)
+        if len(textes) == 2 and reste < 2 * 30:
+            textes, reste = textes[:1], reste + 7
+        if textes and reste >= 25 * len(textes):
+            citations = []
+            for i, texte in enumerate(textes):
+                citations.append(couper(texte, reste // (len(textes) - i)))
+                reste -= len(citations[-1])
+            return debut + ' – '.join('« ' + c + ' »' for c in citations) + fin
+        # Pas de citation possible : le texte de l'édition, plus ou moins détaillé selon la place.
+        variantes = [tete + ' : texte du ' + rite.appellation + ' ' + TEXTE[mode]
+                     + (', avec les consignes en français' if consignes else '') + '.',
+                     tete + ' : texte du ' + rite.nom.lower() + ' ' + TEXTE[mode] + '.',
+                     tete + ' ' + EN[mode] + ', ' + rite.nom.lower() + '.']
+        return next((v for v in variantes if len(v) <= LIMITE_DESCRIPTION), variantes[-1])
+
+    @staticmethod
+    def mots_rite(rite: Rite) -> tuple:
+        """Mots-clés propres au rite : « siddour séfarade », « Rite séfarade », « Edot HaMizrah »…"""
+        return (rite.nom.lower(), *(s for s in rite.sujets if s not in ('Siddour', 'Prière juive', 'Liturgie', 'Judaïsme')))
+
     def book_jsonld(self, livre: Livre) -> dict:
+        cle = self.cle(livre)
         data = {
-            '@type': 'Book', 'name': livre.title, 'bookFormat': 'https://schema.org/EBook',
+            '@type': 'Book', '@id': self.ident(cle + '/', 'livre'), 'name': livre.title,
+            'bookFormat': 'https://schema.org/EBook', 'bookEdition': EDITIONS[livre.mode],
             'inLanguage': ['he', 'fr'] if livre.mode != 'phonetique' else ['fr', 'he'],
             'genre': 'Liturgie juive', 'keywords': ', '.join(livre.rite.sujets),
             'description': description(livre.mode, livre.rite), 'version': livre.version.libelle,
-            'datePublished': livre.version.jour.isoformat(), 'isAccessibleForFree': True,
-            'publisher': {'@type': 'Organization', 'name': 'Siddour-ebook'},
+            'datePublished': livre.version.jour.isoformat(), 'dateModified': livre.version.jour.isoformat(),
+            'isAccessibleForFree': True,
+            'publisher': {'@id': self.ident('', 'editeur')},
             'isBasedOn': {'@type': 'Book', 'name': livre.rite.livre, 'url': 'https://www.sefaria.org'},
         }
         if self.url:
-            data['url'] = self.abs(self.cle(livre) + '/')
-            data['image'] = self.abs('assets/covers/' + self.cle(livre) + '.jpg')
+            data['url'] = self.abs(cle + '/')
+            data['image'] = self.abs('assets/covers/' + cle + '.jpg')
             data['encoding'] = {'@type': 'MediaObject', 'encodingFormat': 'application/epub+zip',
                                 'contentUrl': self.abs('telecharger/' + livre.epub)}
         return data
 
-    def breadcrumb(self, items: list[tuple[str, str]]) -> dict:
-        return {'@context': 'https://schema.org', '@type': 'BreadcrumbList', 'itemListElement': [
-            dict({'@type': 'ListItem', 'position': i, 'name': name},
-                 **({'item': self.abs(path)} if self.url else {}))
-            for i, (name, path) in enumerate(items, 1)]}
+    def breadcrumb(self, path: str, items: list[tuple[str, str]]) -> dict:
+        return {'@type': 'BreadcrumbList', '@id': self.ident(path.removesuffix('index.html'), 'fil'),
+                'itemListElement': [dict({'@type': 'ListItem', 'position': i, 'name': name},
+                                         **({'item': self.abs(chemin)} if self.url else {}))
+                                    for i, (name, chemin) in enumerate(items, 1)]}
 
     # -- Pages -----------------------------------------------------------------------------
     def edition(self, livre: Livre) -> None:
@@ -634,41 +807,76 @@ class Site:
                         for chap, liens in chapitres)
                     + '</select>')
 
-        book = dict(self.book_jsonld(livre), **{'@context': 'https://schema.org'})
+        book = self.book_jsonld(livre)
+        jour = livre.version.jour.isoformat()
+        couverture = 'assets/covers/' + cle + '.jpg'
+        # Le sommaire du livre (même rendu que l'EPUB), sous le titre de l'édition, seul titre de niveau 1.
         sommaire = make_contents([(chap['fr'], chap.get('he', ''), [(h, t) for h, t, _ in liens])
-                                  for chap, liens in chapitres])
+                                  for chap, liens in chapitres]).replace(
+            '<h1>Sommaire</h1>', '<h2 class="sommaire-titre">Sommaire</h2>', 1)
         # Le même livre dans l'autre rite : son sommaire, dans la même édition.
         autres_rites = ' · '.join('<a href="' + racine + r.prefixe + mode + '/index.html">' + html.escape(r.nom) + '</a>'
                                   for r in self.rites if r is not rite and mode in self.modes(r))
-        intro = ('<p class="accroche">' + exposants(livre.version.complet) + '</p>'
+        intro = ('<h1 class="titre-edition">' + html.escape(livre.title) + '</h1>'
+                 '<p class="accroche">' + exposants(livre.version.complet) + '</p>'
                  '<p style="text-align:center"><a class="bouton" href="' + sequence[0][1] + '">Commencer la lecture</a> '
                  '<a class="bouton second" href="' + racine + 'telecharger/' + livre.epub + '" download>'
                  'Télécharger l’EPUB</a></p>'
                  + ('<p class="autre-rite">' + html.escape(rite.limites) + '</p>' if rite.limites else '')
                  + ('<p class="autre-rite">Voir aussi : ' + autres_rites + '</p>' if autres_rites else ''))
         crumb = [(SITE_NAME, ''), (self.nom_edition(livre), cle + '/')]
-        self.write(cle + '/index.html', livre.title + ' — lire en ligne',
-                   'Sommaire du ' + rite.appellation + ' ' + TEXTE[mode] + ', avec consignes en français : '
-                   + ', '.join(chap['fr'] for chap, _ in chapitres[:8]) + '…',
+        # Sommaire : l'édition, puis ses chapitres tant qu'ils tiennent dans la description.
+        titre = rite.nom + ' ' + EN[mode] + ' — lire en ligne ou en EPUB'
+        resume = rite.appellation[0].upper() + rite.appellation[1:] + ' ' + TEXTE[mode] + ', en ligne ou en EPUB gratuit : '
+        for i, (chap, _) in enumerate(chapitres):
+            ajout = (', ' if i else '') + chap['fr']
+            if len(resume) + len(ajout) + 1 > LIMITE_DESCRIPTION:
+                resume += '…'
+                break
+            resume += ajout
+        else:
+            resume += '.'
+        path = cle + '/index.html'
+        self.write(path, titre, resume,
                    intro + '<p class="hors-ligne"><button class="bouton second" data-hors-ligne="' + cle
                    + '" hidden>Garder hors ligne</button> <span></span></p>'
                    + sommaire + '<p style="text-align:center"><a href="a-propos.html">'
                    'À propos de cette édition</a></p>',
-                   livre=livre, barre=aller(''), jsonld=[book, self.breadcrumb(crumb)])
-        self.write(cle + '/a-propos.html', 'À propos — ' + livre.title,
-                   'Sources, licences et conventions de mise en page de l’édition ' + TITLES[mode]
-                   + ' du ' + rite.appellation + '.',
+                   livre=livre, barre=aller(''), og_type='book',
+                   og=[('book:release_date', jour)] + [('book:tag', s) for s in rite.sujets],
+                   mots=mots_cles(self.mots_rite(rite), MOTS_EDITION[mode], ('siddour en ligne', 'siddour epub')),
+                   jsonld=[self.page_jsonld(path, 'WebPage', titre, resume, couverture,
+                                            breadcrumb={'@id': self.ident(cle + '/', 'fil')},
+                                            mainEntity={'@id': book['@id']}),
+                           book, self.breadcrumb(path, crumb)])
+        path = cle + '/a-propos.html'
+        titre = 'Sources et licences — ' + rite.nom + ' ' + EN[mode]
+        resume = ('Sources (Sefaria), licences, conventions de mise en page et numéro d’édition du '
+                  + rite.appellation + ' ' + TEXTE[mode] + '.')
+        self.write(path, titre, resume,
                    web_html(make_credits(livre.title, livre.licences, mode, livre.version, rite)),
-                   livre=livre, barre=aller(''))
+                   livre=livre, barre=aller(''),
+                   mots=mots_cles(('sources', 'licences', 'Sefaria'), (rite.nom.lower(),), MOTS_EDITION[mode][:1]),
+                   jsonld=[self.page_jsonld(path, 'AboutPage', titre, resume, about={'@id': book['@id']},
+                                            breadcrumb={'@id': self.ident(path, 'fil')}),
+                           self.breadcrumb(path, crumb + [('À propos', path)])])
 
+        titres = self.titres_sections(livre, sequence)
         for k, (chap, href, title, content) in enumerate(sequence):
             prev = sequence[k - 1] if k else None
             nxt = sequence[k + 1] if k + 1 < len(sequence) else None
             up = '../' * href.count('/')
-            # Le chapitre en titre de chaque page : repère pour le lecteur comme pour les moteurs.
-            heading = ('<h1>' + html.escape(chap['fr'])
-                       + ('<br><small lang="he" dir="rtl">' + html.escape(chap['he']) + '</small>' if chap.get('he') else '')
-                       + '</h1>')
+            path = cle + '/' + href
+            # La section en titre de niveau 1 (le premier titre du texte), sous le nom du chapitre,
+            # repère pour le lecteur : chaque page a ainsi son propre titre principal.
+            texte = web_html(content)
+            chapitre = (html.escape(chap['fr'])
+                        + ('<br><small lang="he" dir="rtl">' + html.escape(chap['he']) + '</small>' if chap.get('he') else ''))
+            if texte.startswith('<h2>'):
+                heading = '<p class="titre-chapitre">' + chapitre + '</p>'
+                texte = '<h1 class="titre-section">' + texte[4:].replace('</h2>', '</h1>', 1)
+            else:
+                heading = '<h1>' + chapitre + '</h1>'
             autres = ' · '.join('<a href="' + up + '../' + m + '/' + href + '">' + html.escape(TITLES[m]) + '</a>'
                                 for m in self.modes(rite) if m != mode)
             fil = ('<p class="fil"><a href="' + up + 'index.html">' + self.nom_edition(livre) + '</a> › '
@@ -684,15 +892,20 @@ class Site:
                         + html.escape(voisin[2], quote=True) + '" aria-label="' + nom + '">' + signe + '</a>')
             barre = (fleche(prev, 'prec', '‹', 'Section précédente') + aller(up, href)
                      + fleche(nxt, 'suiv', '›', 'Section suivante'))
-            page_title = title + (' — ' + chap['fr'] if title != chap['fr'] else '') + ' | ' + livre.title
-            description = ('« ' + title + ' » (' + chap['fr'] + ') : texte du ' + rite.appellation + ' '
-                           + TEXTE[mode] + ', avec les consignes en français. Lecture en ligne ou EPUB.')
-            jsonld = [self.breadcrumb(crumb + [(chap['fr'], cle + '/' + premiere[chap['id']]),
-                                               (title, cle + '/' + href)]),
-                      {'@context': 'https://schema.org', '@type': 'WebPage', 'name': title,
-                       'inLanguage': 'fr', 'isPartOf': self.book_jsonld(livre)}]
-            self.write(cle + '/' + href, page_title, description, fil + heading + web_html(content) + pager,
-                       livre=livre, jsonld=jsonld, barre=barre)
+            resume = self.description_section(livre, chap['fr'], title, content)
+            jsonld = [self.page_jsonld(path, 'WebPage', titres[k], resume, couverture,
+                                       breadcrumb={'@id': self.ident(path, 'fil')},
+                                       mainEntity={'@id': self.ident(path, 'texte')}),
+                      dict({'@type': 'Chapter', '@id': self.ident(path, 'texte'), 'name': title,
+                            'position': k + 1, 'inLanguage': book['inLanguage'],
+                            'isPartOf': {'@id': book['@id']}}, **({'url': self.abs(path)} if self.url else {})),
+                      book,
+                      self.breadcrumb(path, crumb + [(chap['fr'], cle + '/' + premiere[chap['id']]), (title, path)])]
+            self.write(path, titres[k], resume, fil + heading + texte + pager,
+                       livre=livre, jsonld=jsonld, barre=barre, og_type='article',
+                       og=[('article:modified_time', jour), ('article:section', chap['fr']), ('article:tag', title)],
+                       mots=mots_cles((title, chap['fr'], chap.get('he', '')), (rite.nom.lower(),), MOTS_EDITION[mode][:2]),
+                       voisins=(up + prev[1] if prev else None, up + nxt[1] if nxt else None))
 
     def accueil(self) -> None:
         # Accueil : la journée (date hébraïque, prières, horaires), puis un lien vers les livres.
@@ -706,15 +919,31 @@ class Site:
         sous_titre = ((' · '.join(r.court for r in self.rites) + ' — ' if len(self.rites) > 1 else '')
                       + ' · '.join(MENU[m] for m in dict.fromkeys(lv.mode for lv in self.livres))
                       + ' — en ligne ou en EPUB pour liseuse')
-        site = {'@context': 'https://schema.org', '@type': 'WebSite', 'name': SITE_NAME,
-                'description': SITE_DESCRIPTION, 'inLanguage': 'fr'}
-        if self.url:
-            site['url'] = self.url
-        self.write('index.html', SITE_NAME + ' — prières et horaires du jour, siddour en ligne',
-                   'Date hébraïque, prières du jour et horaires (zmanim) pour sa ville, Chabbat, fêtes et jeûnes à venir. '
-                   'Puis le siddour séfarade et ashkénaze à lire en ligne ou en EPUB.',
-                   corps(cibles, couverture, sous_titre) + '<script src="assets/aujourdhui.js" defer></script>',
-                   jsonld=[site])
+        # Texte fixe sous les cartes du jour : ce que propose le site, et un lien vers chaque édition.
+        adjectifs = ' et '.join(r.adjectif for r in self.rites)
+        presentation = (
+            '<section class="carte presentation" aria-labelledby="presentation-titre">'
+            '<h2 id="presentation-titre">Le siddour en ligne</h2>'
+            '<p>Cette page donne la date hébraïque, les prières du jour et leurs horaires (zmanim) pour sa ville : '
+            'lever du soleil, fin du Chéma, Min’ha, allumage des bougies et sortie de Chabbat, '
+            'avec les prochaines fêtes et jeûnes.</p>'
+            '<p>Le siddour, livre de prière juif, s’y lit en ligne, même sans connexion une fois gardé, '
+            'ou se télécharge gratuitement en EPUB pour liseuse : hébreu vocalisé, phonétique ou les deux, '
+            'avec les consignes en français.</p><ul>'
+            + ''.join('<li><b>' + html.escape(r.libelle) + '</b> : ' + html.escape(r.contenu) + '. Lire le '
+                      + html.escape(r.nom.lower()) + ' ' + ', '.join(
+                          '<a href="' + r.prefixe + m + '/index.html">' + EN[m] + '</a>' for m in self.modes(r)) + '.</li>'
+                      for r in self.rites)
+            + '</ul></section>')
+        titre = 'Siddour en ligne — prières et zmanim du jour, ' + ('rite ' if len(self.rites) == 1 else '') + adjectifs
+        resume = ('Date hébraïque, prières et horaires du jour (zmanim) pour sa ville, Chabbat et fêtes ; siddour '
+                  + adjectifs + ' en hébreu ou phonétique, en ligne ou EPUB.')
+        self.write('index.html', titre, resume,
+                   corps(cibles, couverture, sous_titre, presentation) + '<script src="assets/aujourdhui.js" defer></script>',
+                   mots=mots_cles(('siddour en ligne', 'prière du jour', 'zmanim', 'horaires de prière', 'date hébraïque',
+                                   'calendrier juif', 'horaires de Chabbat')),
+                   jsonld=[self.page_jsonld('index.html', 'WebPage', titre, resume, 'assets/partage.jpg',
+                                            about={'@id': self.ident('', 'livres')})])
 
         # Livres : pour chaque rite, les éditions en 2 × 2 sur téléphone, avec une case d'aide à la lecture
         # sur liseuse (premier rite) ou sur le contenu du livre (les suivants).
@@ -745,16 +974,29 @@ class Site:
                 + '<p class="accroche">' + exposants(self.version.complet) + '</p></div>'
                 + web_html(introduction(self.rites[0] if len(self.rites) == 1 else None))
                 .replace('<h1>', '<h2>').replace('</h1>', '</h2>'))
-        work = {'@context': 'https://schema.org', '@type': 'Book', 'name': SITE_NAME,
-                'description': SITE_DESCRIPTION, 'genre': 'Liturgie juive',
+        # L'œuvre (le siddour) et ses éditions, chacune avec son EPUB.
+        work = {'@type': 'Book', '@id': self.ident('', 'livres'), 'name': SITE_NAME,
+                'alternateName': ['Siddour', 'Sidour', 'Siddur'], 'description': SITE_DESCRIPTION,
+                'genre': 'Liturgie juive', 'inLanguage': ['he', 'fr'], 'isAccessibleForFree': True,
                 'keywords': ', '.join(dict.fromkeys(s for r in self.rites for s in r.sujets)),
+                'publisher': {'@id': self.ident('', 'editeur')},
                 'workExample': [self.book_jsonld(lv) for lv in self.livres]}
-        self.write('livres.html', 'Le siddour en ligne et en EPUB — ' + SITE_NAME,
-                   SITE_DESCRIPTION, body, jsonld=[work, self.breadcrumb([(SITE_NAME, ''), ('Livres', 'livres.html')])])
-        self.write('404.html', 'Page introuvable — ' + SITE_NAME, SITE_DESCRIPTION,
+        titre = SITE_NAME + ' gratuit : lire en ligne ou en EPUB'
+        self.write('livres.html', titre, SITE_DESCRIPTION, body,
+                   mots=mots_cles(('siddour gratuit', 'siddour en ligne', 'siddour epub', 'siddour pour liseuse'),
+                                  *(self.mots_rite(r)[:1] for r in self.rites), ('siddour phonétique',)),
+                   jsonld=[self.page_jsonld('livres.html', 'CollectionPage', titre, SITE_DESCRIPTION,
+                                            'assets/partage.jpg', mainEntity={'@id': work['@id']},
+                                            breadcrumb={'@id': self.ident('livres.html', 'fil')}),
+                           work, self.breadcrumb('livres.html', [(SITE_NAME, ''), ('Livres', 'livres.html')])])
+        self.write('404.html', 'Page introuvable — ' + SITE_NAME,
+                   'Cette page du siddour n’existe pas ou a changé d’adresse : retrouver les prières du jour '
+                   'et les éditions depuis l’accueil.',
                    '<h1>Page introuvable</h1><p style="text-align:center">'
                    '<a class="bouton" href="' + (self.url or 'index.html') + '">Retour à l’accueil</a></p>', index=False)
-        self.write('hors-ligne.html', 'Hors connexion — ' + SITE_NAME, SITE_DESCRIPTION,
+        self.write('hors-ligne.html', 'Hors connexion — ' + SITE_NAME,
+                   'Page affichée sans connexion : les pages déjà lues et les éditions gardées hors ligne '
+                   'restent disponibles.',
                    '<h1>Hors connexion</h1><p>Cette page n’a pas encore été enregistrée sur cet appareil. '
                    'Les pages déjà lues restent disponibles ; pour lire une édition entière sans connexion, '
                    'ouvrir son sommaire et choisir « Garder hors ligne ».</p><p style="text-align:center">'
@@ -779,16 +1021,54 @@ class Site:
                 im = im.convert('RGB')
                 im.thumbnail((800, 1200))
                 im.save(fichier, 'JPEG', quality=85, optimize=True, progressive=True)
+                self.tailles['assets/covers/' + self.cle(lv) + '.jpg'] = im.size
         if not (ICONES / 'logo.png').exists():
             generer_icones()
         shutil.copytree(ICONES, dossier, dirs_exist_ok=True)
+        self.image_partage(dossier)
         telecharger = self.dossier / 'telecharger'
         telecharger.mkdir(exist_ok=True)
         for lv in self.livres:
             shutil.copyfile(sortie / lv.epub, telecharger / lv.epub)
         (self.dossier / '.nojekyll').write_text('', encoding='utf-8')
+        (self.dossier / (INDEXNOW + '.txt')).write_text(INDEXNOW, encoding='utf-8')
         if RACINE.is_dir():
             shutil.copytree(RACINE, self.dossier, dirs_exist_ok=True)
+
+    def image_partage(self, dossier: Path) -> None:
+        """Image des aperçus (réseaux sociaux, messageries) pour les pages communes : 1200 × 630,
+        le logo doré sur le bleu des couvertures, puis jusqu'à trois couvertures côte à côte."""
+        from PIL import Image, ImageDraw, ImageFilter
+        from .icones import FOND
+        largeur, hauteur = 1200, 630
+        image = Image.new('RGB', (largeur, hauteur), FOND)
+        # Léger dégradé vers le bleu du bandeau, vers le bas.
+        degrade = Image.linear_gradient('L').resize((largeur, hauteur))
+        image = Image.composite(Image.new('RGB', (largeur, hauteur), '#1d3966'), image, degrade.point(lambda v: v // 2))
+        with Image.open(ICONES / 'logo.png') as logo:
+            logo = logo.convert('RGBA')
+            logo = logo.resize((logo.width * 110 // logo.height, 110), Image.LANCZOS)
+            image.paste(logo, ((largeur - logo.width) // 2, 36), logo)
+        # Trois couvertures : hébreu et phonétique du premier rite, bilingue du dernier.
+        voulues = [(self.rites[0], 'hebreu'), (self.rites[0], 'phonetique'), (self.rites[-1], 'bilingue')]
+        cles = dict.fromkeys(self.cle(lv) for r, m in voulues for lv in self.livres if lv.rite is r and lv.mode == m)
+        couvertures = [dossier / 'covers' / (c + '.jpg') for c in cles or [self.cle(lv) for lv in self.livres[:3]]]
+        couvertures = [c for c in couvertures if c.exists()]
+        h = hauteur - 180 - 36
+        w = h * 2 // 3
+        ecart = 44
+        x = (largeur - len(couvertures) * w - (len(couvertures) - 1) * ecart) // 2
+        for c in couvertures:
+            with Image.open(c) as couv:
+                couv = couv.convert('RGB').resize((w, h), Image.LANCZOS)
+            ombre = Image.new('L', (largeur, hauteur), 0)
+            ImageDraw.Draw(ombre).rectangle((x + 4, 180 + 8, x + w + 4, 180 + h + 8), fill=150)
+            image = Image.composite(Image.new('RGB', (largeur, hauteur), '#050d1a'), image,
+                                    ombre.filter(ImageFilter.GaussianBlur(10)))
+            image.paste(couv, (x, 180))
+            x += w + ecart
+        image.save(dossier / 'partage.jpg', 'JPEG', quality=85, optimize=True, progressive=True)
+        self.tailles['assets/partage.jpg'] = (largeur, hauteur)
 
     def index_moteurs(self) -> None:
         # Tout est permis, aux moteurs de recherche comme aux robots des IA (entraînement, recherche,
@@ -801,10 +1081,13 @@ class Site:
         if self.url:
             jour = self.version.jour.isoformat()
             urls = ''.join('<url><loc>' + html.escape(self.abs(p.removesuffix('index.html'))) + '</loc><lastmod>'
-                           + jour + '</lastmod></url>\n' for p in self.pages)
+                           + jour + '</lastmod>' + ''.join('<image:image><image:loc>' + html.escape(i)
+                                                            + '</image:loc></image:image>' for i in self.images.get(p, []))
+                           + '</url>\n' for p in self.pages)
             (self.dossier / 'sitemap.xml').write_text(
                 '<?xml version="1.0" encoding="UTF-8"?>\n'
-                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + '</urlset>\n',
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+                'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' + urls + '</urlset>\n',
                 encoding='utf-8')
             lignes.append('Sitemap: ' + self.abs('sitemap.xml'))
         (self.dossier / 'robots.txt').write_text('\n'.join(lignes) + '\n', encoding='utf-8')
