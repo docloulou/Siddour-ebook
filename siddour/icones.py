@@ -3,6 +3,8 @@
     python3 -m siddour.icones          # régénère assets/pwa/ après un changement de couverture
 
 Les fichiers produits sont versionnés dans assets/pwa/ ; le site les recopie tels quels.
+L'application est commune aux deux rites : seuls le mot סידור, la ligne « Sidour » et le filet
+doré, identiques sur toutes les couvertures, en sont tirés, sans le rite ni l'édition.
 - icone-32.png, icone-180.png (iPhone, iPad), icone-192.png, icone-512.png ;
 - icone-maskable.png : variante qu'Android peut rogner en cercle ;
 - ios/demarrage-<largeur>x<hauteur>.jpg : écrans affichés par iOS à l'ouverture de l'application
@@ -12,13 +14,22 @@ Les fichiers produits sont versionnés dans assets/pwa/ ; le site les recopie te
 """
 from __future__ import annotations
 
+import random
 import shutil
 from pathlib import Path
 
+from .rites import COVERS
+
 ROOT = Path(__file__).resolve().parent.parent
-COUVERTURE = ROOT / 'assets' / 'covers' / 'siddour_bilingue.png'
+COUVERTURE = COVERS / 'siddour_bilingue.png'
 DOSSIER = ROOT / 'assets' / 'pwa'
-FOND = '#0c2644'  # bleu de la couverture, aussi utilisé comme couleur de fond du manifeste
+FOND = '#0c2644'  # bleu de la couverture, fond des écrans de démarrage
+
+# Lignes du titre communes à toutes les couvertures (en points d'une couverture large de 400) ;
+# en dessous viennent le rite puis l'édition, propres à chaque livre.
+HEBREU = (70, 82, 340, 180)   # le mot סידור
+SIDOUR = (50, 180, 350, 208)  # « Sidour », en petites capitales
+FILET = (50, 250, 350, 274)   # filet orné qui sépare le titre de l'édition
 
 # Écrans iOS (points CSS en portrait, densité) : iOS n'affiche l'écran de démarrage
 # que si une image correspond exactement à l'appareil.
@@ -67,54 +78,79 @@ def liens_demarrage(racine: str) -> list[str]:
     return liens
 
 
-def titre():
-    """Le haut de la couverture (le titre), en carré, sans le cadre doré."""
+def dore(zone: tuple[int, int, int, int]):
+    """Une ligne dorée de la couverture, détourée par sa luminosité, rognée au plus juste."""
     from PIL import Image
     with Image.open(COUVERTURE) as im:
         im = im.convert('RGB')
         k = im.width / 400
-        return im.crop(tuple(int(v * k) for v in (20, 20, 380, 380)))
+        ligne = im.crop(tuple(int(v * k) for v in zone))
+    ligne.putalpha(ligne.convert('L').point(lambda v: max(0, min(255, (v - 70) * 3))))
+    return ligne.crop(ligne.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox())
+
+
+def empiler(*lignes, ecart: float = .12):
+    """Lignes centrées l'une sous l'autre ; l'écart est une fraction de la hauteur de la première."""
+    from PIL import Image
+    pas = int(lignes[0].height * ecart)
+    largeur = max(l.width for l in lignes)
+    bloc = Image.new('RGBA', (largeur, sum(l.height for l in lignes) + pas * (len(lignes) - 1)), (0, 0, 0, 0))
+    y = 0
+    for l in lignes:
+        bloc.paste(l, ((largeur - l.width) // 2, y))
+        y += l.height + pas
+    return bloc
+
+
+def titre():
+    """סידור et « Sidour » : le titre commun aux deux rites, sur fond transparent."""
+    return empiler(dore(HEBREU), dore(SIDOUR))
 
 
 def texte_dore():
-    """Le titre de la couverture (hébreu, nom, mention de l'édition), sur fond transparent."""
-    from PIL import Image
-    with Image.open(COUVERTURE) as im:
-        im = im.convert('RGB')
-        k = im.width / 400
-        zone = im.crop(tuple(int(v * k) for v in (50, 75, 350, 330)))
-    alpha = zone.convert('L').point(lambda v: max(0, min(255, (v - 70) * 3)))
-    zone.putalpha(alpha)
-    return zone
+    """Le titre commun et le filet orné de la couverture, pour les écrans de démarrage."""
+    return empiler(dore(HEBREU), dore(SIDOUR), dore(FILET), ecart=.16)
 
 
 def logo(hauteur: int = 120):
     """Le mot סידור doré de la couverture, détouré, pour le bandeau du site (affiché à 1/3 de sa taille)."""
     from PIL import Image
-    with Image.open(COUVERTURE) as im:
-        im = im.convert('RGB')
-        k = im.width / 400
-        zone = im.crop(tuple(int(v * k) for v in (70, 82, 340, 182)))
-    zone.putalpha(zone.convert('L').point(lambda v: max(0, min(255, (v - 70) * 3))))
-    zone = zone.crop(zone.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox())
+    zone = dore(HEBREU)
     zone = zone.resize((zone.width * hauteur // zone.height, hauteur), Image.LANCZOS)
     return zone.quantize(64, method=Image.Quantize.FASTOCTREE)  # 64 couleurs : 8 Ko au lieu de 45
 
 
-def adouci(image, marge: int, flou: int):
-    """Masque qui fond les bords de l'image dans l'arrière-plan."""
-    from PIL import Image, ImageDraw, ImageFilter
-    masque = Image.new('L', image.size, 0)
-    ImageDraw.Draw(masque).rectangle((marge, marge, image.width - marge, image.height - marge), fill=255)
-    return masque.filter(ImageFilter.GaussianBlur(flou))
+def bleu(cote: int):
+    """Le fond de la couverture : bleu nuit éclairé au centre, grain à peine visible."""
+    from PIL import Image, ImageChops, ImageFilter
+    alea = random.Random(613)  # graine fixe : même fichier à chaque génération
+    grain = Image.frombytes('L', (48, 48), bytes(alea.randrange(256) for _ in range(48 * 48)))
+    grain = grain.resize((cote, cote), Image.BICUBIC).filter(ImageFilter.GaussianBlur(cote / 256))
+    halo = Image.radial_gradient('L').resize((cote, cote), Image.BICUBIC)  # 0 au centre, 255 aux bords
+    centre, bord, relief = (9, 37, 68), (3, 21, 43), (.04, .06, .07)  # relevés sur la couverture
+    return Image.merge('RGB', [
+        ImageChops.add(halo.point(lambda v, c=c, b=b: round(c + (b - c) * min(1, v / 200))),
+                       grain.point(lambda v, r=r: 64 + round((v - 128) * r)), offset=-64)
+        for c, b, r in zip(centre, bord, relief)])
+
+
+def icone(cote: int, part: float, sous_titre: bool = True):
+    """Le titre doré centré sur le bleu ; part : largeur du titre rapportée au côté de l'icône."""
+    from PIL import Image
+    fond = bleu(cote)
+    lettres = titre() if sous_titre else dore(HEBREU)
+    w = int(cote * part)
+    h = w * lettres.height // lettres.width
+    lettres = lettres.resize((w, h), Image.LANCZOS)
+    fond.paste(lettres, ((cote - w) // 2, (cote - h) // 2), lettres)
+    return fond
 
 
 def generer(dossier: Path = DOSSIER) -> list[Path]:
-    from PIL import Image, ImageFilter
+    from PIL import Image
     if dossier.exists():
         shutil.rmtree(dossier)
     (dossier / 'ios').mkdir(parents=True)
-    carre = titre()
     faits = []
 
     def enregistrer(image, nom: str) -> None:
@@ -124,14 +160,13 @@ def generer(dossier: Path = DOSSIER) -> list[Path]:
             image.save(dossier / nom, optimize=True)
         faits.append(dossier / nom)
 
-    for taille in (32, 180, 192, 512):
+    carre = icone(512, .72)
+    for taille in (180, 192, 512):
         enregistrer(carre.resize((taille, taille), Image.LANCZOS), 'icone-' + str(taille) + '.png')
-
-    # Android peut rogner l'icône en cercle : le titre est réduit dans la zone sûre.
-    fond = carre.resize((64, 64)).filter(ImageFilter.GaussianBlur(12)).resize((512, 512), Image.BICUBIC)
-    s = 380
-    fond.paste(carre.resize((s, s), Image.LANCZOS), ((512 - s) // 2,) * 2, adouci(Image.new('L', (s, s)), 14, 10))
-    enregistrer(fond, 'icone-maskable.png')
+    # Onglet du navigateur : « Sidour » serait illisible, seul le mot hébreu reste.
+    enregistrer(icone(512, .86, sous_titre=False).resize((32, 32), Image.LANCZOS), 'icone-32.png')
+    # Android peut rogner l'icône en cercle : le titre tient dans la zone sûre (cercle de 80 %).
+    enregistrer(icone(512, .58), 'icone-maskable.png')
 
     # Écrans de démarrage iOS : seules les lettres dorées du titre, détourées par leur
     # luminosité, sont posées sur un bleu uni ; aucun cadre ne se voit sur l'écran.
@@ -140,7 +175,7 @@ def generer(dossier: Path = DOSSIER) -> list[Path]:
         for _, lw, lh in orientations(w, h):
             W, H = lw * r, lh * r
             ecran = Image.new('RGB', (W, H), FOND)
-            lw2 = int(min(W, H) * 0.6)
+            lw2 = int(min(W, H) * 0.55)
             lh2 = lw2 * lettres.height // lettres.width
             image = lettres.resize((lw2, lh2), Image.LANCZOS)
             ecran.paste(image, ((W - lw2) // 2, (H - lh2) // 2), image)
