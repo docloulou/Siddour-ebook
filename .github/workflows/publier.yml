@@ -60,7 +60,7 @@ jobs:
       - name: Fabriquer les EPUB et le site
         run: >
           python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist
-          --site ./_site --site-url "${{ steps.pages.outputs.base_url }}/"
+          --site ./_site --site-url "${{ steps.pages.outputs.base_url }}/" --depot "${{ github.repository }}"
           --edition ${{ steps.version.outputs.edition }}
           --revision ${{ steps.version.outputs.revision }}
           --date ${{ steps.version.outputs.date }}

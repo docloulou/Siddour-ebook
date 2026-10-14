@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import tempfile
@@ -129,6 +130,10 @@ def verifier_pwa(dossier: Path) -> None:
 
 
 def main() -> None:
+    with socket.socket() as s:
+        # Un autre serveur sur ce port fausserait les essais hors connexion.
+        if s.connect_ex(('localhost', PORT)) == 0:
+            raise SystemExit(f'Le port {PORT} est déjà utilisé : arrêter le serveur qui l’occupe.')
     with tempfile.TemporaryDirectory() as tmp:
         dossier = Path(tmp)
         fabriquer(dossier, 0, '2026-01-01')

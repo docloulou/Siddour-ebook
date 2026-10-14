@@ -38,6 +38,7 @@ TEXTE = {'hebreu': 'en hébreu vocalisé', 'phonetique': 'en phonétique',
          'bilingue': 'en hébreu vocalisé et en phonétique'}
 MENU = {'hebreu': 'Hébreu', 'phonetique': 'Phonétique', 'bilingue': 'Bilingue'}
 EPUB_NAME = 'siddour_liseuse_{}.epub'
+DEPOT = 'docloulou/Siddour-ebook'  # dépôt GitHub, lien « Contribuer » du pied de page
 
 WEB_CSS = '''
 @font-face { font-family: "SiddurHebrew"; src: url("FONT_URL") format("truetype"); font-display: swap; }
@@ -261,7 +262,8 @@ def web_html(content: str) -> str:
 
 
 class Site:
-    def __init__(self, livres: list[Livre], dossier: Path, url: str):
+    def __init__(self, livres: list[Livre], dossier: Path, url: str, depot: str = DEPOT):
+        self.github = 'https://github.com/' + depot
         self.livres, self.dossier, self.url = livres, dossier, url.rstrip('/') + '/' if url else ''
         self.version = livres[0].version
         self.pages: list[str] = []  # chemins pour le sitemap
@@ -324,7 +326,9 @@ class Site:
                 + SITE_NAME + '</a>' + nav + '</div></header>\n<main>\n' + body + '\n</main>\n'
                 '<footer class="site-foot"><p>' + exposants(self.version.complet) + ' · Textes issus de '
                 '<a href="https://www.sefaria.org">Sefaria</a> · '
-                '<a href="' + root + 'index.html#telecharger">Télécharger les EPUB</a></p></footer>\n'
+                '<a href="' + root + 'index.html#telecharger">Télécharger les EPUB</a></p>'
+                '<p>Projet libre et collaboratif : <a href="' + self.github + '">contribuer sur GitHub</a> · '
+                '<a href="' + self.github + '/issues">signaler une erreur</a></p></footer>\n'
                 '</body>\n</html>\n')
         target = self.dossier / path
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -526,11 +530,11 @@ class Site:
         self.cache = nom
 
 
-def build_site(livres: list[Livre], dossier: Path, sortie: Path, url: str = '') -> Path:
+def build_site(livres: list[Livre], dossier: Path, sortie: Path, url: str = '', depot: str = DEPOT) -> Path:
     if dossier.exists():
         shutil.rmtree(dossier)
     dossier.mkdir(parents=True)
-    site = Site(livres, dossier, url)
+    site = Site(livres, dossier, url, depot)
     site.assets(sortie)
     for livre in livres:
         site.edition(livre)

@@ -88,6 +88,7 @@ Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
 - un sommaire par édition ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
 - une application installable qui se lit hors connexion et se met à jour à chaque publication (voir plus bas).
+- en pied de page, un lien vers ce dépôt pour contribuer et un autre pour signaler une erreur. L’action donne le dépôt avec `--depot` ; par défaut, c’est `docloulou/Siddour-ebook`.
 
 Pour le référencement, chaque page porte :
 

@@ -9,6 +9,7 @@ from .consignes import Consignes
 from .edition import FONT_PATH, build_edition, render_book
 from .phonetique import translit
 from .plan import PLAN, select_plan
+from .site import DEPOT
 from .sources import fetch_section, validate_source
 from .version import Version
 
@@ -36,6 +37,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--date', type=date.fromisoformat, default=date.today(),
                     help='date de fabrication AAAA-MM-JJ (défaut : aujourd’hui)')
     ap.add_argument('--site', metavar='DOSSIER', help='produire aussi le site web de lecture (GitHub Pages)')
+    ap.add_argument('--depot', default=DEPOT,
+                    help='dépôt GitHub (propriétaire/dépôt) cité dans le pied de page du site')
     ap.add_argument('--site-url', default='', help='adresse publique du site, pour les liens canoniques et le sitemap')
     ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
     args = ap.parse_args(argv)
@@ -76,7 +79,7 @@ def main(argv: list[str] | None = None) -> None:
         livres.append(livre)
     if args.site:
         from .site import build_site
-        build_site(livres, Path(args.site), sortie, args.site_url)
+        build_site(livres, Path(args.site), sortie, args.site_url, args.depot)
     cp = sortie / 'rubriques_traduites.csv'
     consignes.export(cp)
     print('CSV :', cp)
