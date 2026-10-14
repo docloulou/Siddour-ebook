@@ -484,11 +484,13 @@ class ReadingLayout:
                                               resume=self.resume_from(j), css='role')))
             return j
         # Barékhénou / Barékh alénou : deux versions d'une même bénédiction.
+        # L'ashkénaze présente de même « Morid hatal / Machiv haroua’h », dans Me’hayé hamétim.
         if p == 'בקיץ' and i + 3 < len(self.records) and self.records[i + 2]['plain'] == 'בחורף':
             body = ('<p class="alternative-label">En été</p>' + self.record_body(self.records[i + 1])
                     + '<p class="alternative-label">En hiver</p>' + self.record_body(self.records[i + 3]))
-            out.append(self.block(i, self.box(body, 'Bénédiction de l’année · une seule version',
-                                              resume=self.resume_from(i + 4), css='choice')))
+            title = ('Une seule formule selon la saison' if self.records[i + 1]['plain'].startswith('מוריד הטל')
+                     else 'Bénédiction de l’année · une seule version')
+            out.append(self.block(i, self.box(body, title, resume=self.resume_from(i + 4), css='choice')))
             return i + 4
         if p.startswith('בקיץ') and 'בחורף' in p and 'מוריד הטל' in p:
             body = ''.join('<p class="alternative-label">' + html.escape(t) + '</p>' if k == 'instruction'
