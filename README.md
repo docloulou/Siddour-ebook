@@ -3,11 +3,21 @@
 <!-- publication:debut -->
 ## Télécharger
 
-**1ʳᵉ édition — 14 octobre 2026** · [notes de publication](https://github.com/docloulou/Siddour-ebook/releases/tag/edition-1-revision-0) · [toutes les éditions](https://github.com/docloulou/Siddour-ebook/releases)
+**1ʳᵉ édition, révision 1 — 14 octobre 2026** · [notes de publication](https://github.com/docloulou/Siddour-ebook/releases/tag/edition-1-revision-1) · [toutes les éditions](https://github.com/docloulou/Siddour-ebook/releases)
 
-- [Édition hébraïque](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-0/siddour_liseuse_hebreu.epub)
-- [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-0/siddour_liseuse_phonetique.epub)
-- [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-0/siddour_liseuse_bilingue.epub)
+### Rite séfarade (Edot HaMizrah)
+
+- [Édition hébraïque](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-1/siddour_liseuse_hebreu.epub)
+- [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-1/siddour_liseuse_phonetique.epub)
+- [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-1/siddour_liseuse_bilingue.epub)
+
+### Rite ashkénaze
+
+*Pourim, le Tikoun ’Hatsot et les prières du cycle de la vie (mariage, brit mila, deuil) ne sont pas encore inclus : la source Sefaria de ce rite ne les contient pas.*
+
+- [Édition hébraïque](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-1/siddour_liseuse_ashkenaze_hebreu.epub)
+- [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-1/siddour_liseuse_ashkenaze_phonetique.epub)
+- [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-1/siddour_liseuse_ashkenaze_bilingue.epub)
 
 📖 [Lire en ligne dans le navigateur](https://docloulou.github.io/Siddour-ebook/)
 <!-- publication:fin -->
