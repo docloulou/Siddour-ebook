@@ -208,9 +208,9 @@ Il télécharge alors la nouvelle version, éditions gardées hors ligne compris
 
 - s’ouvre en plein écran, avec son icône et son nom court « Siddour » ;
 - place la barre d’état sur une bande bleue fixe, sans masquer le contenu sous l’encoche ; la barre des sections se colle juste dessous ;
-- affiche un écran de démarrage (le titre doré sur fond bleu), adapté à chaque modèle d’iPhone et d’iPad.
+- affiche un écran de démarrage (סידור et « Sidour » en lettres dorées sur fond bleu), adapté à chaque modèle d’iPhone et d’iPad.
 
-**Icônes et écrans de démarrage.** Ils sont tirés de la couverture et rangés dans `assets/pwa/`. Après un changement de couverture, les régénérer avec :
+**Icônes et écrans de démarrage.** Ils sont tirés de la couverture et rangés dans `assets/pwa/`. L’application sert les deux rites : on n’y garde que le titre commun à toutes les couvertures (le mot סידור, « Sidour » et le filet doré), sans le rite ni l’édition. Après un changement de couverture, les régénérer avec :
 
 ```bash
 python3 -m siddour.icones
@@ -263,7 +263,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
-| `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis la couverture ; texture du fond « papier ancien ». |
+| `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis le titre commun des couvertures ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site et de la PWA. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |
 
