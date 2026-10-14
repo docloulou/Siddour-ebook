@@ -109,6 +109,13 @@ Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
 - une page d’accueil avec les couvertures, la lecture en ligne et les EPUB à télécharger ;
 - un sommaire par édition ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
+- une barre qui reste en haut de l’écran pendant la lecture : section précédente ‹, liste de toutes les sections rangées par chapitre pour y aller directement, section suivante ›. Sur les pages sans sections (accueil…), c’est le bandeau du site qui reste en haut.
+- un bouton **Aa Affichage** dans cette barre, qui ouvre les réglages de lecture :
+  - taille du texte (A− / A+, de 80 % à 210 %) ;
+  - alignement de l’hébreu et, séparément, de la phonétique : à droite, justifié, centré ou à gauche (par défaut, hébreu à droite, phonétique justifiée) ;
+  - fond de page : blanc (par défaut), ivoire (jaune pâle) ou papier ancien vergé.
+
+  Les réglages sont gardés sur l’appareil et appliqués dès l’ouverture de chaque page. La texture du papier ancien (`assets/pwa/papier.jpg`, raccordable sur ses bords) est générée avec les icônes par `python3 -m siddour.icones`.
 - une application installable qui se lit hors connexion et se met à jour à chaque publication (voir plus bas).
 - en pied de page, un lien vers ce dépôt pour contribuer, un autre pour signaler une erreur, et un lien « nous écrire ». L’action donne le dépôt avec `--depot` ; par défaut, c’est `docloulou/Siddour-ebook`.
   L’adresse de contact n’apparaît en clair ni dans les pages ni dans le dépôt : elle est stockée à l’envers et encodée (`CONTACT` dans `siddour/site.py`), puis reconstituée par le script de la page au moment du clic.
@@ -164,7 +171,8 @@ python3 -m siddour.icones
 - l’installabilité selon Chrome ;
 - la lecture hors connexion ;
 - la mise à jour automatique après une nouvelle révision ;
-- l’aide affichée sur iPhone.
+- l’aide affichée sur iPhone ;
+- la barre des sections qui suit le défilement et les réglages d’affichage gardés d’une page à l’autre.
 
 Les contrôles dans le navigateur demandent Playwright (`pip install playwright`).
 
@@ -200,7 +208,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
-| `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture. |
+| `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site et de la PWA. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |
 
