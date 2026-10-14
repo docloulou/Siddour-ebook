@@ -6,8 +6,9 @@ Tout est calculé dans le navigateur du lecteur :
   (https://www.hebcal.com/home/developer-apis, données sous licence CC BY 4.0) ;
 - la recherche de ville par l'API de géocodage d'Open-Meteo (noms en français, fuseau horaire) ;
 - le nom de la ville trouvée par « Utiliser ma position » par l'API de BigDataCloud.
-L'édition du siddour (hébreu, phonétique, bilingue) est demandée une seule fois, à la première visite.
-Les réglages (ville, allumage, sortie de Chabbat, édition) restent dans le localStorage ;
+L'édition du siddour (hébreu, phonétique, bilingue), et son rite quand le site en a plusieurs,
+est demandée une seule fois, à la première visite.
+Les réglages (ville, allumage, sortie de Chabbat, rite, édition) restent dans le localStorage ;
 la dernière réponse de Hebcal y est gardée pour un affichage hors connexion.
 """
 from __future__ import annotations
@@ -115,6 +116,8 @@ AUJOURDHUI_CSS = '''
 .choix-edition[hidden] { display: none; }
 .choix-edition p { margin: 0; color: #555; }
 .choix-edition .segments { margin: .35em 0 0; }
+.choix-edition .segments + p { margin-top: .6em; }
+.premier-choix .choix-rite { justify-content: center; margin: 0 0 .4em; }
 .premier-choix { box-sizing: border-box; width: calc(100% - 2em); max-width: 23em; border: 0; border-radius: 12px;
                  padding: 1.2em 1.1em 1em; background: #fff; color: #1d1d1d; box-shadow: 0 10px 40px rgba(0,0,0,.35);
                  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.4; }
@@ -160,6 +163,8 @@ LIVRES_CSS = '''
               text-align: left; background: #faf6ea; }
 .carte-aide h2 { text-align: center; }
 .carte-aide p { margin: .4em 0; }
+.rite-titre { text-align: center; margin: 1.6em 0 0; }
+.rite + .rite { margin-top: 2em; padding-top: .4em; border-top: 1px solid #e6dfcc; }
 @media (max-width: 40em) { .editions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8em; margin: 1em 0; }
                            .edition-carte p.texte { display: none; } }
 '''
@@ -170,7 +175,8 @@ AUJOURDHUI_JS = r'''"use strict";
   const page = document.querySelector("[data-aujourdhui]");
   if (!page) return;
   const $ = (s) => page.querySelector(s);
-  const CIBLES = JSON.parse(document.getElementById("cibles").textContent);
+  // Par rite : nom, préfixe des pages, éditions publiées et pages du jour (voir corps()).
+  const RITES = JSON.parse(document.getElementById("cibles").textContent);
   const HEBCAL = "https://www.hebcal.com/";
   const GEO = "https://geocoding-api.open-meteo.com/v1/search";
   const GEO_INVERSE = "https://api.bigdatacloud.net/data/reverse-geocode-client";
@@ -194,7 +200,12 @@ AUJOURDHUI_JS = r'''"use strict";
   let reglages = {};
   try { reglages = JSON.parse(localStorage.getItem(CLE)) || {}; } catch (e) {}
   const lieu = () => reglages.lieu || PARIS;
-  const edition = () => EDITIONS[reglages.edition] ? reglages.edition : "bilingue";
+  const rite = () => RITES[reglages.rite] ? reglages.rite : Object.keys(RITES)[0];
+  const edition = () => {
+    const modes = RITES[rite()].modes;
+    return modes.includes(reglages.edition) ? reglages.edition : modes.includes("bilingue") ? "bilingue" : modes[0];
+  };
+  const dossier = () => RITES[rite()].prefixe + edition() + "/";
   const enregistrer = () => { try { localStorage.setItem(CLE, JSON.stringify(reglages)); } catch (e) {} };
   const jerusalem = (l) => Math.abs(l.lat - 31.77) < .12 && Math.abs(l.lon - 35.22) < .12;
   const minutesBougies = () => reglages.bougies ? Number(reglages.bougies) : (jerusalem(lieu()) ? 40 : 18);
@@ -338,8 +349,8 @@ AUJOURDHUI_JS = r'''"use strict";
   const zman = (donnees, cle, iso) => donnees && donnees.zmanim[cle] ? donnees.zmanim[cle][iso] : null;
 
   // -- Affichage ---------------------------------------------------------------------------
-  const lien = (cle, texte, classe) => CIBLES[cle]
-    ? '<a' + (classe ? ' class="' + classe + '"' : "") + ' href="' + edition() + "/" + CIBLES[cle] + '">' + texte + "</a>"
+  const lien = (cle, texte, classe) => RITES[rite()].pages[cle]
+    ? '<a' + (classe ? ' class="' + classe + '"' : "") + ' href="' + dossier() + RITES[rite()].pages[cle] + '">' + texte + "</a>"
     : (classe ? '<span class="' + classe + '">' + texte + "</span>" : texte);
 
   function afficherDate(aujourdhui, donnees, maintenant) {
@@ -418,7 +429,7 @@ AUJOURDHUI_JS = r'''"use strict";
       + (l.notes.length ? '<p class="notes">' + l.notes.join("<br>") + "</p>" : "") + "</li>").join("");
     $(".raccourcis").innerHTML = [lien("hamazone", "Birkat hamazone"), lien("me-ene-chaloch", "Mé’ène chaloch"),
       lien("brakhot", "Bénédictions"), lien("voyageur", "Téfilat haderekh"),
-      '<a href="' + edition() + '/index.html">Tout le siddour</a>'].filter((x) => x.startsWith("<a")).join("");
+      '<a href="' + dossier() + 'index.html">Tout le siddour</a>'].filter((x) => x.startsWith("<a")).join("");
   }
 
   const ZMANIM = [
@@ -563,20 +574,39 @@ AUJOURDHUI_JS = r'''"use strict";
   }
   actualiser(true);
 
-  // -- Édition du siddour : demandée à la première visite, modifiable dans « Prières du jour » --
+  // -- Rite et édition du siddour : demandés à la première visite, modifiables dans « Prières du jour » --
   const choix = $(".choix-edition");
   const majEdition = () => {
-    const m = edition();
-    $(".bouton-edition").textContent = EDITIONS[m] + " ▾";
-    $(".bouton-edition").setAttribute("aria-label", "Édition du siddour : " + EDITIONS[m] + ". Changer");
-    choix.querySelectorAll("[data-edition]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.edition === m)));
+    const r = rite(), m = edition();
+    const nom = (Object.keys(RITES).length > 1 ? RITES[r].nom + " · " : "") + EDITIONS[m];
+    $(".bouton-edition").textContent = nom + " ▾";
+    $(".bouton-edition").setAttribute("aria-label", "Siddour : " + nom + ". Changer");
+    page.querySelectorAll("[data-rite]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.rite === r)));
+    choix.querySelectorAll("[data-edition]").forEach((b) => {
+      b.hidden = !RITES[r].modes.includes(b.dataset.edition);
+      b.setAttribute("aria-pressed", String(b.dataset.edition === m));
+    });
   };
-  const choisirEdition = (m) => {
-    reglages.edition = EDITIONS[m] ? m : "bilingue";
-    enregistrer(); majEdition();
+  const afficherPrieres = () => {
+    majEdition();
     const maintenant = new Date();
     prieres(donnees, jourIso(maintenant), maintenant);
   };
+  const choisirEdition = (m) => {
+    reglages.edition = EDITIONS[m] ? m : "bilingue";
+    enregistrer(); afficherPrieres();
+  };
+  // Les onglets du menu suivent le rite choisi (voir app.js).
+  const choisirRite = (r) => {
+    if (!RITES[r]) return;
+    reglages.rite = r;
+    enregistrer(); afficherPrieres();
+    document.dispatchEvent(new Event("siddour-rite"));
+  };
+  page.querySelectorAll(".choix-rite").forEach((el) => el.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-rite]");
+    if (b) choisirRite(b.dataset.rite);
+  }));
   majEdition();
   $(".bouton-edition").addEventListener("click", (e) => {
     choix.hidden = !choix.hidden;
@@ -706,10 +736,18 @@ AUJOURDHUI_JS = r'''"use strict";
 '''
 
 
-def corps(cibles: dict[str, str], couverture: str, sous_titre: str) -> str:
-    """Contenu de la page d'accueil ; le script remplit les cartes au chargement."""
+def corps(cibles: dict[str, dict], couverture: str, sous_titre: str) -> str:
+    """Contenu de la page d'accueil ; le script remplit les cartes au chargement.
+
+    cibles : pour chaque rite, {"nom", "prefixe", "modes", "pages"}, où pages associe
+    une clé de CIBLES au chemin de la page dans l'édition. Le premier rite est celui par défaut.
+    """
     editions = ''.join('<button type="button" data-edition="' + m + '">' + nom + '</button>'
                        for m, nom in (('hebreu', 'Hébreu'), ('phonetique', 'Phonétique'), ('bilingue', 'Bilingue')))
+    # Le choix du rite n'apparaît que si le site en a plusieurs.
+    rites = ('<div class="segments choix-rite">' + ''.join(
+        '<button type="button" data-rite="' + html.escape(code, quote=True) + '">' + html.escape(r['nom']) + '</button>'
+        for code, r in cibles.items()) + '</div>') if len(cibles) > 1 else ''
     bougies = ''.join('<option value="' + v + '">' + t + '</option>' for v, t in (
         ('', 'Auto : 18 min (40 à Jérusalem)'), ('15', '15 min'), ('18', '18 min'), ('20', '20 min'),
         ('22', '22 min'), ('30', '30 min'), ('40', '40 min')))
@@ -745,8 +783,9 @@ def corps(cibles: dict[str, str], couverture: str, sous_titre: str) -> str:
         '<section class="carte" id="prieres"><h2>Prières du jour <small>'
         '<button type="button" class="lien bouton-edition" aria-expanded="false" aria-controls="choix-edition">'
         'Bilingue ▾</button></small></h2>'
-        '<div class="choix-edition" id="choix-edition" hidden><p>Ouvrir les prières dans l’édition :</p>'
-        '<div class="segments">' + editions + '</div></div>'
+        '<div class="choix-edition" id="choix-edition" hidden>'
+        + ('<p>Rite :</p>' + rites if rites else '')
+        + '<p>Ouvrir les prières dans l’édition :</p><div class="segments">' + editions + '</div></div>'
         '<ul class="prieres"></ul>'
         '<div class="raccourcis"></div></section>'
         '<p class="etat-donnees discret" hidden>Horaires indisponibles : vérifier la connexion.</p>'
@@ -758,7 +797,9 @@ def corps(cibles: dict[str, str], couverture: str, sous_titre: str) -> str:
         '<a class="vers-livres" href="livres.html"><img src="' + couverture + '" alt="" width="52" height="78">'
         '<span><b>Le siddour : lire en ligne ou télécharger</b><small>' + html.escape(sous_titre) + '</small></span></a>'
         '<dialog class="premier-choix" aria-labelledby="premier-choix-titre" hidden>'
-        '<h2 id="premier-choix-titre">Bienvenue</h2><p>Comment lire les prières ?</p><div class="options">'
+        '<h2 id="premier-choix-titre">Bienvenue</h2>'
+        + ('<p>Quel rite suivez-vous ?</p>' + rites if rites else '')
+        + '<p>Comment lire les prières ?</p><div class="options">'
         '<button type="button" data-edition="hebreu"><b>Hébreu</b><span class="ex" lang="he" dir="rtl">בָּרוּךְ אַתָּה</span></button>'
         '<button type="button" data-edition="phonetique"><b>Phonétique</b><span class="ex">Baroukh ata</span></button>'
         '<button type="button" data-edition="bilingue"><b>Bilingue</b><span class="ex">hébreu puis phonétique</span></button>'

@@ -1,0 +1,114 @@
+{
+ "versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "על פירות האילן חוץ מז' מינים ופירות האדמה וירקות ועל כל המשקין ועל דבר שאין גידולו מן הארץ",
+    "",
+    "אחרי האכילה אומר:",
+    "",
+    "בָּרוּךְ אַתָּה יְ‑יָ אֱ‑לֹהֵינוּ מֶלֶךְ הָעוֹלָם בּוֹרֵא נְפָשׁוֹת רַבּוֹת וְחֶסְרוֹנָן עַל כָּל מַה שֶׁבָּרָאתָּ לְהַחֲיוֹת בָּהֶם נֶפֶשׁ כָּל חָי בָּרוּךְ חֵי <em><small>חַי</small></em> הָעוֹלָמִים:"
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Ashkenaz",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Borei Nefashot",
+ "heRef": "סידור אשכנז, ברכות, ברכת הנהנין, אכילה, ברכות אחרונות, בורא נפשות",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Borei Nefashot",
+ "heSectionRef": "סידור אשכנז, ברכות, ברכת הנהנין, אכילה, ברכות אחרונות, בורא נפשות",
+ "firstAvailableSectionRef": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Borei Nefashot",
+ "isSpanning": false,
+ "next": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Blessings on Sights Sounds and Smells",
+ "prev": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Al Hamichyah",
+ "title": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Borei Nefashot",
+ "book": "Siddur Ashkenaz, Berachot, Birkat Hanehenin, Eating, Brachot Achronot, Borei Nefashot",
+ "heTitle": "סידור אשכנז, ברכות, ברכת הנהנין, אכילה, ברכות אחרונות, בורא נפשות",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Ashkenaz",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור אשכנז",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  1
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Borei Nefashot"
+ ],
+ "heTitleVariants": [
+  "בורא נפשות"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}

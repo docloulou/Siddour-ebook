@@ -8,7 +8,8 @@ from pathlib import Path
 from .consignes import Consignes
 from .edition import FONT_PATH, build_edition, render_book
 from .phonetique import translit
-from .plan import PLAN, select_plan
+from .plan import select_plan
+from .rites import RITES
 from .site import DEPOT
 from .sources import fetch_section, validate_source
 from .version import Version
@@ -17,10 +18,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(description='Siddour séfarade complet : hébreu, phonétique et bilingue, '
+    ap = argparse.ArgumentParser(description='Siddour séfarade et ashkénaze : hébreu, phonétique et bilingue, '
                                              'avec consignes françaises intégrées.')
+    ap.add_argument('--rite', choices=['tous', *RITES], default='tous',
+                    help='tous génère les éditions des deux rites (défaut)')
     ap.add_argument('--mode', choices=['tous', 'hebreu', 'phonetique', 'bilingue'], default='tous',
-                    help='tous génère les trois ePub (défaut)')
+                    help='tous génère les trois ePub de chaque rite (défaut)')
     ap.add_argument('--sortie', default='.', help='dossier de sortie')
     ap.add_argument('--cache', default=str(ROOT / 'cache'))
     ap.add_argument('--offline', action='store_true', help='utiliser uniquement les textes déjà mis en cache')
@@ -43,9 +46,12 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
     args = ap.parse_args(argv)
 
+    rites = list(RITES.values()) if args.rite == 'tous' else [RITES[args.rite]]
     if args.liste:
-        for c in PLAN:
-            print(c['id'], ':', c['fr'], '(' + str(len(c['sections'])) + ' sections)')
+        for rite in rites:
+            print('#', rite.libelle)
+            for c in rite.plan:
+                print(c['id'], ':', c['fr'], '(' + str(len(c['sections'])) + ' sections)')
         return
     if args.translit:
         print(translit(args.translit))
@@ -53,17 +59,23 @@ def main(argv: list[str] | None = None) -> None:
 
     consignes = Consignes()
     consignes.load_overrides(args.rubriques)
-    plan = select_plan(args.chapitres, complet=not args.quotidien)
-    sources: dict[str, dict] = {}
+    plans = {}
+    for rite in rites:
+        plans[rite.code] = select_plan(args.chapitres, not args.quotidien, rite.plan, strict=len(rites) == 1)
+    if args.chapitres and not any(plans.values()):
+        select_plan(args.chapitres, not args.quotidien, rites[0].plan)  # message d'erreur habituel
+    sources: dict[str, dict[str, dict]] = {}
     failures = []
-    for chap in plan:
-        for _, ref in chap['sections']:
-            try:
-                data = fetch_section(ref, Path(args.cache), args.offline)
-                validate_source(data, ref)
-                sources[ref] = data
-            except Exception as exc:
-                failures.append(ref + ' : ' + str(exc))
+    for rite in rites:
+        sources[rite.code] = {}
+        for chap in plans[rite.code]:
+            for _, ref in chap['sections']:
+                try:
+                    data = fetch_section(ref, Path(args.cache), args.offline, rite.livre)
+                    validate_source(data, ref)
+                    sources[rite.code][ref] = data
+                except Exception as exc:
+                    failures.append(rite.adjectif + ', ' + ref + ' : ' + str(exc))
     if failures:
         raise SystemExit('Aucun ePub produit, pour éviter une édition incomplète :\n' + '\n'.join(failures))
 
@@ -73,10 +85,13 @@ def main(argv: list[str] | None = None) -> None:
     modes = ['hebreu', 'phonetique', 'bilingue'] if args.mode == 'tous' else [args.mode]
     version = Version(args.edition, args.revision, args.date)
     livres = []
-    for mode in modes:
-        livre = render_book(plan, sources, mode, consignes, version)
-        build_edition(livre, sortie, font, args.html)
-        livres.append(livre)
+    for rite in rites:
+        if not plans[rite.code]:
+            continue
+        for mode in modes:
+            livre = render_book(plans[rite.code], sources[rite.code], mode, consignes, version, rite)
+            build_edition(livre, sortie, font, args.html)
+            livres.append(livre)
     if args.site:
         from .site import build_site
         build_site(livres, Path(args.site), sortie, args.site_url, args.depot)

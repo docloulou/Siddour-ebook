@@ -1,0 +1,126 @@
+{
+ "versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl",
+   "text": [
+    "יִתְגַּדַּל וְיִתְקַדַּשׁ שְׁמֵהּ רַבָּא. [אמן]",
+    "",
+    "בְּעָלְמָא דִּי בְרָא כִרְעוּתֵהּ וְיַמְלִיךְ מַלְכוּתֵהּ בְּחַיֵּיכוֹן וּבְיוֹמֵיכוֹן וּבְחַיֵּי דְכָל בֵּית יִשְׂרָאֵל בַּעֲגָלָא וּבִזְמַן קָרִיב, וְאִמְרוּ אָמֵן.",
+    "[אמן, יְהֵא שְׁמֵהּ רַבָּא מְבָרַךְ לְעָלַם וּלְעָלְמֵי עָלְמַיָּא]",
+    "",
+    "יְהֵא שְׁמֵהּ רַבָּא מְבָרַךְ לְעָלַם וּלְעָלְמֵי עָלְמַיָּא: יִתְבָּרַךְ וְיִשְׁתַּבַּח וְיִתְפָּאַר וְיִתְרוֹמַם וְיִתְנַשֵּׂא וְיִתְהַדָּר וְיִתְעַלֶּה וְיִתְהַלָּל שְׁמֵהּ דְּקֻדְשָׁא. בְּרִיךְ הוּא. בריך הוא. [אמן]",
+    "",
+    "לְעֵלָּא מִן כָּל בִּרְכָתָא וְשִׁירָתָא תֻּשְׁבְּחָתָא וְנֶחֱמָתָא דַּאֲמִירָן בְּעָלְמָא. וְאִמְרוּ אָמֵן. [אמן]",
+    "",
+    "עַל יִשְׂרָאֵל וְעַל רַבָּנָן. וְעַל תַּלְמִידֵיהוֹן וְעַל כָּל תַּלְמִידֵי תַלְמִידֵיהוֹן. וְעַל כָּל מַאן דְּעָסְקִין בְּאוֹרַיְתָא. דִּי בְאַתְרָא קַדִּישָׁא הָדֵין וְדִי בְכָל אֲתַר וַאֲתַר. יְהֵא לְהוֹן וּלְכוֹן שְׁלָמָא רַבָּא חִנָּא וְחִסְדָּא וְרַחֲמִין וְחַיִּין אֲרִיכִין וּמְזוֹנֵי רְוִיחֵי וּפֻרְקָנָא מִן קֳדָם אֲבוּהוֹן דְּבִשְׁמַיָּא וְאַרְעָא וְאִמְרוּ אָמֵן. [אמן]",
+    "",
+    "יְהֵא שְׁלָמָא רַבָּא מִן שְׁמַיָּא וְחַיִּים עָלֵינוּ וְעַל כָּל יִשְׂרָאֵל. וְאִמְרוּ אָמֵן. [אמן]",
+    "",
+    "עוֹשֶׂה שָׁלוֹם בִּמְרוֹמָיו הוּא יַעֲשֶׂה שָׁלוֹם עָלֵינוּ וְעַל כָּל יִשְׂרָאֵל וְאִמְרוּ אָמֵן. [אמן]"
+   ]
+  }
+ ],
+ "available_versions": [
+  {
+   "status": "locked",
+   "priority": "",
+   "license": "Public Domain",
+   "versionNotes": "",
+   "formatAsPoetry": "",
+   "digitizedBySefaria": "",
+   "method": "",
+   "heversionSource": "",
+   "versionUrl": "",
+   "versionTitleInHebrew": "",
+   "versionNotesInHebrew": "",
+   "shortVersionTitle": "",
+   "shortVersionTitleInHebrew": "",
+   "extendedNotes": "",
+   "extendedNotesHebrew": "",
+   "purchaseInformationImage": "",
+   "purchaseInformationURL": "",
+   "hasManuallyWrappedRefs": "",
+   "language": "he",
+   "title": "Siddur Ashkenaz",
+   "versionSource": "http://www.daat.ac.il/daat/sidurim/tohen3.htm",
+   "versionTitle": "Daat Siddur Ashkenaz",
+   "actualLanguage": "he",
+   "languageFamilyName": "hebrew",
+   "isSource": true,
+   "isPrimary": true,
+   "direction": "rtl"
+  }
+ ],
+ "ref": "Siddur Ashkenaz, Kaddish, Kaddish d'Rabbanan",
+ "heRef": "סידור אשכנז, קדיש, קדיש דרבנן",
+ "sections": [],
+ "toSections": [],
+ "sectionRef": "Siddur Ashkenaz, Kaddish, Kaddish d'Rabbanan",
+ "heSectionRef": "סידור אשכנז, קדיש, קדיש דרבנן",
+ "firstAvailableSectionRef": "Siddur Ashkenaz, Kaddish, Kaddish d'Rabbanan",
+ "isSpanning": false,
+ "next": "Siddur Ashkenaz, Kaddish, Kaddish achar HaKevura",
+ "prev": "Siddur Ashkenaz, Kaddish, Kaddish Shalem",
+ "title": "Siddur Ashkenaz, Kaddish, Kaddish d'Rabbanan",
+ "book": "Siddur Ashkenaz, Kaddish, Kaddish d'Rabbanan",
+ "heTitle": "סידור אשכנז, קדיש, קדיש דרבנן",
+ "primary_category": "Liturgy",
+ "type": "Liturgy",
+ "indexTitle": "Siddur Ashkenaz",
+ "categories": [
+  "Liturgy",
+  "Siddur"
+ ],
+ "heIndexTitle": "סידור אשכנז",
+ "isComplex": true,
+ "isDependant": false,
+ "order": [
+  1
+ ],
+ "collectiveTitle": "",
+ "heCollectiveTitle": "",
+ "alts": [],
+ "textDepth": 1,
+ "sectionNames": [
+  "Paragraph"
+ ],
+ "addressTypes": [
+  "Integer"
+ ],
+ "titleVariants": [
+  "Kaddish d'Rabbanan",
+  "Kaddish al Yisrael",
+  "Kaddish of the Rabbis"
+ ],
+ "heTitleVariants": [
+  "קדיש דרבנן",
+  "קדיש על ישראל"
+ ],
+ "index_offsets_by_depth": {},
+ "warnings": []
+}

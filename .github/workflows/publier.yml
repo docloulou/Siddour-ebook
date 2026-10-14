@@ -1,5 +1,5 @@
 # Publication manuelle : Actions > « Publier les EPUB » > Run workflow.
-# Fabrique les trois EPUB numérotés, les vérifie avec EPUBCheck, met à jour
+# Fabrique les six EPUB numérotés (trois par rite), les vérifie avec EPUBCheck, met à jour
 # les liens du README, crée la release correspondante et publie le site de
 # lecture sur GitHub Pages (Settings > Pages > Source : GitHub Actions).
 name: Publier les EPUB
@@ -98,13 +98,21 @@ jobs:
             echo "**$LIBELLE**, fabriquée le $DATE."
             echo
             if [ -n "$NOTES" ]; then echo "$NOTES"; echo; fi
+            echo "Rite séfarade (Edot HaMizrah) :"
+            echo
             echo "- \`siddour_liseuse_hebreu.epub\` : textes en hébreu, consignes en français"
             echo "- \`siddour_liseuse_phonetique.epub\` : textes en phonétique, consignes en français"
             echo "- \`siddour_liseuse_bilingue.epub\` : chaque passage en hébreu puis en phonétique"
             echo
+            echo "Rite ashkénaze (sans Pourim, le Tikoun ’Hatsot ni le cycle de la vie) :"
+            echo
+            echo "- \`siddour_liseuse_ashkenaze_hebreu.epub\` : textes en hébreu, consignes en français"
+            echo "- \`siddour_liseuse_ashkenaze_phonetique.epub\` : textes en phonétique, consignes en français"
+            echo "- \`siddour_liseuse_ashkenaze_bilingue.epub\` : chaque passage en hébreu puis en phonétique"
+            echo
             echo "Lire en ligne : ${{ steps.pages.outputs.base_url }}/"
           } > notes.md
-          gh release create "$TAG" dist/*.epub --title "Siddour séfarade — $LIBELLE" --notes-file notes.md --latest
+          gh release create "$TAG" dist/*.epub --title "Siddour séfarade et ashkénaze — $LIBELLE" --notes-file notes.md --latest
 
       - name: Envoyer le site
         uses: actions/upload-pages-artifact@v3
