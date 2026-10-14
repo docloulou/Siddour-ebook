@@ -13,22 +13,25 @@ from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from .rites import RITES
 from .version import TAG_RE, Version, suivante
 
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / 'README.md'
 DEBUT, FIN = '<!-- publication:debut -->', '<!-- publication:fin -->'
-LIVRES = [('Édition hébraïque', 'siddour_liseuse_hebreu.epub'),
-          ('Édition phonétique', 'siddour_liseuse_phonetique.epub'),
-          ('Édition hébreu puis phonétique', 'siddour_liseuse_bilingue.epub')]
+EDITIONS = [('hebreu', 'Édition hébraïque'), ('phonetique', 'Édition phonétique'),
+            ('bilingue', 'Édition hébreu puis phonétique')]
 
 
 def bloc_readme(version: Version, depot: str, site: str = '') -> str:
     base = 'https://github.com/' + depot + '/releases/download/' + version.tag + '/'
-    liens = '\n'.join('- [' + nom + '](' + base + fichier + ')' for nom, fichier in LIVRES)
+    liens = '\n'.join('\n### ' + rite.libelle + '\n\n'
+                      + ('*' + rite.limites + '*\n\n' if rite.limites else '')
+                      + '\n'.join('- [' + nom + '](' + base + rite.epub(mode) + ')' for mode, nom in EDITIONS)
+                      for rite in RITES.values())
     return (DEBUT + '\n## Télécharger\n\n**' + version.complet + '** · '
             '[notes de publication](https://github.com/' + depot + '/releases/tag/' + version.tag + ')'
-            ' · [toutes les éditions](https://github.com/' + depot + '/releases)\n\n'
+            ' · [toutes les éditions](https://github.com/' + depot + '/releases)\n'
             + liens + '\n'
             + ('\n📖 [Lire en ligne dans le navigateur](' + site.rstrip('/') + '/)\n' if site else '') + FIN)
 

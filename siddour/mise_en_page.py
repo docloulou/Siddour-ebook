@@ -17,6 +17,7 @@ import re
 from .consignes import REFERENCE_RE
 from .hebreu import HE_RE, clean_markup, find_hebrew, is_vocalized, loose, outer_units, parse_paragraph, plain_hebrew
 from .phonetique import translit
+from .sources import AMIDA_RE
 
 # Variante insérée dans le texte d'une prière : début, séparateur, fin.
 VAR_OPEN, VAR_SEP, VAR_CLOSE = '', '', ''
@@ -126,12 +127,14 @@ def append_to_last_prayer(parts: list[str], span: str) -> bool:
 
 
 class ReadingLayout:
-    def __init__(self, title, paragraphs, mode, ref, consignes):
+    def __init__(self, title, paragraphs, mode, ref, consignes, bornes=None):
         self.title, self.mode, self.ref, self.c = title, mode, ref, consignes
+        # Section réunie de plusieurs prières : début, fin et titre anglais de chacune.
+        self.bornes = {start: end for start, end, _ in bornes or []}
         self.notes: list[list] = []      # [numéro, texte, passage concerné]
         self.pending: list[int] = []     # notes à rattacher au prochain passage récité
         self.carry: list[str] = []       # appels de note sans place propre, posés sur ce passage
-        self.is_amida = any(k in ref for k in ('Amida', 'Amidah', 'Mussaf'))
+        self.is_amida = bool(AMIDA_RE.search(ref))
         self.is_meal = ref == 'Post Meal Blessing'
         self.in_zimoun = False
         self.records = []
@@ -447,7 +450,8 @@ class ReadingLayout:
             return None
         # Quelques intertitres de la source n'étaient pas balisés <big>.
         if p == 'ברכת כהנים' or (p.startswith('קדושה') and len(p) < 55):
-            j = self.span_until(i + 1)
+            # Repère posé au début d'une prière réunie : l'encadré la couvre en entier.
+            j = self.bornes.get(i, self.span_until(i + 1))
             label = ('Bénédiction des Cohanim · répétition de l’Amida' if p == 'ברכת כהנים'
                      else 'Kedoucha · répétition de l’Amida')
             body = ''.join(self.record_body(x) for x in self.records[i + 1:j])
@@ -551,5 +555,5 @@ class ReadingLayout:
         return '\n'.join(out)
 
 
-def render_section(title, paragraphs, mode, ref, consignes):
-    return ReadingLayout(title, paragraphs, mode, ref, consignes).render()
+def render_section(title, paragraphs, mode, ref, consignes, bornes=None):
+    return ReadingLayout(title, paragraphs, mode, ref, consignes, bornes).render()

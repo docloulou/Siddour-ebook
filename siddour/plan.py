@@ -135,12 +135,15 @@ PLAN = [
 #   Kétoret : déjà inclus dans la prière du matin.
 
 
-def select_plan(chapitres: str | None, complet: bool) -> list[dict]:
+def select_plan(chapitres: str | None, complet: bool, plan: list[dict] | None = None,
+                strict: bool = True) -> list[dict]:
+    """Chapitres retenus ; strict=False ignore les identifiants absents de ce plan (autre rite)."""
+    plan = PLAN if plan is None else plan
     if chapitres:
         wanted = [c.strip() for c in chapitres.split(",") if c.strip()]
-        known = {c["id"] for c in PLAN}
+        known = {c["id"] for c in plan}
         unknown = [w for w in wanted if w not in known]
-        if unknown:
+        if unknown and strict:
             sys.exit(f"Chapitres inconnus : {', '.join(unknown)}  (voir --liste)")
-        return [c for c in PLAN if c["id"] in wanted]
-    return [c for c in PLAN if complet or c["quotidien"]]
+        return [c for c in plan if c["id"] in wanted]
+    return [c for c in plan if complet or c["quotidien"]]

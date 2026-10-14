@@ -152,6 +152,9 @@ class Consignes:
                 description = self.translations[key].split(') : ')[0] + ') :'
                 self.seen.add(self.where + (key,))
                 return [('instruction', description)] + self.split(text[end + 1:])
+        # Référence biblique seule : elle accompagne le verset, comme au fil du texte.
+        if REFERENCE_RE.fullmatch(text.strip()) and rubric_key(text) not in self._table():
+            return [('prayer', text.strip())]
         words = re.findall(r'\S+', unicodedata.normalize('NFC', text))
         if not words:
             return []
@@ -187,15 +190,21 @@ class Consignes:
         if key in self.translations:
             self.seen.add(self.where + (key,))
             return self.translations[key]
-        body = key[1:-1].strip()
+        body = re.sub(r'\s*-\s*', '-', key[1:-1].strip())
+        # « בשינוי » : verset cité avec des changements ; « חצי ראשון » : sa première moitié.
+        changed = re.search(r',?\s*(?:עם\s+|ב)שינוי$', body)
+        body = body[:changed.start()] if changed else body
+        half = re.search(r'\s+חצי ראשון,?$', body)
+        body = body[:half.start()] if half else body
         for he, fr in sorted(REFERENCE_BOOKS.items(), key=lambda x: -len(x[0])):
             if body.startswith(he + ' '):
-                values = re.split(r'[ :]+', body[len(he):].strip())
+                values = re.split(r'[ :,]+', body[len(he):].strip())
                 if fr == 'Chroniques':
                     fr = ('I' if values.pop(0).startswith('א') else 'II') + ' ' + fr
                 converted = ['–'.join(str(sum(NUMBER_VALUES.get(c, 0) for c in part)) for part in value.split('-'))
                              for value in values]
-                return '(' + fr + ' ' + ', '.join(converted) + '.)'
+                return ('(' + ('D’après ' if changed else '') + fr + ' ' + ', '.join(converted)
+                        + (', première moitié' if half else '') + '.)')
         self.missing.add('Référence : ' + key)
         return MISSING_REFERENCE
 

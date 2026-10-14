@@ -8,8 +8,8 @@ from pathlib import Path
 
 from .consignes import Consignes
 from .mise_en_page import render_section
-from .plan import BOOK
-from .sources import validate_source
+from .rites import SEFARADE, Rite
+from .sources import validate_source, versions_of
 from .version import Version, date_fr
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,46 +24,47 @@ EDITION_NOTES = {
     'bilingue': 'Chaque passage en hébreu, suivi de sa phonétique ; consignes en français.',
 }
 
-
-COVERS = ROOT / 'assets' / 'covers'
-SERIES = 'Siddour séfarade pour liseuse'
 SERIES_POSITION = {'hebreu': '1', 'phonetique': '2', 'bilingue': '3'}
-DESCRIPTION = {
-    'hebreu': 'Siddour complet du rite séfarade (Edot HaMizrah), textes en hébreu vocalisé, '
-              'consignes en français : prières de la semaine, Chabbat, fêtes, jeûnes, '
-              'bénédictions et cycle de la vie.',
-    'phonetique': 'Siddour complet du rite séfarade (Edot HaMizrah) en phonétique française, '
-                  'consignes en français : prières de la semaine, Chabbat, fêtes, jeûnes, '
-                  'bénédictions et cycle de la vie.',
-    'bilingue': 'Siddour complet du rite séfarade (Edot HaMizrah) : chaque passage en hébreu '
-                'vocalisé suivi de sa phonétique, consignes en français : prières de la semaine, '
-                'Chabbat, fêtes, jeûnes, bénédictions et cycle de la vie.',
+_DESCRIPTION = {
+    'hebreu': '{}, textes en hébreu vocalisé, consignes en français : {}.',
+    'phonetique': '{} en phonétique française, consignes en français : {}.',
+    'bilingue': '{} : chaque passage en hébreu vocalisé suivi de sa phonétique, consignes en français : {}.',
 }
 FONT_NOTICE = 'La police Noto Serif Hebrew est distribuée sous SIL Open Font License 1.1.'
-SUBJECTS = ['Prière juive', 'Siddour', 'Rite séfarade', 'Edot HaMizrah', 'Liturgie', 'Judaïsme']
 
-INTRODUCTION = (
-    '<h1>Introduction</h1>'
-    '<p class="intro">Ce siddour est né d’un souhait simple : que chacun puisse avoir sur soi, '
-    'où qu’il soit, un livre de prière aussi complet que possible. Le voyageur loin de sa '
-    'synagogue, celui qui part pour quelques jours et ne peut emporter ses livres, celui qui '
-    'veut retrouver la prière d’un moment ou d’une fête sans chercher dans plusieurs volumes : '
-    'tous trouveront ici, dans une liseuse ou un téléphone, les offices de la semaine, '
-    'du Chabbat et des fêtes, les jeûnes, les bénédictions et les étapes de la vie.</p>'
-    '<p class="intro">Le texte suit le rite séfarade (Edot HaMizrah). Les consignes sont '
-    'traduites en français et placées juste avant le passage qu’elles concernent, pour que '
-    'l’on sache toujours quoi dire, quand et comment, même sans connaître l’hébreu des '
-    'rubriques. Trois éditions sont proposées : en hébreu, en phonétique, ou chaque passage '
-    'en hébreu suivi de sa phonétique.</p>'
-    '<p class="intro">Il faut pourtant le dire avec humilité : un fichier n’est qu’un '
-    'compagnon de route. Depuis des siècles, c’est le livre de papier, copié, imprimé, '
-    'relié, usé par les mains des pères puis transmis aux enfants, qui a porté les paroles '
-    'saintes à travers les âges et les générations. Aucun écran ne remplace ce siddour '
-    'de famille dont les pages gardent la trace de ceux qui ont prié avant nous. Ce livre '
-    'numérique ne prétend pas prendre sa place ; il voudrait seulement accompagner ceux qui '
-    'sont loin de lui, jusqu’à ce qu’ils le retrouvent.</p>'
-    '<p class="intro fin">Que nos prières soient agréées.</p>'
-)
+
+def description(mode: str, rite: Rite = SEFARADE) -> str:
+    return _DESCRIPTION[mode].format(rite.titre_long, rite.description)
+
+
+# Introduction de la page des livres, quand le site réunit les deux rites.
+RITES_INTRODUCTION = 'Deux rites sont proposés : le rite séfarade (Edot HaMizrah) et le rite ashkénaze.'
+
+
+def introduction(rite: Rite | None = SEFARADE) -> str:
+    """Introduction d'une édition ; sans rite, celle du site qui réunit les deux."""
+    contenu, phrase = (SEFARADE.contenu, RITES_INTRODUCTION) if rite is None else (rite.contenu, rite.introduction)
+    return (
+        '<h1>Introduction</h1>'
+        '<p class="intro">Ce siddour est né d’un souhait simple : que chacun puisse avoir sur soi, '
+        'où qu’il soit, un livre de prière aussi complet que possible. Le voyageur loin de sa '
+        'synagogue, celui qui part pour quelques jours et ne peut emporter ses livres, celui qui '
+        'veut retrouver la prière d’un moment ou d’une fête sans chercher dans plusieurs volumes : '
+        'tous trouveront ici, dans une liseuse ou un téléphone, ' + contenu + '.</p>'
+        '<p class="intro">' + phrase + ' Les consignes sont '
+        'traduites en français et placées juste avant le passage qu’elles concernent, pour que '
+        'l’on sache toujours quoi dire, quand et comment, même sans connaître l’hébreu des '
+        'rubriques. Trois éditions sont proposées : en hébreu, en phonétique, ou chaque passage '
+        'en hébreu suivi de sa phonétique.</p>'
+        '<p class="intro">Il faut pourtant le dire avec humilité : un fichier n’est qu’un '
+        'compagnon de route. Depuis des siècles, c’est le livre de papier, copié, imprimé, '
+        'relié, usé par les mains des pères puis transmis aux enfants, qui a porté les paroles '
+        'saintes à travers les âges et les générations. Aucun écran ne remplace ce siddour '
+        'de famille dont les pages gardent la trace de ceux qui ont prié avant nous. Ce livre '
+        'numérique ne prétend pas prendre sa place ; il voudrait seulement accompagner ceux qui '
+        'sont loin de lui, jusqu’à ce qu’ils le retrouvent.</p>'
+        '<p class="intro fin">Que nos prières soient agréées.</p>'
+    )
 
 
 def exposants(text: str) -> str:
@@ -80,21 +81,21 @@ def colophon(version: Version) -> str:
             '<p>Fabriqué le ' + exposants(date_fr(version.jour)) + '</p></div>')
 
 
-def make_credits(title: str, licences: set[str], mode: str, version: Version) -> str:
+def make_credits(title: str, licences: set[str], mode: str, version: Version, rite: Rite = SEFARADE) -> str:
     items = ''.join('<li>' + html.escape(x) + '</li>' for x in sorted(licences))
     note = ('La phonétique est générée automatiquement selon des conventions françaises '
-            'et peut comporter des approximations. ') if mode != 'hebreu' else ''
+            'et peut comporter des approximations. ' + rite.phonetique) if mode != 'hebreu' else ''
     return ('<h1>À propos de cette édition</h1>'
             '<p class="credits"><b>' + html.escape(title) + '.</b> ' + EDITION_NOTES[mode] + '</p>'
             '<p class="credits">' + exposants(version.complet) + '.</p>'
-            '<p class="credits">Rite séfarade (Edot HaMizrah). Textes issus de Sefaria.</p>'
+            '<p class="credits">' + html.escape(rite.libelle) + '. Textes issus de Sefaria.</p>'
             '<ul class="credits">' + items + '</ul>'
             '<p class="credits">' + note
             + 'Les consignes figurent en italique juste avant le passage qu’elles concernent. '
               'Une variante brève est donnée entre crochets, dans la phrase, avec sa condition. '
               'Les ajouts plus longs sont encadrés et proposent un lien vers la suite de la prière. '
               'Les sources et les précisions techniques sont en notes numérotées, en fin de section. '
-              'Les consignes françaises traduisent cette source et ses usages, notamment ceux du Ben Ich ’Haï.</p>'
+              'Les consignes françaises traduisent cette source et ses usages, ' + rite.usages + '.</p>'
             + ('<p class="credits">' + FONT_NOTICE + '</p>' if mode != 'phonetique' else ''))
 
 
@@ -115,9 +116,9 @@ def make_contents(chapters: list[tuple[str, str, list[str]]]) -> str:
     return '<h1>Sommaire</h1><div class="sommaire">' + ''.join(blocks) + '</div>'
 
 
-def cover_image(mode: str) -> tuple[str, bytes] | None:
+def cover_image(mode: str, rite: Rite = SEFARADE) -> tuple[str, bytes] | None:
     """Couverture de l'édition, recompressée en JPEG si Pillow est disponible."""
-    path = COVERS / ('siddour_' + mode + '.png')
+    path = rite.couvertures / ('siddour_' + mode + '.png')
     if not path.exists():
         return None
     try:
@@ -140,8 +141,8 @@ def cover_page(cover: tuple[str, bytes], title: str) -> str:
             + html.escape(title, quote=True) + '"/></div>')
 
 
-def add_metadata(book, title: str, mode: str, licences: set[str], version: Version) -> None:
-    book.set_identifier('urn:siddour-ebook:edot-hamizrah:' + mode)
+def add_metadata(book, title: str, mode: str, licences: set[str], version: Version, rite: Rite = SEFARADE) -> None:
+    book.set_identifier(rite.urn + mode)
     book.set_title(title)
     # Langue principale du texte récité, puis celle des consignes.
     main, other = ('he', 'fr') if mode == 'hebreu' else ('fr', 'he')
@@ -151,19 +152,19 @@ def add_metadata(book, title: str, mode: str, licences: set[str], version: Versi
     book.add_metadata('DC', 'contributor', 'Sefaria (textes sources)')
     book.add_metadata('DC', 'publisher', 'Siddour-ebook')
     book.add_metadata('DC', 'date', version.jour.isoformat())
-    book.add_metadata('DC', 'description', DESCRIPTION[mode] + ' ' + version.complet + '.')
+    book.add_metadata('DC', 'description', description(mode, rite) + ' ' + version.complet + '.')
     book.add_metadata(None, 'meta', version.libelle, {'property': 'schema:version'})
-    for subject in SUBJECTS:
+    for subject in rite.sujets:
         book.add_metadata('DC', 'subject', subject)
-    book.add_metadata('DC', 'source', 'Sefaria, Siddur Edot HaMizrach (https://www.sefaria.org)')
+    book.add_metadata('DC', 'source', 'Sefaria, ' + rite.livre + ' (https://www.sefaria.org)')
     book.add_metadata('DC', 'rights', 'Textes : Sefaria. ' + ' ; '.join(sorted(licences))
                       + ('. ' + FONT_NOTICE if mode != 'phonetique' else '.'))
-    book.add_metadata(None, 'meta', SERIES, {'property': 'belongs-to-collection', 'id': 'collection'})
+    book.add_metadata(None, 'meta', rite.serie, {'property': 'belongs-to-collection', 'id': 'collection'})
     book.add_metadata(None, 'meta', 'series', {'refines': '#collection', 'property': 'collection-type'})
     book.add_metadata(None, 'meta', SERIES_POSITION[mode], {'refines': '#collection', 'property': 'group-position'})
     # Calibre lit encore ces métadonnées EPUB 2 pour la série.
     book.add_prefix('schema', 'http://schema.org/')
-    book.add_metadata(None, 'meta', '', {'name': 'calibre:series', 'content': SERIES})
+    book.add_metadata(None, 'meta', '', {'name': 'calibre:series', 'content': rite.serie})
     book.add_metadata(None, 'meta', '', {'name': 'calibre:series_index', 'content': SERIES_POSITION[mode]})
     # Accessibilité (schema.org), lue par les catalogues et certaines liseuses.
     for prop, value in [('schema:accessMode', 'textual'), ('schema:accessModeSufficient', 'textual'),
@@ -183,14 +184,20 @@ class Livre:
     version: Version
     licences: set[str]
     chapters: list[tuple[dict, list[tuple[str, str]]]]  # (chapitre du plan, [(titre, html)])
+    rite: Rite = SEFARADE
 
     @property
     def title(self) -> str:
-        return 'Siddour séfarade : ' + TITLES[self.mode]
+        return self.rite.nom + ' : ' + TITLES[self.mode]
+
+    @property
+    def epub(self) -> str:
+        return self.rite.epub(self.mode)
 
 
 def render_book(plan: list[dict], sources: dict, mode: str, consignes: Consignes,
-                version: Version | None = None) -> Livre:
+                version: Version | None = None, rite: Rite = SEFARADE, strict: bool = True) -> Livre:
+    """Met en page une édition ; strict=False laisse les traductions manquantes en place, pour relecture."""
     consignes.missing.clear()
     chapters = []
     licences: set[str] = set()
@@ -199,23 +206,24 @@ def render_book(plan: list[dict], sources: dict, mode: str, consignes: Consignes
         for title, ref in chap['sections']:
             data = sources[ref]
             v, texts = validate_source(data, ref)
-            licences.add((data.get('indexTitle') or data.get('book') or BOOK) + ', '
-                         + v.get('versionTitle', '').strip() + ' : ' + v.get('license', 'licence non précisée'))
-            sections.append((title, render_section(title, texts, mode, ref, consignes)))
+            for book, version_ in versions_of(data):
+                licences.add(book + ', ' + version_.get('versionTitle', '').strip() + ' : '
+                             + version_.get('license', 'licence non précisée'))
+            sections.append((title, render_section(title, texts, mode, ref, consignes, v.get('bornes'))))
         chapters.append((chap, sections))
-    if consignes.missing:
+    if consignes.missing and strict:
         raise ValueError('Traductions manquantes :\n' + '\n'.join(sorted(consignes.missing)))
-    return Livre(mode, version or Version(), licences, chapters)
+    return Livre(mode, version or Version(), licences, chapters, rite)
 
 
 def build_edition(livre: Livre, sortie: Path, font: Path | None, with_html: bool = False) -> Path:
-    mode, version, licences, title = livre.mode, livre.version, livre.licences, livre.title
+    mode, version, licences, title, rite = livre.mode, livre.version, livre.licences, livre.title, livre.rite
     chapters = [(chap['fr'], sections) for chap, sections in livre.chapters]
     plan = [chap for chap, _ in livre.chapters]
     from ebooklib import epub
     book = epub.EpubBook()
-    add_metadata(book, title, mode, licences, version)
-    cover = cover_image(mode)
+    add_metadata(book, title, mode, licences, version, rite)
+    cover = cover_image(mode, rite)
     if cover:
         book.set_cover(cover[0], cover[1], create_page=False)
     css = CSS
@@ -249,10 +257,10 @@ def build_edition(livre: Livre, sortie: Path, font: Path | None, with_html: bool
     contents = make_contents([
         (chap['fr'], chap.get('he', ''), [(p.file_name.removeprefix('text/'), p.title) for p in pages])
         for chap, pages in zip(plan, chapter_pages)])
-    credits = make_credits(title, licences, mode, version)
-    introduction = INTRODUCTION + colophon(version)
+    credits = make_credits(title, licences, mode, version, rite)
+    intro_html = introduction(rite) + colophon(version)
     sommaire = page('sommaire', 'Sommaire', contents)
-    intro = page('introduction', 'Introduction', introduction)
+    intro = page('introduction', 'Introduction', intro_html)
     about = page('a-propos', 'À propos de cette édition', credits)
     spine = [sommaire, intro, about]
     guide = []
@@ -261,7 +269,7 @@ def build_edition(livre: Livre, sortie: Path, font: Path | None, with_html: bool
         spine.insert(0, couverture)
         guide.append({'type': 'cover', 'title': 'Couverture', 'href': couverture.file_name})
     toc = [intro, about]
-    htmlparts = [contents, introduction, credits]
+    htmlparts = [contents, intro_html, credits]
     for (chap_title, sections), pages in zip(chapters, chapter_pages):
         htmlparts.append('<h1>' + html.escape(chap_title) + '</h1>')
         htmlparts.extend(content for _, content in sections)
@@ -274,7 +282,7 @@ def build_edition(livre: Livre, sortie: Path, font: Path | None, with_html: bool
     book.add_item(epub.EpubNcx())
     book.add_item(epub.EpubNav())  # navigation de la liseuse (hors ordre de lecture)
 
-    path = Path(sortie) / ('siddour_liseuse_' + mode + '.epub')
+    path = Path(sortie) / livre.epub
     temp = path.with_suffix('.epub.tmp')
     epub.write_epub(str(temp), book, options={'raise_exceptions': True})
     with zipfile.ZipFile(temp) as archive:

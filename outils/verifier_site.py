@@ -9,7 +9,7 @@ GitHub Pages, puis contrôle :
    - les critères d'installation de Chrome ;
    - la mise en cache « Garder hors ligne » et la lecture serveur arrêté ;
    - la mise à jour automatique après une nouvelle révision ;
-   - l'aide à l'installation et la page « Aujourd'hui » sur iPhone, les livres en 2 × 2 ;
+   - l'aide à l'installation et la page « Aujourd'hui » sur iPhone, le choix du rite, les livres en 2 × 2 ;
    - la barre des sections qui suit le défilement, les réglages d'affichage et les onglets du bandeau.
 Le script s'arrête à la première erreur.
 """
@@ -51,12 +51,14 @@ def verifier_liens(site: Path) -> None:
                 cible /= 'index.html'
             assert cible.exists(), f'lien cassé dans {page.relative_to(site)} : {lien}'
             liens += 1
-    # Pages du siddour proposées par l'accueil « Aujourd'hui » (liens écrits par le script).
+    # Pages du siddour proposées par l'accueil « Aujourd'hui », dans chaque rite (liens écrits par le script).
     cibles = json.loads(re.search(r'id="cibles">(.*?)</script>', (site / 'index.html').read_text(encoding='utf-8')).group(1))
-    for chemin in cibles.values():
-        for mode in ('hebreu', 'phonetique', 'bilingue'):
-            assert (site / mode / chemin).exists(), f'accueil : page absente {mode}/{chemin}'
-    liens += len(cibles) * 3
+    for rite in cibles.values():
+        for chemin in rite['pages'].values():
+            for mode in rite['modes']:
+                assert (site / (rite['prefixe'] + mode) / chemin).exists(), \
+                    f'accueil : page absente {rite["prefixe"]}{mode}/{chemin}'
+                liens += 1
     sw = (site / 'sw.js').read_text(encoding='utf-8')
     for nom in ('COQUILLE', 'EDITIONS'):
         valeur = json.loads(re.search(nom + r' = (.*);', sw).group(1))
@@ -152,10 +154,24 @@ def verifier_pwa(dossier: Path) -> None:
             assert not pg.is_visible('.premier-choix'), 'édition redemandée'
             assert pg.text_content('.lieu .ville').startswith('Jérusalem')
             assert pg.get_attribute('.prieres li a.nom', 'href').startswith('hebreu/')
+            # Autre rite : les prières du jour et les onglets du bandeau mènent à ses livres.
+            pg.click('.bouton-edition')
+            pg.click('.choix-edition [data-rite=ashkenaze]')
+            pg.wait_for_selector('.prieres li a.nom[href^="ashkenaze/hebreu/"]')
+            assert pg.get_attribute('.site-head .menu a[data-mode=bilingue]', 'href').endswith(
+                '/ashkenaze/bilingue/index.html'), 'onglets du bandeau hors du rite choisi'
+            assert 'Ashkénaze' in pg.text_content('.bouton-edition')
             pg.goto(BASE + 'livres.html')
-            hauts = pg.eval_on_selector_all('.editions > *', 'l => l.map(x => Math.round(x.getBoundingClientRect().top))')
-            assert len(hauts) == 4 and hauts[0] == hauts[1] < hauts[2] == hauts[3], f'livres hors 2 × 2 : {hauts}'
-            print('✓ accueil « Aujourd’hui » (édition demandée une fois, réglages gardés), livres en 2 × 2')
+            assert pg.get_attribute('.site-head .menu a[data-mode=hebreu]', 'href').endswith(
+                '/ashkenaze/hebreu/index.html'), 'rite oublié d’une page à l’autre'
+            for grille in pg.query_selector_all('.rite .editions'):
+                hauts = grille.eval_on_selector_all(':scope > *', 'l => l.map(x => Math.round(x.getBoundingClientRect().top))')
+                assert len(hauts) == 4 and hauts[0] == hauts[1] < hauts[2] == hauts[3], f'livres hors 2 × 2 : {hauts}'
+            pg.goto(BASE)
+            pg.click('.bouton-edition')
+            pg.click('.choix-edition [data-rite=sefarade]')
+            pg.wait_for_selector('.prieres li a.nom[href^="hebreu/"]')
+            print('✓ accueil « Aujourd’hui » (édition demandée une fois, réglages et rite gardés), livres en 2 × 2')
 
             pg.goto(BASE + 'bilingue/' + sections[3])  # section longue : la page défile
             pg.evaluate('scrollTo(0, document.body.scrollHeight)')
@@ -175,6 +191,8 @@ def verifier_pwa(dossier: Path) -> None:
             pg.click('.site-head .menu a.jour')
             pg.wait_for_url(BASE + 'index.html')
             print('✓ barre des sections collée, réglages d’affichage gardés, onglets vers la même page et le jour')
+            iphone.unroute_all(behavior='ignoreErrors')  # requêtes Hebcal en cours : fermeture sans erreur
+            iphone.close()
     finally:
         arreter(srv)
 

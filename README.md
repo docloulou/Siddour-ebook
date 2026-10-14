@@ -12,7 +12,12 @@
 📖 [Lire en ligne dans le navigateur](https://docloulou.github.io/Siddour-ebook/)
 <!-- publication:fin -->
 
-Siddour séfarade pour liseuse, selon le plan fourni : **26 chapitres et 95 sections**. Les consignes pratiques sont en français dans les trois éditions.
+Siddour pour liseuse, en deux rites, chacun en trois éditions (hébreu, phonétique, hébreu puis phonétique) :
+
+- **rite séfarade (Edot HaMizrah)**, selon le plan fourni : **26 chapitres et 95 sections** ;
+- **rite ashkénaze**, tiré du *Siddur Ashkenaz* de Sefaria et rangé sur le même modèle : **21 chapitres et 92 sections**. Pourim, le Tikoun ’Hatsot et les prières du cycle de la vie n’y sont pas encore : la source Sefaria de ce rite ne les contient pas.
+
+Les consignes pratiques sont en français dans les six éditions.
 
 Cette version reprend le travail de mise en page du 13 octobre 2026 : consignes raccourcies, suppression des citations répétitives, ajouts délimités et zimoun présenté comme un dialogue.
 
@@ -23,6 +28,8 @@ Les liens de la dernière publication s’affichent en haut de cette page après
 - [Édition hébraïque](dist/siddour_liseuse_hebreu.epub)
 - [Édition phonétique](dist/siddour_liseuse_phonetique.epub)
 - [Édition hébreu puis phonétique pour chaque passage](dist/siddour_liseuse_bilingue.epub)
+
+Les éditions ashkénazes (`siddour_liseuse_ashkenaze_<mode>.epub`) rejoindront `dist/` à leur première publication.
 
 ## Installation
 
@@ -48,10 +55,13 @@ Les textes sources sont inclus dans `cache/`, ce qui permet de générer les liv
 python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist
 ```
 
-Cette commande produit les trois EPUB et exporte `rubriques_traduites.csv`, la liste des consignes avec leur nombre d’utilisations. Autres exemples :
+Cette commande produit les six EPUB (trois par rite) et exporte `rubriques_traduites.csv`, la liste des consignes avec leur nombre d’utilisations. Autres exemples :
 
 ```bash
-# Une édition seulement
+# Un seul rite (sefarade ou ashkenaze)
+python3 siddour_ebook_liseuse.py --offline --rite ashkenaze --sortie ./dist
+
+# Une édition seulement, dans chaque rite
 python3 siddour_ebook_liseuse.py --offline --mode phonetique --sortie ./dist
 
 # Aperçus HTML pour relire la mise en page
@@ -66,7 +76,7 @@ python3 siddour_ebook_liseuse.py --offline --rubriques ./mes_corrections.csv --s
 # Sous-ensemble du plan
 python3 siddour_ebook_liseuse.py --offline --chapitres apres-le-repas,priere-du-matin --sortie ./build
 
-# Afficher les identifiants disponibles
+# Afficher les identifiants disponibles, rite par rite
 python3 siddour_ebook_liseuse.py --liste
 ```
 
@@ -83,11 +93,11 @@ Dans l’onglet **Actions** de GitHub, choisir **Publier les EPUB**, puis **Run 
 L’action :
 
 1. calcule le numéro suivant ;
-2. fabrique les trois EPUB ;
+2. fabrique les six EPUB (trois par rite) ;
 3. les vérifie avec EPUBCheck ;
 4. met à jour `dist/` et les liens en haut de ce README ;
 5. ajoute l’étiquette `edition-<N>-revision-<M>` ;
-6. crée la release avec les trois fichiers ;
+6. crée la release avec les six fichiers, rangés par rite dans les notes ;
 7. publie le site de lecture en ligne sur GitHub Pages.
 
 Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages › Build and deployment › Source : GitHub Actions**.
@@ -106,11 +116,11 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 
 ### Site de lecture en ligne
 
-Les trois éditions se lisent aussi dans un navigateur. En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets : un petit calendrier pour revenir à la page du jour, puis Livres, Hébreu, Phonétique, Bilingue. Depuis une page de prière, les onglets Hébreu, Phonétique et Bilingue ouvrent la même page dans l’autre édition. Le site comprend :
+Les six éditions se lisent aussi dans un navigateur. Le rite séfarade est à la racine du site (`hebreu/`, `phonetique/`, `bilingue/`), le rite ashkénaze sous `ashkenaze/` (`ashkenaze/hebreu/`…). En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets : un petit calendrier pour revenir à la page du jour, puis Livres, Hébreu, Phonétique, Bilingue. Depuis une page de prière, les onglets Hébreu, Phonétique et Bilingue ouvrent la même page dans l’autre édition du même rite. Sur l’accueil et la page des livres, ils mènent aux éditions du rite choisi dans « Aujourd’hui » (séfarade par défaut). Le site comprend :
 
 - une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
-- une page **Livres** (`livres.html`) avec les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions et une case d’aide à la lecture sur liseuse tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
-- un sommaire par édition ;
+- une page **Livres** (`livres.html`) avec, pour chaque rite, les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions d’un rite et une case (aide à la lecture sur liseuse pour le rite séfarade, contenu du livre pour le rite ashkénaze) tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
+- un sommaire par édition, avec un lien vers la même édition dans l’autre rite ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
 - une barre qui reste en haut de l’écran pendant la lecture : section précédente ‹, liste de toutes les sections rangées par chapitre pour y aller directement, section suivante ›. Sur les pages sans sections (accueil…), c’est le bandeau du site qui reste en haut.
 - un bouton **Aa Affichage** dans cette barre, qui ouvre les réglages de lecture :
@@ -128,7 +138,7 @@ Pour le référencement, chaque page porte :
 - un titre et une description propres ;
 - une adresse canonique ;
 - les balises Open Graph et Twitter pour les aperçus de partage ;
-- des données structurées schema.org : `Book` avec ses trois éditions, `BreadcrumbList` et `WebPage`.
+- des données structurées schema.org : `Book` avec ses six éditions, `BreadcrumbList` et `WebPage`.
 
 Le site fournit aussi `sitemap.xml` et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`).
 
@@ -145,9 +155,9 @@ L’accueil montre la journée du lecteur, comme un calendrier de synagogue :
 
 - la date grégorienne et la date hébraïque, en français et en hébreu, avec la date hébraïque qui commence au coucher du soleil ;
 - les **prières du jour** :
-  - Cha’harit, Min’ha et Arvit, avec un lien vers la page du siddour. La prière du moment est mise en évidence.
+  - Cha’harit, Min’ha et Arvit, avec un lien vers la page du siddour, dans le rite choisi. La prière du moment est mise en évidence.
   - Les ajouts du jour : lundi et jeudi, Roch ’Hodech, ’Hol hamoèd, ’Hanouka, Pourim, jeûnes, compte de l’omer, Havdala.
-  - Le Chabbat et les jours de fête, dont les offices ne sont pas encore dans ce siddour, sont signalés sans lien.
+  - Le Chabbat et les jours de fête, dont les offices ne sont pas encore dans ce siddour, sont signalés sans lien, comme les prières absentes du rite choisi (la Méguila de Pourim dans le rite ashkénaze, par exemple).
 - les **horaires du jour** (zmanim), chacun avec une ligne d’explication : aube, téfilines, Chéma, Amida, ’hatsot, Min’ha, coucher du soleil, tombée de la nuit, milieu de la nuit ;
 - les horaires du prochain **Chabbat** (allumage, sortie, paracha) ;
 - les **prochaines fêtes et jeûnes**, avec leurs heures d’allumage, de début et de fin ;
@@ -155,7 +165,7 @@ L’accueil montre la journée du lecteur, comme un calendrier de synagogue :
 
 Les horaires et le calendrier viennent de l’[API de Hebcal.com](https://www.hebcal.com/home/developer-apis) (licence CC BY 4.0). La date hébraïque est calculée par le navigateur, même sans connexion.
 
-À la première visite, une fenêtre demande une seule fois l’édition à ouvrir par les liens : hébreu, phonétique ou bilingue. Si on la ferme sans choisir, l’édition bilingue est retenue. On change ensuite d’édition par le petit bouton à droite du titre **Prières du jour**.
+À la première visite, une fenêtre demande une seule fois le rite (séfarade ou ashkénaze) et l’édition à ouvrir par les liens : hébreu, phonétique ou bilingue. Si on la ferme sans choisir, le rite séfarade et l’édition bilingue sont retenus. On change ensuite de rite ou d’édition par le petit bouton à droite du titre **Prières du jour**.
 
 Le lien **Changer de ville** ouvre les réglages :
 
@@ -171,7 +181,7 @@ Pour Israël, le calendrier suit l’usage israélien (un seul jour de fête). L
 
 Le site s’installe comme une application, sur téléphone comme sur ordinateur : menu du navigateur, puis **Installer l’application** ou **Ajouter à l’écran d’accueil**. Il fournit pour cela :
 
-- un manifeste (`manifest.webmanifest`) avec les icônes, dont une version adaptée aux icônes rondes d’Android, et un raccourci vers chaque édition et vers la page des livres ;
+- un manifeste (`manifest.webmanifest`) avec les icônes, dont une version adaptée aux icônes rondes d’Android, et un raccourci vers chaque édition des deux rites et vers la page des livres ;
 - un service worker (`sw.js`).
 
 **Lecture hors connexion.** Les pages déjà lues restent disponibles. Le bouton **Garder hors ligne**, sur le sommaire de chaque édition, enregistre toute l’édition sur l’appareil.
@@ -203,7 +213,7 @@ python3 -m siddour.icones
 - la lecture hors connexion ;
 - la mise à jour automatique après une nouvelle révision ;
 - l’aide affichée sur iPhone ;
-- la page « Aujourd’hui » (édition demandée une seule fois, liens vers le siddour, réglages gardés) et les livres en 2 × 2 sur iPhone ;
+- la page « Aujourd’hui » (édition demandée une seule fois, liens vers le siddour, réglages gardés), le choix du rite (prières du jour et onglets du bandeau) et les livres de chaque rite en 2 × 2 sur iPhone ;
 - la barre des sections qui suit le défilement et les réglages d’affichage gardés d’une page à l’autre.
 
 Les contrôles dans le navigateur demandent Playwright (`pip install playwright`).
@@ -232,8 +242,10 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 
 | Fichier | Rôle |
 | --- | --- |
-| `siddour/plan.py` | Plan du livre : chapitres, sections et références Sefaria. |
-| `siddour/sources.py` | Téléchargement, cache et corrections ponctuelles de la source (`SOURCE_FIXES`). |
+| `siddour/rites.py` | Les deux rites : livre Sefaria, plan, couvertures, dossier du site, textes de présentation et métadonnées propres à chacun. |
+| `siddour/plan.py` | Plan du rite séfarade : chapitres, sections et références Sefaria. |
+| `siddour/plan_ashkenaze.py` | Plan du rite ashkénaze, d’après les parties du *Siddur Ashkenaz*. |
+| `siddour/sources.py` | Téléchargement, cache, corrections ponctuelles de la source (`SOURCE_FIXES`) et mise au format séfarade du texte ashkénaze (`normalize_ashkenaze`). |
 | `siddour/hebreu.py` | Nikoud, balises `<small>`/`<big>`, recherche dans le texte hébreu. |
 | `siddour/consignes.py` | Traduction des consignes et découpage consigne / texte à réciter. |
 | `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
@@ -251,13 +263,13 @@ Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
 - `data/intertitres.csv` : titres internes.
 - `data/consignes_locales.csv` : consigne dont le sens dépend du passage (section Sefaria et numéro de paragraphe), par exemple un « אומרים » qui désigne l’officiant.
 
-Une consigne absente de ces tables bloque la génération et est listée, pour qu’aucun hébreu non traduit n’apparaisse dans les livres.
+Les deux rites partagent ces tables : une consigne identique se traduit une seule fois. Une consigne absente de ces tables bloque la génération et est listée, pour qu’aucun hébreu non traduit n’apparaisse dans les livres.
 
 ### Contenu de chaque EPUB
 
-Couverture (`assets/covers/siddour_<mode>.png`), sommaire sur deux colonnes, introduction, page « À propos de cette édition » (sources, licences, conventions), puis les 26 chapitres. Le texte de l’introduction et les métadonnées sont dans `siddour/edition.py`.
+Couverture (`assets/covers/siddour_<mode>.png`, ou `assets/covers/ashkenaze/siddour_<mode>.png`), sommaire sur deux colonnes, introduction, page « À propos de cette édition » (sources, licences, conventions), puis les 26 chapitres du rite séfarade ou les 21 du rite ashkénaze. Le texte de l’introduction et les métadonnées sont dans `siddour/edition.py` ; ce qui change d’un rite à l’autre est dans `siddour/rites.py`.
 
-Métadonnées : titre, identifiant, langues (hébreu et français), auteur et éditeur, date, description, sujets, source Sefaria, droits et licences, série « Siddour séfarade pour liseuse » avec le numéro de l’édition (EPUB 3 et Calibre), couverture, date de modification et informations d’accessibilité. Les trois livres passent EPUBCheck 5.1 sans erreur.
+Métadonnées : titre, identifiant, langues (hébreu et français), auteur et éditeur, date, description, sujets, source Sefaria, droits et licences, série « Siddour séfarade pour liseuse » ou « Siddour ashkénaze pour liseuse » avec le numéro de l’édition (EPUB 3 et Calibre), couverture, date de modification et informations d’accessibilité. Les six livres passent EPUBCheck 5.1 sans erreur.
 
 ### Conventions de mise en page
 
@@ -273,6 +285,8 @@ Inspirées du Pata’h Eliyahou et de l’édition Beit Hassofer :
 
 Les JSON du cache conservent les références et les métadonnées des versions Sefaria : *Siddur Edot HaMizrach*, édition Shaliehsaboo (CC0), *Tanach with Nikkud* et *Torat Emet 357* (domaine public, selon les métadonnées sources). Les usages traduits suivent cette source, notamment ceux du Ben Ich ’Haï.
 
+Le rite ashkénaze vient du *Siddur Ashkenaz* de Sefaria, qui réunit deux versions : *The Metsudah siddur, 1981* (CC-BY) et *Daat Siddur Ashkenaz* (domaine public). Chaque EPUB cite, page « À propos », les versions qu’il utilise. Les consignes traduites suivent surtout la Michna beroura. La phonétique de ce rite suit la prononciation israélienne, et non la prononciation ashkénaze traditionnelle. Les prières pour l’État et pour la communauté, vides dans la source, n’y figurent pas, ni Véyitèn lekha, faute de texte sous licence connue.
+
 La police **Noto Serif Hebrew** est distribuée sous SIL Open Font License 1.1, reproduite dans [OFL-NotoSerifHebrew.txt](OFL-NotoSerifHebrew.txt).
 
-La phonétique est générée automatiquement et reste approximative. Le contenu couvre le plan inclus, pas tous les offices possibles. La conservation des textes, la structure XML et les liens des trois EPUB ont été vérifiés ; leur affichage exact dépend de la liseuse. Les références Pata’h Eliyahou et Beit Hassofer ont servi à guider la présentation, sans reproduire leurs textes.
+La phonétique est générée automatiquement et reste approximative. Le contenu couvre le plan inclus, pas tous les offices possibles. La conservation des textes, la structure XML et les liens des six EPUB ont été vérifiés ; leur affichage exact dépend de la liseuse. Les références Pata’h Eliyahou et Beit Hassofer ont servi à guider la présentation, sans reproduire leurs textes.

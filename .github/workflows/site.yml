@@ -58,7 +58,8 @@ jobs:
             --edition ${{ steps.version.outputs.edition }} \
             --revision ${{ steps.version.outputs.revision }} \
             --date ${{ steps.version.outputs.date }}
-          # Les EPUB proposés restent ceux de la release publiée.
+          # Les EPUB proposés restent ceux de la release publiée ; une édition encore
+          # jamais publiée (absente de dist/) garde l'EPUB fabriqué ici.
           cp dist/*.epub ./_site/telecharger/
 
       - name: Envoyer le site
