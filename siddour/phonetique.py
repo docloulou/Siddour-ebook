@@ -37,6 +37,10 @@ EXCEPTIONS = {
 }
 CANTILLATION = re.compile(r"[֑-ֽֿׅ֯ׄ]")
 HEB_LETTER = re.compile(r"[א-ת]")
+# Ketiv non vocalisé à côté du qeré vocalisé entre crochets (הביט [הַבִּיטָה]) :
+# on ne lit que le qeré.
+KETIV_QERE = re.compile(r"(?<![א-תְ-ׇ'\"״׳])[א-ת]+\s*\[([^\]]*[ְ-ׇ][^\]]*)\]"
+                        r"|\[([^\]]*[ְ-ׇ][^\]]*)\]\s*[א-ת]+(?![א-תְ-ׇ'\"״׳])")
 
 
 def _split_letters(word: str) -> list[tuple[str, set[str]]]:
@@ -167,6 +171,7 @@ def translit(text: str, capitalize: bool = True) -> str:
     text = unicodedata.normalize("NFC", text)
     text = CANTILLATION.sub("", text)
     text = text.replace(MAQAF, "-").replace("׃", ".").replace("׀", "")
+    text = KETIV_QERE.sub(lambda m: m[1] or m[2], text)
     parts = re.split(r"([א-תְ-ׇ']+)", text)
     res = []
     for p in parts:
