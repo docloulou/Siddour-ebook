@@ -24,6 +24,7 @@ from pathlib import Path
 
 from .edition import (CSS, DESCRIPTION, FONT_PATH, INTRODUCTION, SUBJECTS, TITLES, Livre, cover_image,
                       exposants, make_contents, make_credits)
+from .icones import DOSSIER as ICONES, generer as generer_icones, liens_demarrage
 from .version import date_fr
 
 SITE_NAME = 'Siddour séfarade'
@@ -45,6 +46,7 @@ body { margin: 0; background: #fbf9f4; color: #1d1d1d; font-size: 1.12em; }
 main { max-width: 40em; margin: 0 auto; padding: 1em 1.2em 3em; background: #fff; }
 a { color: #1f3a68; }
 .site-head { background: #15284a; color: #f1e4bf; font: .95em/1.4 sans-serif; }
+.site-head { padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
 .site-head .inner { max-width: 44em; margin: 0 auto; padding: .6em 1.2em; display: flex; flex-wrap: wrap;
                     gap: .4em 1.2em; align-items: baseline; }
 .site-head a { color: #f1e4bf; text-decoration: none; }
@@ -56,7 +58,7 @@ a { color: #1f3a68; }
          border-top: 1px solid #ddd; font: .92em/1.4 sans-serif; }
 .pager a { text-decoration: none; max-width: 48%; }
 .pager .suiv { margin-left: auto; text-align: right; }
-.site-foot { max-width: 40em; margin: 0 auto; padding: 1.2em; font: .8em/1.5 sans-serif; color: #666;
+.site-foot { max-width: 40em; margin: 0 auto; padding: 1.2em 1.2em calc(1.2em + env(safe-area-inset-bottom)); font: .8em/1.5 sans-serif; color: #666;
              text-align: center; }
 .editions { display: grid; grid-template-columns: repeat(auto-fit, minmax(11em, 1fr)); gap: 1.4em; margin: 1.5em 0; }
 .edition-carte { text-align: center; font-family: sans-serif; }
@@ -69,8 +71,10 @@ a { color: #1f3a68; }
 .accroche { text-align: center; font-style: italic; color: #444; }
 button.bouton { font: inherit; cursor: pointer; }
 .hors-ligne { text-align: center; font-size: .95em; color: #555; }
+.installer-ios { margin: 1em 0; padding: .7em 1em; border: 1px solid #d8cfb8; border-radius: 4px; background: #f6f0e1;
+                 font: .9em/1.5 sans-serif; text-align: center; }
 .hors-ligne span { display: block; margin-top: .3em; font: .85em/1.4 sans-serif; }
-.annonce { position: fixed; left: 50%; bottom: 1.2em; transform: translateX(-50%); z-index: 10;
+.annonce { position: fixed; left: 50%; bottom: calc(1.2em + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10;
            max-width: calc(100% - 2.4em); padding: .7em 1.1em; border-radius: 4px; background: #15284a;
            color: #f1e4bf; font: .9em/1.4 sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
 @media (max-width: 34em) { .sommaire { column-count: 1; -webkit-column-count: 1; } body { font-size: 1.05em; }
@@ -111,6 +115,11 @@ APP_JS = r'''"use strict";
     setInterval(verifier, 3600 * 1000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) verifier(); });
   }).catch(() => {});
+
+  // Safari sur iPhone et iPad n'a pas de bouton d'installation : on explique la marche à suivre.
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const aide = document.querySelector(".installer-ios");
+  if (aide && ios && !navigator.standalone) aide.hidden = false;
 
   const bouton = document.querySelector("[data-hors-ligne]");
   if (!bouton || !("caches" in window)) return;
@@ -272,15 +281,21 @@ class Site:
             + MENU[m] + '</a>' for m in (lv.mode for lv in self.livres))
         head = [
             '<meta charset="utf-8">',
-            '<meta name="viewport" content="width=device-width, initial-scale=1">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
             '<title>' + html.escape(title) + '</title>',
             '<meta name="description" content="' + html.escape(description, quote=True) + '">',
             '<meta name="robots" content="' + ('index, follow' if index else 'noindex') + '">',
             '<meta name="theme-color" content="#15284a">',
+            '<link rel="icon" type="image/png" sizes="32x32" href="' + root + 'assets/icone-32.png">',
             '<link rel="icon" type="image/png" sizes="192x192" href="' + root + 'assets/icone-192.png">',
-            '<link rel="apple-touch-icon" href="' + root + 'assets/icone-180.png">',
             '<link rel="manifest" href="' + root + 'manifest.webmanifest">',
+            # iPhone et iPad : icône, plein écran, barre d'état sur le bandeau bleu, écrans de démarrage.
+            '<link rel="apple-touch-icon" sizes="180x180" href="' + root + 'assets/icone-180.png">',
             '<meta name="apple-mobile-web-app-title" content="Siddour">',
+            '<meta name="apple-mobile-web-app-capable" content="yes">',
+            '<meta name="mobile-web-app-capable" content="yes">',
+            '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">',
+            *liens_demarrage(root),
             '<link rel="stylesheet" href="' + root + 'assets/style.css">',
             '<script src="' + root + 'assets/app.js" defer></script>',
             '<meta property="og:site_name" content="' + SITE_NAME + '">',
@@ -415,6 +430,8 @@ class Site:
             '<p><a href="telecharger/' + EPUB_NAME.format(lv.mode) + '" download>Télécharger l’EPUB</a></p></div>'
             for i, lv in enumerate(self.livres))
         body = ('<h1>' + SITE_NAME + '</h1><p class="accroche">' + TAGLINE + '</p>'
+                '<p class="installer-ios" hidden>Sur iPhone ou iPad, pour installer le siddour comme une '
+                'application : bouton <b>Partager</b>, puis <b>Sur l’écran d’accueil</b>.</p>'
                 '<section id="telecharger"><div class="editions">' + cartes + '</div>'
                 '<p class="accroche">' + exposants(self.version.complet) + '</p></section>'
                 + web_html(INTRODUCTION).replace('<h1>', '<h2>').replace('</h1>', '</h2>'))
@@ -452,8 +469,9 @@ class Site:
                 im = im.convert('RGB')
                 im.thumbnail((800, 1200))
                 im.save(dossier / 'covers' / (lv.mode + '.jpg'), 'JPEG', quality=85, optimize=True, progressive=True)
-        if cover_image('bilingue'):
-            icones(cover_image('bilingue')[1], dossier)
+        if not (ICONES / 'icone-512.png').exists():
+            generer_icones()
+        shutil.copytree(ICONES, dossier, dirs_exist_ok=True)
         telecharger = self.dossier / 'telecharger'
         telecharger.mkdir(exist_ok=True)
         for lv in self.livres:
@@ -498,7 +516,7 @@ class Site:
         nom = (self.version.tag if self.version.edition else 'travail') + '-' + empreinte.hexdigest()[:12]
         coquille = (['index.html', 'hors-ligne.html', 'manifest.webmanifest', 'assets/style.css', 'assets/app.js',
                      'assets/' + FONT_PATH.name]
-                    + [i['src'] for i in liste] + ['assets/icone-180.png']
+                    + [i['src'] for i in liste] + ['assets/icone-32.png', 'assets/icone-180.png']
                     + [p.relative_to(self.dossier).as_posix() for p in sorted((self.dossier / 'assets' / 'covers').glob('*.jpg'))]
                     + [lv.mode + '/index.html' for lv in self.livres])
         sw = (SW_JS.replace('__CACHE__', json.dumps(nom))
@@ -506,24 +524,6 @@ class Site:
               .replace('__EDITIONS__', json.dumps(self.par_edition, ensure_ascii=False)))
         (self.dossier / 'sw.js').write_text(sw, encoding='utf-8')
         self.cache = nom
-
-
-def icones(couverture: bytes, dossier: Path) -> None:
-    """Icônes de l'application : le titre de la couverture, en carré, sans le cadre doré."""
-    from PIL import Image, ImageDraw, ImageFilter
-    with Image.open(io.BytesIO(couverture)) as im:
-        im = im.convert('RGB')
-        k = im.width / 400
-        carre = im.crop(tuple(int(v * k) for v in (20, 20, 380, 380)))
-    for taille in (180, 192, 512):
-        carre.resize((taille, taille), Image.LANCZOS).save(dossier / ('icone-' + str(taille) + '.png'), optimize=True)
-    # Version « maskable » : le lanceur Android peut la rogner en cercle ; le titre reste dans la zone sûre.
-    fond = carre.resize((64, 64)).filter(ImageFilter.GaussianBlur(12)).resize((512, 512), Image.BICUBIC)
-    s = 380
-    fondu = Image.new('L', (s, s), 0)
-    ImageDraw.Draw(fondu).rectangle((14, 14, s - 14, s - 14), fill=255)
-    fond.paste(carre.resize((s, s), Image.LANCZOS), ((512 - s) // 2,) * 2, fondu.filter(ImageFilter.GaussianBlur(10)))
-    fond.save(dossier / 'icone-maskable.png', optimize=True)
 
 
 def build_site(livres: list[Livre], dossier: Path, sortie: Path, url: str = '') -> Path:

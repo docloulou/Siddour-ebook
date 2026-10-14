@@ -117,6 +117,32 @@ Le site s’installe comme une application, sur téléphone comme sur ordinateur
 
 Il télécharge alors la nouvelle version, éditions gardées hors ligne comprises, puis recharge la page. Un message indique le nouveau numéro, par exemple « Siddour mis à jour : 1ʳᵉ édition, révision 1 ».
 
+**iPhone et iPad.** Safari n’a pas de bouton d’installation. Sur iPhone et iPad, la page d’accueil explique donc la marche à suivre : **Partager › Sur l’écran d’accueil**. Une fois installée, l’application :
+
+- s’ouvre en plein écran, avec son icône et son nom court « Siddour » ;
+- place la barre d’état sur le bandeau bleu, sans masquer le contenu sous l’encoche ;
+- affiche un écran de démarrage (le titre doré sur fond bleu), adapté à chaque modèle d’iPhone et d’iPad.
+
+**Icônes et écrans de démarrage.** Ils sont tirés de la couverture et rangés dans `assets/pwa/`. Après un changement de couverture, les régénérer avec :
+
+```bash
+python3 -m siddour.icones
+```
+
+**Vérification.** La commande suivante fabrique le site dans un dossier temporaire et contrôle :
+
+- les liens ;
+- l’installabilité selon Chrome ;
+- la lecture hors connexion ;
+- la mise à jour automatique après une nouvelle révision ;
+- l’aide affichée sur iPhone.
+
+Les contrôles dans le navigateur demandent Playwright (`pip install playwright`).
+
+```bash
+python3 outils/verifier_site.py
+```
+
 La numérotation suit celle d’un livre imprimé : *1ʳᵉ édition*, puis *1ʳᵉ édition, révision 1*, *révision 2*… Une nouvelle édition remet les révisions à zéro, par exemple *2ᵉ édition*.
 
 Le numéro et la date de fabrication apparaissent à trois endroits :
@@ -145,6 +171,8 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
+| `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture. |
+| `outils/verifier_site.py` | Vérification du site et de la PWA. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils de l’action de publication (`.github/workflows/publier.yml`). |
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
