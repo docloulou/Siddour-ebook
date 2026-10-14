@@ -1,6 +1,7 @@
 """Outils de publication utilisés par l'action GitHub « Publier les EPUB ».
 
     python3 -m siddour.publication suivante --increment revision
+    python3 -m siddour.publication actuelle
     python3 -m siddour.publication readme --tag edition-1-revision-0 --depot owner/repo --date 2026-10-14
 """
 from __future__ import annotations
@@ -8,8 +9,9 @@ from __future__ import annotations
 import argparse
 import re
 import subprocess
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from .version import TAG_RE, Version, suivante
 
@@ -43,11 +45,26 @@ def mettre_a_jour_readme(version: Version, depot: str, site: str = '') -> None:
     README.write_text(texte, encoding='utf-8')
 
 
+def git(*args: str) -> str:
+    return subprocess.run(['git', *args], cwd=ROOT, check=True, capture_output=True, text=True).stdout
+
+
+def actuelle(tags: list[str]) -> Version:
+    """Dernière publication, datée du jour de son étiquette (heure de Paris)."""
+    connues = sorted((int(m[1]), int(m[2]), m[0]) for m in map(TAG_RE.match, tags) if m)
+    if not connues:
+        raise SystemExit('Aucune édition publiée : lancer d’abord « Publier les EPUB ».')
+    edition, revision, tag = connues[-1]
+    quand = datetime.fromisoformat(git('log', '-1', '--format=%cI', tag).strip())
+    return Version(edition, revision, quand.astimezone(ZoneInfo('Europe/Paris')).date())
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='commande', required=True)
     s = sub.add_parser('suivante', help='calcule le numéro de la prochaine publication')
     s.add_argument('--increment', choices=['revision', 'edition'], required=True)
+    sub.add_parser('actuelle', help='numéro et date de la dernière publication, pour republier le site')
     r = sub.add_parser('readme', help='met à jour les liens de téléchargement du README')
     r.add_argument('--tag', required=True)
     r.add_argument('--depot', required=True, help='propriétaire/dépôt')
@@ -55,12 +72,13 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument('--site', default='', help='adresse du site de lecture en ligne')
     args = ap.parse_args(argv)
 
-    if args.commande == 'suivante':
-        tags = subprocess.run(['git', 'tag', '--list', 'edition-*'], cwd=ROOT, check=True,
-                              capture_output=True, text=True).stdout.split()
-        v = suivante(tags, args.increment)
+    if args.commande in ('suivante', 'actuelle'):
+        tags = git('tag', '--list', 'edition-*').split()
+        v = suivante(tags, args.increment) if args.commande == 'suivante' else actuelle(tags)
         # Format clé=valeur, directement ajoutable à $GITHUB_OUTPUT.
         print(f'edition={v.edition}\nrevision={v.revision}\ntag={v.tag}\nlibelle={v.libelle}')
+        if args.commande == 'actuelle':
+            print('date=' + v.jour.isoformat())
     else:
         m = TAG_RE.match(args.tag)
         if not m:

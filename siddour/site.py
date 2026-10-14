@@ -81,6 +81,8 @@ button.bouton { font: inherit; cursor: pointer; }
 .annonce { position: fixed; left: 50%; bottom: calc(1.2em + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10;
            max-width: calc(100% - 2.4em); padding: .7em 1.1em; border-radius: 4px; background: #15284a;
            color: #f1e4bf; font: .9em/1.4 sans-serif; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
+/* Lecture à l'écran : phonétique justifiée comme dans un livre, dernière ligne à gauche. */
+.ph { text-align: justify; text-align-last: left; -webkit-hyphens: auto; hyphens: auto; }
 @media (max-width: 34em) { .sommaire { column-count: 1; -webkit-column-count: 1; } body { font-size: 1.05em; }
                            .site-head .marque { flex-basis: 100%; } }
 '''

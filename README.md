@@ -92,6 +92,16 @@ L’action :
 
 Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages › Build and deployment › Source : GitHub Actions**.
 
+### Corriger le site sans nouvelle édition
+
+Pour une correction qui ne touche que le site (mise en page, liens…), lancer l’action **Republier le site**. Elle ne crée ni étiquette ni release. Le site :
+
+- garde le numéro et la date de la dernière publication ;
+- propose les EPUB de cette publication (`dist/`) ;
+- se met à jour dans l’application installée, comme après une révision.
+
+Une correction du texte des livres demande en revanche une nouvelle révision, pour que les EPUB et le site restent identiques.
+
 ### Site de lecture en ligne
 
 Les trois éditions se lisent aussi dans un navigateur. Le site comprend :
@@ -187,7 +197,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/icones.py`, `assets/pwa/` | Icônes et écrans de démarrage iOS de l’application, générés depuis la couverture. |
 | `outils/verifier_site.py` | Vérification du site et de la PWA. |
-| `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils de l’action de publication (`.github/workflows/publier.yml`). |
+| `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`). |
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
 
