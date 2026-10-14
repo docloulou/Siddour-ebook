@@ -37,6 +37,10 @@ EXCEPTIONS = {
 }
 CANTILLATION = re.compile(r"[֑-ֽֿׅ֯ׄ]")
 HEB_LETTER = re.compile(r"[א-ת]")
+# Ketiv non vocalisé à côté du qeré vocalisé entre crochets (הביט [הַבִּיטָה]) :
+# on ne lit que le qeré.
+KETIV_QERE = re.compile(r"(?<![א-תְ-ׇ'\"״׳])[א-ת]+\s*\[([^\]]*[ְ-ׇ][^\]]*)\]"
+                        r"|\[([^\]]*[ְ-ׇ][^\]]*)\]\s*[א-ת]+(?![א-תְ-ׇ'\"״׳])")
 
 
 def _split_letters(word: str) -> list[tuple[str, set[str]]]:
@@ -146,8 +150,9 @@ PH_WORDS = {
     'מיורדי': 'miyoredé', 'וצירם': 'vetsiram', 'קום': 'koum', 'הושר': 'hochar',
     "ה'": 'Hachem', 'יו"ד': 'youd', 'יהוה': 'Adonaï', 'יי': 'Adonaï',
 }
-# Préfixes possibles devant le Tétragramme (le, ve, mi…).
-_NAME_PREFIXES = {'ב', 'ל', 'ו', 'מ', 'ד', 'וב', 'ול'}
+# Préfixes devant le Tétragramme (le, ve, mi, ka, ché, oumé…) : le Nom se lit
+# toujours Adonaï, le préfixe gardant la voyelle de cette lecture (כַּיהוָה kaAdonaï).
+_NAME_PREFIX = re.compile(r'[ובכלמשד]{1,3}')
 
 
 def translit_word(word: str) -> str:
@@ -156,7 +161,7 @@ def translit_word(word: str) -> str:
         return PH_WORDS[key]
     letters = _split_letters(word)
     cons = ''.join(ch for ch, _ in letters)
-    if cons.endswith('יהוה') and len(cons) > 4 and cons[:-4] in _NAME_PREFIXES:
+    if cons.endswith('יהוה') and len(cons) > 4 and _NAME_PREFIX.fullmatch(cons[:-4]):
         positions = [i for i, ch in enumerate(word) if HEB_LETTER.match(ch)]
         return _translit_word_base(word[:positions[-4]]) + 'Adonaï'
     return _translit_word_base(word)
@@ -166,6 +171,7 @@ def translit(text: str, capitalize: bool = True) -> str:
     text = unicodedata.normalize("NFC", text)
     text = CANTILLATION.sub("", text)
     text = text.replace(MAQAF, "-").replace("׃", ".").replace("׀", "")
+    text = KETIV_QERE.sub(lambda m: m[1] or m[2], text)
     parts = re.split(r"([א-תְ-ׇ']+)", text)
     res = []
     for p in parts:
