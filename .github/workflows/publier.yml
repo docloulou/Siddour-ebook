@@ -1,5 +1,5 @@
 # Publication manuelle : Actions > « Publier les EPUB » > Run workflow.
-# Fabrique les six EPUB numérotés (trois par rite), les vérifie avec EPUBCheck, met à jour
+# Lance les tests, fabrique les six EPUB numérotés (trois par rite), les vérifie avec EPUBCheck, met à jour
 # les liens du README, crée la release correspondante et publie le site de
 # lecture sur GitHub Pages (Settings > Pages > Source : GitHub Actions).
 name: Publier les EPUB
@@ -48,6 +48,9 @@ jobs:
 
       - name: Installer les dépendances
         run: python3 -m pip install -r requirements.txt
+
+      - name: Lancer les tests
+        run: python3 -m unittest discover -s tests
 
       - name: Calculer le numéro d'édition
         id: version

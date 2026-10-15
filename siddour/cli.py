@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .consignes import Consignes
 from .edition import FONT_PATH, build_edition, render_book
-from .phonetique import translit
+from .phonetique import INCONNUS, PRONONCIATIONS, translit
 from .plan import select_plan
 from .rites import RITES
 from .site import DEPOT
@@ -44,6 +44,8 @@ def main(argv: list[str] | None = None) -> None:
                     help='dépôt GitHub (propriétaire/dépôt) cité dans le pied de page du site')
     ap.add_argument('--site-url', default='', help='adresse publique du site, pour les liens canoniques et le sitemap')
     ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
+    ap.add_argument('--prononciation', choices=list(PRONONCIATIONS),
+                    help='prononciation de --translit (défaut : celle du rite choisi, sinon sefarade)')
     args = ap.parse_args(argv)
 
     rites = list(RITES.values()) if args.rite == 'tous' else [RITES[args.rite]]
@@ -54,7 +56,7 @@ def main(argv: list[str] | None = None) -> None:
                 print(c['id'], ':', c['fr'], '(' + str(len(c['sections'])) + ' sections)')
         return
     if args.translit:
-        print(translit(args.translit))
+        print(translit(args.translit, prononciation=args.prononciation or rites[0].prononciation))
         return
 
     consignes = Consignes()
@@ -98,3 +100,8 @@ def main(argv: list[str] | None = None) -> None:
     cp = sortie / 'rubriques_traduites.csv'
     consignes.export(cp)
     print('CSV :', cp)
+    if INCONNUS:
+        # Mots que la phonétique n'a pu lire (non vocalisés, absents de ses tables) : à corriger
+        # dans phonetique.PH_WORDS ou LECTURES.
+        print('Phonétique : ' + str(len(INCONNUS)) + ' mots sans lecture fiable, dont '
+              + ', '.join(mot + ' (' + str(n) + ')' for mot, n in INCONNUS.most_common(12)))

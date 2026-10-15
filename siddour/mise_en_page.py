@@ -16,7 +16,7 @@ import re
 
 from .consignes import REFERENCE_RE
 from .hebreu import HE_RE, clean_markup, find_hebrew, is_vocalized, loose, outer_units, parse_paragraph, plain_hebrew
-from .phonetique import translit
+from .phonetique import non_vocalise, noms_html, translit
 from .sources import AMIDA_RE
 
 # Variante insérée dans le texte d'une prière : début, séparateur, fin.
@@ -58,6 +58,9 @@ OMER_KAVANA_RE = re.compile(r'^.+? ({0}) שב({0}) \S+ \S$'.format('|'.join(SEFI
 # Nom de la personne, à insérer dans la prière.
 PLACEHOLDER_RE = re.compile(r'^\((?:Untel|Unetelle)\b')
 REPLACEMENTS = {'המלך הקדוש': 'האל הקדוש', 'המלך המשפט': 'מלך אוהב צדקה ומשפט', 'השלום': 'שלום'}
+UNREAD = 'Passage non vocalisé dans la source : phonétique non disponible.'
+# Fin de phrase : le passage qui suit une variante commence par une capitale.
+SENTENCE_END_RE = re.compile(r'[.:׃!?]\s*$')
 
 
 def brief(text: str) -> str:
@@ -90,9 +93,9 @@ def merge_prayers(items):
     return result
 
 
-def excerpt(text: str, tail: bool = False) -> str:
+def excerpt(text: str, tail: bool = False, prononciation: str = 'sefarade') -> str:
     words = VAR_RE.sub(' ', text).strip(' ()').split()
-    return translit(' '.join(words[-6:] if tail else words[:6])).strip(' ()')[:100]
+    return translit(' '.join(words[-6:] if tail else words[:6]), prononciation=prononciation).strip(' ()')[:100]
 
 
 def repetition_span(text: str) -> str:
@@ -127,8 +130,10 @@ def append_to_last_prayer(parts: list[str], span: str) -> bool:
 
 
 class ReadingLayout:
-    def __init__(self, title, paragraphs, mode, ref, consignes, bornes=None):
+    def __init__(self, title, paragraphs, mode, ref, consignes, bornes=None, prononciation='sefarade'):
         self.title, self.mode, self.ref, self.c = title, mode, ref, consignes
+        self.prononciation = prononciation  # profil de phonetique.PRONONCIATIONS, propre au rite
+        self.unread = False              # le passage précédent n'était pas vocalisé
         # Section réunie de plusieurs prières : début, fin et titre anglais de chacune.
         self.bornes = {start: end for start, end, _ in bornes or []}
         self.notes: list[list] = []      # [numéro, texte, passage concerné]
@@ -152,7 +157,7 @@ class ReadingLayout:
         """Appel de note. Le passage concerné (target) est rappelé dans la note ;
         sans target, c'est le prochain passage récité, sauf pour une simple source."""
         n = len(self.notes) + 1
-        self.notes.append([n, text, excerpt(target, tail=True) if target else ''])
+        self.notes.append([n, text, excerpt(target, tail=True, prononciation=self.prononciation) if target else ''])
         if not target and anchored:
             self.pending.append(n)
         return ('<a class="note-ref" epub:type="noteref" id="appel-' + str(n) + '" href="#note-' + str(n) + '">'
@@ -175,10 +180,12 @@ class ReadingLayout:
         for k in range(0, len(chunks), 3):
             plain = chunks[k].strip()
             if plain:
-                body = self.c.recitation_html(plain, phonetic, capitalize=not out)
-                if not out and not body.startswith('<'):
-                    first, space, rest = body.partition(' ')
-                    body = '<strong>' + first + '</strong>' + space + rest
+                before = (chunks[k - 1] or chunks[k - 3]) if k else ''
+                body = self.c.recitation_html(plain, phonetic, not out or bool(SENTENCE_END_RE.search(before)),
+                                              self.prononciation)
+                first = re.match(r'(?:<[^>]*>|[^ <])+', body)  # premier mot, avec ses balises (nom divin)
+                if not out and first and not body.startswith('<span class="reference"'):
+                    body = '<strong>' + first[0] + '</strong>' + body[first.end():]
                 out.append(body)
             if k + 2 < len(chunks):
                 label, alt = chunks[k + 1], chunks[k + 2]
@@ -187,12 +194,13 @@ class ReadingLayout:
                     out.append('<span class="variante">[<span class="variante-label" lang="fr" dir="ltr">'
                                + html.escape(label) + '</span>]</span>')
                     continue
-                value = translit(alt, capitalize=False) if phonetic else alt
+                value = (noms_html(html.escape(translit(alt, capitalize=False, prononciation=self.prononciation,
+                                                        noms=True))) if phonetic else html.escape(alt))
                 # En hébreu, le deux-points reste hors de l'étiquette française pour
                 # se placer entre l'étiquette et le texte dans le sens de lecture.
                 out.append('<span class="variante">[<span class="variante-label" lang="fr" dir="ltr">'
                            + html.escape(label) + (' :</span> ' if phonetic else '</span>: ')
-                           + html.escape(value) + ']</span>')
+                           + value + ']</span>')
         # Pas d'espace entre l'indication d'un nom et la ponctuation qui la suit.
         return re.sub(r'(\]</span>) ([,.:;])', r'\1\2', ' '.join(out))
 
@@ -201,19 +209,27 @@ class ReadingLayout:
         if not text or not HE_RE.search(text):
             return ''
         for n in self.pending:
-            self.notes[n - 1][2] = excerpt(text)
+            self.notes[n - 1][2] = excerpt(text, prononciation=self.prononciation)
         self.pending = []
         marker = ''.join(self.carry) + marker
         self.carry = []
         marker = '<span class="note-markers" dir="ltr">' + marker + '</span>' if marker else ''
         he = '<p class="he" lang="he" dir="rtl">' + self.recitation(text, False) + marker + suffix + '</p>'
-        ph = ('<p class="ph" lang="fr" dir="ltr">' + self.recitation(text, True)
-              + (marker if self.mode != 'bilingue' else '') + suffix + '</p>')
         if self.mode == 'hebreu':
             return he
+        # Passage que la source ne vocalise pas : sa phonétique ne serait qu'une suite de
+        # consonnes. Une rubrique le signale, une fois pour toute la suite de tels passages.
+        unread, noted = non_vocalise(REFERENCE_RE.sub('', text)), self.unread
+        self.unread = unread
+        head = self.note(UNREAD) if unread and not noted else ''
+        if unread:
+            ph = '<p class="ph" lang="fr" dir="ltr">' + marker + suffix + '</p>' if marker or suffix else ''
+        else:
+            ph = ('<p class="ph" lang="fr" dir="ltr">' + self.recitation(text, True)
+                  + (marker if self.mode != 'bilingue' else '') + suffix + '</p>')
         if self.mode == 'phonetique':
-            return ph
-        return '<div class="pair">' + he + ph + '</div>'
+            return head + ph
+        return head + '<div class="pair">' + he + (ph if not unread else '') + '</div>'
 
     def note(self, text: str, after: bool = False) -> str:
         """Rubrique en italique, collée au passage suivant (ou précédent si after)."""
@@ -497,6 +513,15 @@ class ReadingLayout:
                            else self.prayer(t) for k, t in self.items(r))
             out.append(self.block(i, self.box(body, 'Une seule formule selon la saison', css='choice')))
             return i + 1
+        # Moussaf de Roch 'Hodech : la saison précède chaque formule, « בקיץ - מוֹרִיד הַטָּל ».
+        if p.startswith('בקיץ') and i + 1 < len(self.records) and self.records[i + 1]['plain'].startswith('בחורף'):
+            def season(x):
+                return ''.join('<p class="alternative-label">' + html.escape(t.rstrip(' :')) + '</p>'
+                               if k == 'instruction' else self.prayer(t) for k, t in self.items(x))
+            body = season(r) + self.block(i + 1, season(self.records[i + 1]))
+            out.append(self.block(i, self.box(body, 'Une seule formule selon la saison',
+                                              resume=self.resume_from(i + 2), css='choice')))
+            return i + 2
         return None
 
     def condition_block(self, i: int, r, fr: str, out: list[str]) -> int | None:
@@ -569,5 +594,5 @@ class ReadingLayout:
         return '\n'.join(out)
 
 
-def render_section(title, paragraphs, mode, ref, consignes, bornes=None):
-    return ReadingLayout(title, paragraphs, mode, ref, consignes, bornes).render()
+def render_section(title, paragraphs, mode, ref, consignes, bornes=None, prononciation='sefarade'):
+    return ReadingLayout(title, paragraphs, mode, ref, consignes, bornes, prononciation).render()

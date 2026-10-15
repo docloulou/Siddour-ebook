@@ -88,6 +88,9 @@ python3 siddour_ebook_liseuse.py --offline --chapitres apres-le-repas,priere-du-
 
 # Afficher les identifiants disponibles, rite par rite
 python3 siddour_ebook_liseuse.py --liste
+
+# Phonétique d’un texte, dans la prononciation du rite (ou --prononciation sefarade, israelienne)
+python3 siddour_ebook_liseuse.py --translit 'בָּרוּךְ אַתָּה' --rite ashkenaze
 ```
 
 Sans `--offline`, le script télécharge auprès de Sefaria les sections absentes du cache. Il réutilise les fichiers déjà présents.
@@ -102,13 +105,14 @@ Dans l’onglet **Actions** de GitHub, choisir **Publier les EPUB**, puis **Run 
 
 L’action :
 
-1. calcule le numéro suivant ;
-2. fabrique les six EPUB (trois par rite) ;
-3. les vérifie avec EPUBCheck ;
-4. met à jour `dist/` et les liens en haut de ce README ;
-5. ajoute l’étiquette `edition-<N>-revision-<M>` ;
-6. crée la release avec les six fichiers, rangés par rite dans les notes ;
-7. publie le site de lecture en ligne sur GitHub Pages.
+1. lance les tests (voir « Continuer le travail ») ;
+2. calcule le numéro suivant ;
+3. fabrique les six EPUB (trois par rite) ;
+4. les vérifie avec EPUBCheck ;
+5. met à jour `dist/` et les liens en haut de ce README ;
+6. ajoute l’étiquette `edition-<N>-revision-<M>` ;
+7. crée la release avec les six fichiers, rangés par rite dans les notes ;
+8. publie le site de lecture en ligne sur GitHub Pages.
 
 Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages › Build and deployment › Source : GitHub Actions**.
 
@@ -271,13 +275,22 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/hebreu.py` | Nikoud, balises `<small>`/`<big>`, recherche dans le texte hébreu. |
 | `siddour/consignes.py` | Traduction des consignes et découpage consigne / texte à réciter. |
 | `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
-| `siddour/phonetique.py` | Translittération ; cas particuliers dans `PH_WORDS`. |
+| `siddour/phonetique.py` | Phonétique, dans la prononciation du rite (`PRONONCIATIONS`) ; vocalisations fautives de la source dans `CORRECTIONS`, mots non vocalisés et sigles dans `PH_WORDS` et `LECTURES`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
 | `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis le titre commun des couvertures ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site, de son référencement et de la PWA. |
+| `tests/` | Tests de non-régression : phonétique des deux rites, lecture des sources et de leurs correctifs, mise en page. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`), dont le signalement IndexNow. |
+
+Les tests se lancent depuis la racine du dépôt ; les deux actions de publication les lancent aussi avant de fabriquer quoi que ce soit :
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Ils fabriquent en phonétique toutes les sections des deux rites, depuis `cache/` : un mot sans lecture, un correctif de `SOURCE_FIXES` qui ne trouve plus son passage ou une lecture de référence modifiée les fait échouer. Une lecture changée volontairement se met à jour dans `tests/test_phonetique.py`.
 
 Les traductions sont des données, séparées du code (UTF-8, séparateur `;`) :
 
@@ -303,6 +316,28 @@ Inspirées du Pata’h Eliyahou et de l’édition Beit Hassofer :
 - Un ajout long est encadré, avec la condition en en-tête et un lien « Suite de la prière ». Les rôles (zimoun, Kedoucha, bénédiction des Cohanim) sont aussi encadrés.
 - Les sources (Ben Ich ’Haï, Kaf ha’Haïm…) et les précisions techniques (initiales, acrostiches) passent en notes numérotées, en fin de section, avec liens aller et retour.
 
+### Conventions de la phonétique
+
+Chaque rite a sa prononciation (`prononciation` dans `siddour/rites.py`) :
+
+| | Rite séfarade | Rite ashkénaze |
+| --- | --- | --- |
+| Modèle | Pata’h Eliyahou et Beit Hassofer | Prononciation israélienne courante |
+| ח, ע, ו, ק | ḥ, ‘, w, q : éḥad, ‘al, mitswa, qadoche | ’h, ’ (rien au bord du mot), v, k : è’had, al, mitsva, kadoch |
+| Tséré, ségol | è, é : chèm, mélékh | é, è : chém, mèlèkh |
+| Daguech fort | consonne doublée : atta, tefilla | consonne simple : ata, tefila |
+| Chva après une voyelle longue | prononcé : touvekha | muet : touvkha |
+| Fin de mot | finales du Pata’h Eliyahou : netilate, amène, haarétss | netilat, amén, haarèts |
+| Mots liés par un maqaf | séparés : ‘al kol | trait d’union : al-kol |
+| Tétragramme | Adonaïe, préfixe compris : laAdonaïe | Adonaï : laAdonaï |
+
+Dans les deux rites :
+
+- l’aleph prononcé après une consonne s’écrit ’ (mal’akh) ; le qamats qatan se lit o (ḥokhma) ;
+- les noms divins sont en petites capitales ; Élohim garde sa majuscule après un préfixe (lÈlohim), comme les noms propres (bIrouchalaïm), mais pas les dieux des nations (élohim aḥèrim) ;
+- quand la source donne le ketiv suivi du qeré, seul le qeré, la forme lue, est translittéré ; un nom à dire s’écrit « (untel fils d’untel) » ;
+- un passage que la source donne sans voyelles (seli’hot du rite ashkénaze) n’a pas de phonétique : une consigne le signale, une fois par série.
+
 ## Sources et limites
 
 Les JSON du cache conservent les références et les métadonnées des versions Sefaria : *Siddur Edot HaMizrach*, édition Shaliehsaboo (CC0), *Tanach with Nikkud* et *Torat Emet 357* (domaine public, selon les métadonnées sources). Les usages traduits suivent cette source, notamment ceux du Ben Ich ’Haï.
@@ -311,4 +346,4 @@ Le rite ashkénaze vient du *Siddur Ashkenaz* de Sefaria, qui réunit deux versi
 
 La police **Noto Serif Hebrew** est distribuée sous SIL Open Font License 1.1, reproduite dans [OFL-NotoSerifHebrew.txt](OFL-NotoSerifHebrew.txt).
 
-La phonétique est générée automatiquement et reste approximative. Le Tétragramme y est toujours lu Adonaï, préfixe compris (laAdonaï, kaAdonaï, chèAdonaï) ; quand la source donne le ketiv suivi du qeré entre crochets, seul le qeré, la forme lue, est translittéré. Le contenu couvre le plan inclus, pas tous les offices possibles. La conservation des textes, la structure XML et les liens des six EPUB ont été vérifiés ; leur affichage exact dépend de la liseuse. Les références Pata’h Eliyahou et Beit Hassofer ont servi à guider la présentation, sans reproduire leurs textes.
+La phonétique est générée automatiquement et reste approximative ; ses conventions sont décrites plus haut. Le contenu couvre le plan inclus, pas tous les offices possibles. La conservation des textes, la structure XML et les liens des six EPUB ont été vérifiés ; leur affichage exact dépend de la liseuse. Les références Pata’h Eliyahou et Beit Hassofer ont servi à guider la présentation et la phonétique, sans reproduire leurs textes.

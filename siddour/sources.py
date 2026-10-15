@@ -126,8 +126,20 @@ _TAL_OUMATAR = ('<small>אם שכח לומר ' + loose('טל') + ' ' + loose('ו
                 'לברכת השנים ויתחיל ברך עלינו ויתפלל כסדר. ואם עקר רגליו חוזר לראש התפלה.</small>')
 
 SOURCE_FIXES = {
-    # Lettre parasite à la fin de l'invitation au zimoun.
-    'Fast Days and Mourning, Mourning': [('(' + loose('קדישא') + ':)צ', r'\1')],
+    # Lettre parasite à la fin de l'invitation au zimoun ; espace manquante dans « לָקָח עֹשֵׂה » (Psaume 15).
+    'Fast Days and Mourning, Mourning': [('(' + loose('קדישא') + ':)צ', r'\1'),
+                                         (loose('לקח') + '(?=ע)', r'\g<0> ')],
+    # Espace manquante après le premier mot, en gras : « <b>זְכֹר</b>יְהוָה » (Ékha 5, 1).
+    'The Midnight Rite, Tikkun Rachel': [('(<b>' + loose('זכר') + '</b>)(?=' + loose('יהוה') + ')', r'\1 ')],
+    # Variante entre crochets : « וַתָּרֹנָּה [נ"א: וַתִּבְכֶּינָה] ».
+    'Havdalah, Motzei Shabbat Songs': [(r'\[נ"א:\s*([^\]]+)\]', r'(<small>נ"א</small> \1)')],
+    # Rappel du refrain en tête de strophe, sans balise : « אבותי: … ».
+    'Festivals, Selichot, Ten of Tevet': [(r'^אבותי:\s*', '<small>(אבותי)</small> ')],
+    'Festivals, Selichot, Fast of Esther': [(r'^במתי:\s*', '<small>(במתי)</small> ')],
+    'Festivals, Selichot, Seventeen of Tamuz': [(r'^יום:\s*', '<small>(יום גבר)</small> ')],
+    'Festivals, Selichot, Yom Kippur Katan': [(r'^יום:\s*', '<small>(יום זה)</small> ')],
+    # Source du passage, sans balise, en tête du paragraphe.
+    '@Perek Shirah 6': [(r'^\((ילקוט שמעוני פרשת בא רמז קפז)\) ', r'<small>(\1)</small> ')],
     # « בְּיוֹם » appartient à l'ajout de Yom tov : à 'Hol hamoèd, on s'arrête avant.
     'Post Meal Blessing': [(_YOM_TOV, _YOM_TOV_FIX)],
     'Al Hamihya': [(_YOM_TOV, _YOM_TOV_FIX)],
@@ -137,10 +149,13 @@ SOURCE_FIXES = {
     'Weekday, Shacharit, Amidah': [_TAL_OUMATAR],
     'Weekday, Minchah, Amida': [_TAL_OUMATAR],
     'Weekday, Maariv, Amidah': [_TAL_OUMATAR],
-    # Titre de la seconde seli'ha, sur quatre lignes.
-    'Festivals, Selichot, Fast of Gedalia': [('^סליחות לימי התשובה<br>.*<br>סליחה ב$', '<big>סליחה ב</big>')],
+    # Titre de la seconde seli'ha, sur quatre lignes ; « ושם נאמר », sans voyelles devant le
+    # verset vocalisé (la seli'ha elle-même reste non vocalisée).
+    'Festivals, Selichot, Fast of Gedalia': [('^סליחות לימי התשובה<br>.*<br>סליחה ב$', '<big>סליחה ב</big>'),
+                                             (r'\bושם נאמר:', 'וְשָׁם נֶאֱמַר:')],
     # Textes à réciter que Daat donne sans voyelles.
     'Shabbat, Havdalah': [('^כן תהיה לנו:$', 'כֵּן תִּהְיֶה לָּנוּ:')],
+    'Berachot, Tefillat HaDerech': [('(' + loose('כי') + r'\s+)אל(?=\s+' + loose('שומע') + ')', r'\1אֵל')],
     # Mesure de la 'halla : l'équivalent en grammes manque, il ne reste que l'unité.
     # Les consignes de la 'halla et de la mezouza, sans balise, précèdent le texte à dire.
     'Berachot, Birkhot Hamitzvot': [('<small> ?גרם</small> ?', ''),
@@ -194,12 +209,17 @@ def _variante(m: re.Match) -> str:
     return m[0]
 
 
+# Indications de Daat sans balise, suivies d'un tiret ou d'un deux-points : « בקיץ - מוֹרִיד הַטָּל », « ועונים: אמן ».
+_MARQUEURS = re.compile(r'(^|<br>\s*|\s)(בקיץ|בחורף|הקהל|ועונים|לש"ץ)(?:\s+-|:)\s*(?![^<]*</small>)')
+
+
 def normalize_ashkenaze(texts: list[str]) -> list[str]:
     out = []
     for t in texts:
         t = re.sub(r"(?<=[\u05d0-\u05ea\u0591-\u05c7])\u2011(?=[\u05d0-\u05ea])", "", t)  # יְ‑יָ
         # Les <b> n'ont pas de sens ici ; chaque balise couperait le mot en deux.
         t = re.sub(r"</?b>", "", t)
+        t = _MARQUEURS.sub(r'\1<small>\2</small> ', t)
         t = re.sub(r"<big>([\u05d0-\u05ea][\u0591-\u05c7]*)</big>", r"\1", t)  # lettre agrandie
         # Référence biblique de Daat : « <em><small>תהלים קמה</small></em> ».
         t = re.sub(r"<em><small>([^<>]*)</small></em>",

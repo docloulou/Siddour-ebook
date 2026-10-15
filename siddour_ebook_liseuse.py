@@ -10,10 +10,12 @@ Le code est dans le paquet siddour/ :
     plan.py         chapitres et sections
     sources.py      textes Sefaria (cache hors ligne)
     hebreu.py       nikoud, balises de la source
-    phonetique.py   translittération
+    phonetique.py   phonétique, dans la prononciation du rite (rites.py)
     consignes.py    traductions françaises (data/consignes.csv, data/intertitres.csv)
     mise_en_page.py rattachement des consignes aux passages
     edition.py      assemblage EPUB ; style.css pour l'apparence
+
+Tests de non-régression : python3 -m unittest discover -s tests
 """
 from siddour.cli import main
 

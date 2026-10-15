@@ -209,7 +209,8 @@ def render_book(plan: list[dict], sources: dict, mode: str, consignes: Consignes
             for book, version_ in versions_of(data):
                 licences.add(book + ', ' + version_.get('versionTitle', '').strip() + ' : '
                              + version_.get('license', 'licence non précisée'))
-            sections.append((title, render_section(title, texts, mode, ref, consignes, v.get('bornes'))))
+            sections.append((title, render_section(title, texts, mode, ref, consignes, v.get('bornes'),
+                                                   rite.prononciation)))
         chapters.append((chap, sections))
     if consignes.missing and strict:
         raise ValueError('Traductions manquantes :\n' + '\n'.join(sorted(consignes.missing)))

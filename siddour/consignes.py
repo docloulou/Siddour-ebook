@@ -14,7 +14,7 @@ import unicodedata
 from pathlib import Path
 
 from .hebreu import HE_RE, is_vocalized, plain_hebrew
-from .phonetique import PH_WORDS, translit
+from .phonetique import PH_WORDS, noms_html, translit
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -208,17 +208,26 @@ class Consignes:
         self.missing.add('Référence : ' + key)
         return MISSING_REFERENCE
 
-    def recitation_html(self, value: str, phonetic: bool = False, capitalize: bool = True) -> str:
-        """Texte à réciter (hébreu ou phonétique), références bibliques traduites."""
+    def recitation_html(self, value: str, phonetic: bool = False, capitalize: bool = True,
+                        prononciation: str = 'sefarade') -> str:
+        """Texte à réciter (hébreu ou phonétique), références bibliques traduites.
+        En phonétique, les noms divins sont balisés <span class="nom">."""
+        def render(start: int, end: int) -> str:
+            text = value[start:end]
+            if not phonetic:
+                return html.escape(text)
+            # Capitale en tête du texte, et après la référence d'un verset achevé.
+            before = REFERENCE_RE.sub('', value[:start])
+            first = bool(re.search(r'[.:׃!?]\s*$', before)) if HE_RE.search(before) else capitalize
+            return noms_html(html.escape(translit(text, capitalize=first, prononciation=prononciation, noms=True)))
+
         parts = []
         pos = 0
         for match in REFERENCE_RE.finditer(value):
-            text = value[pos:match.start()]
-            parts.append(html.escape(translit(text, capitalize=capitalize and pos == 0) if phonetic else text))
+            parts.append(render(pos, match.start()))
             parts.append('<span class="reference" lang="fr" dir="ltr">' + html.escape(self.reference(match.group())) + '</span>')
             pos = match.end()
-        text = value[pos:]
-        parts.append(html.escape(translit(text, capitalize=capitalize and pos == 0) if phonetic else text))
+        parts.append(render(pos, len(value)))
         return ' '.join(p for p in parts if p)
 
     def export(self, path: Path) -> None:
