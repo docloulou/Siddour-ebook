@@ -7,6 +7,7 @@ h1,h2,h3,h4 { page-break-after: avoid; break-after: avoid; }
 .he { text-align: right; font-family: "SiddurHebrew", "Noto Serif Hebrew", "DejaVu Sans", serif;
       font-size: 1.22em; line-height: 1.65; margin: .45em 0 .15em; }
 .ph { text-align: left; font-size: 1em; line-height: 1.5; margin: .2em 0 .65em; }
+.ph .nom { font-variant: small-caps; }  /* noms divins de la phonétique */
 .pair { margin-bottom: .8em; }
 .he.kavana { font-size: .9em; color: #555; margin-top: 0; }
 .rubrique { text-align: left; font-style: italic; font-size: .86em; line-height: 1.4;

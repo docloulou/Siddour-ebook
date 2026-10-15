@@ -34,6 +34,7 @@ class Rite:
     usages: str          # sources des consignes, dans « À propos »
     phonetique: str = ''  # précision sur la phonétique
     limites: str = ''     # ce qui manque encore, annoncé sur la page des livres
+    prononciation: str = 'sefarade'  # profil de la phonétique (phonetique.PRONONCIATIONS)
 
     @property
     def nom(self) -> str:
@@ -63,6 +64,8 @@ SEFARADE = Rite(
     contenu='les offices de la semaine, du Chabbat et des fêtes, les jeûnes, les bénédictions '
             'et les étapes de la vie',
     usages='notamment ceux du Ben Ich ’Haï',
+    phonetique='Elle suit l’usage des siddourim Pata’h Eliyahou et Beit Hassofer : ḥ pour le ’het, '
+               '‘ pour le ayin, w pour le vav, q pour le qof, consonne doublée au daguech fort. ',
 )
 
 ASHKENAZE = Rite(
@@ -77,7 +80,9 @@ ASHKENAZE = Rite(
     contenu='les offices de la semaine, la Havdala, Roch ’Hodech et ’Hanouka, les jeûnes, '
             'les bénédictions et le Kaddich',
     usages='notamment ceux de la Michna beroura',
-    phonetique='Elle suit la prononciation israélienne, et non la prononciation ashkénaze traditionnelle. ',
+    phonetique='Elle suit la prononciation israélienne, et non la prononciation ashkénaze traditionnelle : '
+               '’h pour le ’het, v pour le vav, k pour le qof, sans consonne doublée. ',
+    prononciation='israelienne',
     limites='Pourim, le Tikoun ’Hatsot et les prières du cycle de la vie (mariage, brit mila, deuil) '
             'ne sont pas encore inclus : la source Sefaria de ce rite ne les contient pas.',
 )

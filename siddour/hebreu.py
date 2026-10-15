@@ -35,16 +35,20 @@ def parse_paragraph(raw: str) -> tuple[str, list[tuple[str, bool]]]:
     segments: list[tuple[str, bool]] = []
     depth = 0
     pos = 0
+    chunk = ""
     for match in TAG_RE.finditer(raw):
-        chunk = raw[pos:match.start()]
+        chunk += raw[pos:match.start()]
+        pos = match.end()
+        closing, tag = match.group(1), match.group(2).lower()
+        if tag != "small":
+            continue  # <b>, <big> peuvent couper un mot : <b>אָ</b>שַׁמְנוּ, שְׁמַ<big>ע</big>
         if chunk:
             segments.append((html.unescape(chunk), depth > 0))
-        closing, tag = match.group(1), match.group(2).lower()
-        if tag == "small":
-            depth = max(0, depth + (-1 if closing else 1))
-        pos = match.end()
-    if raw[pos:]:
-        segments.append((html.unescape(raw[pos:]), depth > 0))
+        chunk = ""
+        depth = max(0, depth + (-1 if closing else 1))
+    chunk += raw[pos:]
+    if chunk:
+        segments.append((html.unescape(chunk), depth > 0))
     segments = [(re.sub(r"\s+", " ", s), n) for s, n in segments if s.strip()]
     if re.fullmatch(r"<big>.*</big>", raw.strip(), re.S) and "<small>" not in raw:
         return "heading", segments
