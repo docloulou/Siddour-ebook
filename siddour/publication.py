@@ -3,7 +3,7 @@
     python3 -m siddour.publication suivante --increment revision
     python3 -m siddour.publication actuelle
     python3 -m siddour.publication readme --tag edition-1-revision-0 --depot owner/repo --date 2026-10-14
-    python3 -m siddour.publication indexnow --site https://owner.github.io/repo/
+    python3 -m siddour.publication indexnow --site https://sidour.page/
 """
 from __future__ import annotations
 

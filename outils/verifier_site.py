@@ -2,7 +2,7 @@
 
     python3 outils/verifier_site.py
 
-Fabrique le site dans un dossier temporaire, servi sous /Siddour-ebook/ comme sur
+Fabrique le site dans un dossier temporaire, servi à la racine comme sur
 GitHub Pages, puis contrôle :
 1. les liens internes et les fichiers listés dans le service worker ;
 2. le référencement : titre et description propres à chaque page, un seul h1, canonique,
@@ -31,13 +31,13 @@ from urllib.parse import urljoin, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 PORT = 8765
-BASE = f'http://localhost:{PORT}/Siddour-ebook/'
+BASE = f'http://localhost:{PORT}/'
 CHROMIUM = '/opt/pw-browsers/chromium'  # navigateur préinstallé dans certains environnements
 
 
 def fabriquer(dossier: Path, revision: int, jour: str) -> None:
     subprocess.run([sys.executable, 'siddour_ebook_liseuse.py', '--offline', '--sortie', str(dossier / 'epub'),
-                    '--site', str(dossier / 'www' / 'Siddour-ebook'), '--site-url', BASE,
+                    '--site', str(dossier / 'www'), '--site-url', BASE,
                     '--edition', '1', '--revision', str(revision), '--date', jour],
                    cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
 
@@ -239,8 +239,8 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         dossier = Path(tmp)
         fabriquer(dossier, 0, '2026-01-01')
-        verifier_liens(dossier / 'www' / 'Siddour-ebook')
-        verifier_referencement(dossier / 'www' / 'Siddour-ebook')
+        verifier_liens(dossier / 'www')
+        verifier_referencement(dossier / 'www')
         verifier_pwa(dossier)
 
 

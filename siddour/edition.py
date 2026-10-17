@@ -81,6 +81,9 @@ def colophon(version: Version) -> str:
             '<p>Fabriqué le ' + exposants(date_fr(version.jour)) + '</p></div>')
 
 
+SITE_URL = 'https://sidour.page/'  # adresse publique du site de lecture
+
+
 def make_credits(title: str, licences: set[str], mode: str, version: Version, rite: Rite = SEFARADE) -> str:
     items = ''.join('<li>' + html.escape(x) + '</li>' for x in sorted(licences))
     note = ('La phonétique est générée automatiquement selon des conventions françaises '
@@ -89,6 +92,8 @@ def make_credits(title: str, licences: set[str], mode: str, version: Version, ri
             '<p class="credits"><b>' + html.escape(title) + '.</b> ' + EDITION_NOTES[mode] + '</p>'
             '<p class="credits">' + exposants(version.complet) + '.</p>'
             '<p class="credits">' + html.escape(rite.libelle) + '. Textes issus de Sefaria.</p>'
+            '<p class="credits">À lire aussi en ligne, avec les mises à jour : '
+            '<a href="' + SITE_URL + '">' + SITE_URL.removeprefix('https://').rstrip('/') + '</a>.</p>'
             '<ul class="credits">' + items + '</ul>'
             '<p class="credits">' + note
             + 'Les consignes figurent en italique juste avant le passage qu’elles concernent. '

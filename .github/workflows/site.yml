@@ -26,6 +26,10 @@ concurrency:
   group: publication
   cancel-in-progress: false
 
+env:
+  # Adresse publique du site (domaine personnalisé : Settings > Pages > Custom domain).
+  SITE_URL: https://sidour.page/
+
 jobs:
   fabriquer:
     runs-on: ubuntu-latest
@@ -57,7 +61,7 @@ jobs:
       - name: Fabriquer le site
         run: |
           python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./_epub \
-            --site ./_site --site-url "${{ steps.pages.outputs.base_url }}/" --depot "${{ github.repository }}" \
+            --site ./_site --site-url "$SITE_URL" --depot "${{ github.repository }}" \
             --edition ${{ steps.version.outputs.edition }} \
             --revision ${{ steps.version.outputs.revision }} \
             --date ${{ steps.version.outputs.date }}
@@ -75,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploiement.outputs.page_url }}
+      url: ${{ env.SITE_URL }}
     steps:
       - name: Publier sur GitHub Pages
         id: deploiement
@@ -88,4 +92,4 @@ jobs:
 
       - name: Signaler les pages aux moteurs (IndexNow)
         continue-on-error: true
-        run: python3 -m siddour.publication indexnow --site "${{ steps.deploiement.outputs.page_url }}"
+        run: python3 -m siddour.publication indexnow --site "$SITE_URL"
