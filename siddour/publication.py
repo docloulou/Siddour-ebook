@@ -75,12 +75,14 @@ def indexnow(site: str) -> None:
     """Signale les pages du sitemap publié aux moteurs qui suivent IndexNow (Bing, Yandex, Seznam, Naver…) :
     ils les explorent à nouveau sans attendre leur prochain passage. Google n'y participe pas."""
     site = site.rstrip('/') + '/'
-    with urllib.request.urlopen(site + 'sitemap.xml', timeout=30) as reponse:
+    # Le site passe par Cloudflare, qui refuse (403) l'agent par défaut de Python : on se présente.
+    agent = {'User-Agent': 'Mozilla/5.0 (compatible; Siddour-IndexNow/1.0; +' + site + ')'}
+    with urllib.request.urlopen(urllib.request.Request(site + 'sitemap.xml', headers=agent), timeout=30) as reponse:
         adresses = [html.unescape(u) for u in re.findall(r'<loc>([^<]+)</loc>', reponse.read().decode('utf-8'))]
     corps = json.dumps({'host': urlsplit(site).hostname, 'key': INDEXNOW, 'keyLocation': site + INDEXNOW + '.txt',
                         'urlList': adresses[:10000]}).encode('utf-8')
     demande = urllib.request.Request('https://api.indexnow.org/indexnow', data=corps, method='POST',
-                                     headers={'Content-Type': 'application/json; charset=utf-8'})
+                                     headers={'Content-Type': 'application/json; charset=utf-8', **agent})
     try:
         with urllib.request.urlopen(demande, timeout=60) as reponse:
             print('IndexNow :', len(adresses), 'adresses signalées (réponse ' + str(reponse.status) + ')')
