@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--site', metavar='DOSSIER', help='produire aussi le site web de lecture (GitHub Pages)')
     ap.add_argument('--depot', default=DEPOT,
                     help='dépôt GitHub (propriétaire/dépôt) cité dans le pied de page du site')
-    ap.add_argument('--site-url', default='', help='adresse publique du site, pour les liens canoniques et le sitemap')
+    ap.add_argument('--site-url', default='', help='adresse publique du site, pour les liens canoniques et le sitemap (https://sidour.page/)')
     ap.add_argument('--translit', metavar='TEXTE', help='tester la phonétique et quitter')
     ap.add_argument('--prononciation', choices=list(PRONONCIATIONS),
                     help='prononciation de --translit (défaut : celle du rite choisi, sinon sefarade)')

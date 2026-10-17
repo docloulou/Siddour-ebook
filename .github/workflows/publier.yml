@@ -28,6 +28,8 @@ concurrency:
 
 env:
   EPUBCHECK_VERSION: "5.1.0"
+  # Adresse publique du site (domaine personnalisé : Settings > Pages > Custom domain).
+  SITE_URL: https://sidour.page/
 
 jobs:
   publier:
@@ -63,7 +65,7 @@ jobs:
       - name: Fabriquer les EPUB et le site
         run: >
           python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist
-          --site ./_site --site-url "${{ steps.pages.outputs.base_url }}/" --depot "${{ github.repository }}"
+          --site ./_site --site-url "$SITE_URL" --depot "${{ github.repository }}"
           --edition ${{ steps.version.outputs.edition }}
           --revision ${{ steps.version.outputs.revision }}
           --date ${{ steps.version.outputs.date }}
@@ -81,7 +83,7 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
           LIBELLE: ${{ steps.version.outputs.libelle }}
         run: |
-          python3 -m siddour.publication readme --tag "$TAG" --depot "$GITHUB_REPOSITORY" --date "${{ steps.version.outputs.date }}" --site "${{ steps.pages.outputs.base_url }}"
+          python3 -m siddour.publication readme --tag "$TAG" --depot "$GITHUB_REPOSITORY" --date "${{ steps.version.outputs.date }}" --site "$SITE_URL"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md dist/*.epub
@@ -113,7 +115,7 @@ jobs:
             echo "- \`siddour_liseuse_ashkenaze_phonetique.epub\` : textes en phonétique, consignes en français"
             echo "- \`siddour_liseuse_ashkenaze_bilingue.epub\` : chaque passage en hébreu puis en phonétique"
             echo
-            echo "Lire en ligne : ${{ steps.pages.outputs.base_url }}/"
+            echo "Lire en ligne : $SITE_URL"
           } > notes.md
           gh release create "$TAG" dist/*.epub --title "Siddour séfarade et ashkénaze — $LIBELLE" --notes-file notes.md --latest
 
@@ -127,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploiement.outputs.page_url }}
+      url: ${{ env.SITE_URL }}
     steps:
       - name: Publier sur GitHub Pages
         id: deploiement
@@ -138,4 +140,4 @@ jobs:
 
       - name: Signaler les pages aux moteurs (IndexNow)
         continue-on-error: true
-        run: python3 -m siddour.publication indexnow --site "${{ steps.deploiement.outputs.page_url }}"
+        run: python3 -m siddour.publication indexnow --site "$SITE_URL"

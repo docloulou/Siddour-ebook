@@ -1,5 +1,7 @@
 # Siddour-ebook
 
+Siddour séfarade et ashkénaze gratuit, à lire en ligne sur **[sidour.page](https://sidour.page/)** ou à télécharger en EPUB pour liseuse.
+
 <!-- publication:debut -->
 ## Télécharger
 
@@ -19,7 +21,7 @@
 - [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_ashkenaze_phonetique.epub)
 - [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_ashkenaze_bilingue.epub)
 
-📖 [Lire en ligne dans le navigateur](https://docloulou.github.io/Siddour-ebook/)
+📖 [Lire en ligne dans le navigateur](https://sidour.page/)
 <!-- publication:fin -->
 
 Siddour pour liseuse, en deux rites, chacun en trois éditions (hébreu, phonétique, hébreu puis phonétique) :
@@ -159,20 +161,22 @@ Pour le référencement, chaque page porte :
 
 La police hébraïque est préchargée sur les éditions qui contiennent de l’hébreu. Sur l’accueil, sous le lien vers les livres, un court texte présente le siddour en ligne et mène aux six sommaires.
 
-Le site fournit aussi `sitemap.xml` (avec les images des pages) et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`). Sur une page de projet GitHub (`owner.github.io/depot/`), les robots ne lisent que le `robots.txt` du domaine, pas celui du site : il faut donc déclarer le sitemap soi-même.
+Le site fournit aussi `sitemap.xml` (avec les images des pages) et `robots.txt`. Le `robots.txt` autorise tout, à tous les robots, y compris ceux des IA (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…), nommés un par un dans `ROBOTS_IA` (`siddour/site.py`). Le site est servi à la racine de son domaine, [sidour.page](https://sidour.page/) : les robots lisent donc ce `robots.txt`, qui leur indique le sitemap.
 
 Pour un meilleur référencement, déclarer le site et son sitemap dans Google Search Console et Bing Webmaster Tools :
 
-- **Google Search Console** : propriété de type « Préfixe de l’URL », avec l’adresse du site. Le fichier de validation HTML est dans `assets/racine/`. Soumettre ensuite `sitemap.xml` (Sitemaps > Ajouter).
+- **Google Search Console** : propriété de type « Domaine » (`sidour.page`, validée par un enregistrement DNS TXT) ou « Préfixe de l’URL » (`https://sidour.page/`, validée par le fichier HTML de `assets/racine/`). Soumettre ensuite `https://sidour.page/sitemap.xml` (Sitemaps > Ajouter).
 - **Bing Webmaster Tools** : importer le site depuis Google Search Console. Bing reprend alors la validation et le sitemap.
 
 **IndexNow.** Après chaque déploiement, les actions signalent toutes les pages du sitemap à IndexNow : Bing, Yandex, Seznam ou Naver les réexplorent sans attendre leur prochain passage. La clé (`INDEXNOW`, `siddour/publication.py`) est publiée dans `<clé>.txt` à la racine du site. Un refus n’arrête pas la publication. Pour le faire à la main :
 
 ```bash
-python3 -m siddour.publication indexnow --site https://docloulou.github.io/Siddour-ebook/
+python3 -m siddour.publication indexnow --site https://sidour.page/
 ```
 
 Tout fichier placé dans `assets/racine/` est copié tel quel à la racine du site (fichiers de validation, etc.).
+
+**Domaine.** Le site est publié à l’adresse `https://sidour.page/` (`SITE_URL`, dans `siddour/edition.py` et dans les deux actions). Le fichier `CNAME` est écrit à la racine du site quand il est fabriqué pour cette adresse. Dans GitHub, *Settings > Pages > Custom domain* doit indiquer `sidour.page`, avec *Enforce HTTPS* coché ; chez le registraire, le domaine pointe vers GitHub Pages (enregistrements `A` vers `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, et `AAAA` vers `2606:50c0:8000::153` à `2606:50c0:8003::153`). L’ancienne adresse `docloulou.github.io/Siddour-ebook/` redirige alors (301) vers le nouveau domaine, page par page. L’application installée depuis l’ancienne adresse est à réinstaller depuis `sidour.page`.
 
 #### Page d’accueil « Aujourd’hui »
 

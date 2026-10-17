@@ -6,7 +6,7 @@ Arborescence produite :
     <mode>/index.html                  sommaire d'une édition séfarade
     <mode>/<chapitre>/<section>.html   une page par section, comme dans l'EPUB
     ashkenaze/<mode>/...               les éditions ashkénazes, rangées de la même façon
-    telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html, <clé IndexNow>.txt
+    telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html, <clé IndexNow>.txt, CNAME
     manifest.webmanifest, sw.js, hors-ligne.html   application installable (PWA)
 Les ancres internes (notes, « Suite de la prière ») restent propres à chaque page.
 
@@ -26,7 +26,7 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import urljoin
 
-from .edition import (CSS, FONT_PATH, TITLES, Livre, cover_image, description, exposants, introduction,
+from .edition import (CSS, FONT_PATH, SITE_URL, TITLES, Livre, cover_image, description, exposants, introduction,
                       make_contents, make_credits)
 from .hebreu import NIKUD_RE
 from .publication import INDEXNOW
@@ -677,7 +677,7 @@ class Site:
     def graphe_commun(self) -> list[dict]:
         """Le site et son éditeur, en tête du graphe de chaque page."""
         site = {'@type': 'WebSite', '@id': self.ident('', 'site'), 'name': SITE_NAME,
-                'alternateName': ['Siddour en ligne', 'Sidour', 'Siddur'], 'description': SITE_DESCRIPTION,
+                'alternateName': ['sidour.page', 'Siddour en ligne', 'Sidour', 'Siddur'], 'description': SITE_DESCRIPTION,
                 'inLanguage': 'fr', 'publisher': {'@id': self.ident('', 'editeur')}}
         editeur = {'@type': 'Organization', '@id': self.ident('', 'editeur'), 'name': 'Siddour-ebook',
                    'url': self.github, 'sameAs': [self.github]}
@@ -1032,6 +1032,9 @@ class Site:
             shutil.copyfile(sortie / lv.epub, telecharger / lv.epub)
         (self.dossier / '.nojekyll').write_text('', encoding='utf-8')
         (self.dossier / (INDEXNOW + '.txt')).write_text(INDEXNOW, encoding='utf-8')
+        # Domaine personnalisé de GitHub Pages, quand le site est publié à son adresse.
+        if self.url == SITE_URL:
+            (self.dossier / 'CNAME').write_text(SITE_URL.removeprefix('https://').rstrip('/') + '\n', encoding='utf-8')
         if RACINE.is_dir():
             shutil.copytree(RACINE, self.dossier, dirs_exist_ok=True)
 
