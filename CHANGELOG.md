@@ -4,6 +4,12 @@ Les modifications du contenu des livres (textes, consignes, phonétique, plan, p
 
 Ce fichier est généré à partir de `data/changelog.json` à chaque publication : ne pas le modifier à la main. Les modifications pas encore publiées attendent dans `.changeset/` (voir `AGENTS.md`).
 
+## 1ʳᵉ édition, révision 5 — 18 octobre 2026
+
+- **Ajoute en fin de livre la liste des dernières modifications.** — les deux rites · toutes les éditions · tout le livre
+
+  Une page « Dernières modifications » clôt chaque EPUB et chaque PDF : les dernières publications qui touchent l’édition, chacune résumée en une ligne avec les chapitres concernés, et un lien vers l’historique complet sur le site.
+
 ## 1ʳᵉ édition, révision 4 — 15 octobre 2026
 
 - **Aligne la phonétique sur la prononciation de chaque rite.** — les deux rites · éditions phonétique et bilingue · tout le livre

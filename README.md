@@ -5,21 +5,21 @@ Siddour séfarade et ashkénaze gratuit, à lire en ligne sur **[sidour.page](ht
 <!-- publication:debut -->
 ## Télécharger
 
-**1ʳᵉ édition, révision 4 — 15 octobre 2026** · [notes de publication](https://github.com/docloulou/Siddour-ebook/releases/tag/edition-1-revision-4) · [toutes les éditions](https://github.com/docloulou/Siddour-ebook/releases)
+**1ʳᵉ édition, révision 5 — 18 octobre 2026** · [notes de publication](https://github.com/docloulou/Siddour-ebook/releases/tag/edition-1-revision-5) · [toutes les éditions](https://github.com/docloulou/Siddour-ebook/releases)
 
 ### Rite séfarade (Edot HaMizrah)
 
-- [Édition hébraïque](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_hebreu.epub)
-- [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_phonetique.epub)
-- [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_bilingue.epub)
+- Édition hébraïque : [EPUB](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_liseuse_hebreu.epub) · [PDF](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_hebreu.pdf)
+- Édition phonétique : [EPUB](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_liseuse_phonetique.epub) · [PDF](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_phonetique.pdf)
+- Édition hébreu puis phonétique : [EPUB](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_liseuse_bilingue.epub) · [PDF](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_bilingue.pdf)
 
 ### Rite ashkénaze
 
 *Pourim, le Tikoun ’Hatsot et les prières du cycle de la vie (mariage, brit mila, deuil) ne sont pas encore inclus : la source Sefaria de ce rite ne les contient pas.*
 
-- [Édition hébraïque](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_ashkenaze_hebreu.epub)
-- [Édition phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_ashkenaze_phonetique.epub)
-- [Édition hébreu puis phonétique](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-4/siddour_liseuse_ashkenaze_bilingue.epub)
+- Édition hébraïque : [EPUB](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_liseuse_ashkenaze_hebreu.epub) · [PDF](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_ashkenaze_hebreu.pdf)
+- Édition phonétique : [EPUB](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_liseuse_ashkenaze_phonetique.epub) · [PDF](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_ashkenaze_phonetique.pdf)
+- Édition hébreu puis phonétique : [EPUB](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_liseuse_ashkenaze_bilingue.epub) · [PDF](https://github.com/docloulou/Siddour-ebook/releases/download/edition-1-revision-5/siddour_ashkenaze_bilingue.pdf)
 
 📖 [Lire en ligne dans le navigateur](https://sidour.page/)
 <!-- publication:fin -->
