@@ -1,3 +1,4 @@
 requests
 EbookLib
 Pillow
+weasyprint

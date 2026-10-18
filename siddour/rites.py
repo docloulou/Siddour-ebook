@@ -51,6 +51,9 @@ class Rite:
     def epub(self, mode: str) -> str:
         return 'siddour_liseuse_' + ('' if self.code == 'sefarade' else self.code + '_') + mode + '.epub'
 
+    def pdf(self, mode: str) -> str:
+        return 'siddour_' + ('' if self.code == 'sefarade' else self.code + '_') + mode + '.pdf'
+
 
 SEFARADE = Rite(
     code='sefarade', adjectif='séfarade', livre=plan_sefarade.BOOK, plan=plan_sefarade.PLAN,

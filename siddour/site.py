@@ -2,11 +2,11 @@
 
 Arborescence produite :
     index.html                         accueil « Aujourd'hui » : date hébraïque, prières et horaires du jour
-    livres.html                        les éditions : lecture en ligne, téléchargements EPUB
+    livres.html                        les éditions : lecture en ligne, téléchargements EPUB et PDF
     <mode>/index.html                  sommaire d'une édition séfarade
     <mode>/<chapitre>/<section>.html   une page par section, comme dans l'EPUB
     ashkenaze/<mode>/...               les éditions ashkénazes, rangées de la même façon
-    telecharger/*.epub, assets/, sitemap.xml, robots.txt, 404.html, <clé IndexNow>.txt, CNAME
+    telecharger/*.epub, *.pdf, assets/, sitemap.xml, robots.txt, 404.html, <clé IndexNow>.txt, CNAME
     manifest.webmanifest, sw.js, hors-ligne.html   application installable (PWA)
 Les ancres internes (notes, « Suite de la prière ») restent propres à chaque page.
 
@@ -446,8 +446,8 @@ async function fichier(e) {
 
 self.addEventListener("fetch", (e) => {
   const r = e.request;
-  // Les EPUB se téléchargent toujours depuis le réseau.
-  if (r.method !== "GET" || !r.url.startsWith(base) || new URL(r.url).pathname.endsWith(".epub")) return;
+  // Les EPUB et les PDF se téléchargent toujours depuis le réseau.
+  if (r.method !== "GET" || !r.url.startsWith(base) || /\.(epub|pdf)$/.test(new URL(r.url).pathname)) return;
   e.respondWith(r.mode === "navigate" ? page(e) : fichier(e));
 });
 
@@ -527,6 +527,7 @@ class Site:
         self.images: dict[str, list[str]] = {}  # images de chaque page, pour le sitemap
         self.tailles: dict[str, tuple[int, int]] = {}  # dimensions des images de partage
         self.par_edition: dict[str, list[str]] = {}  # pages à garder hors ligne, par édition
+        self.pdfs: set[str] = set()  # PDF proposés au téléchargement (fabriqués avec --pdf)
         # Chemin de chaque section dans les éditions d'un rite : (chapitre, titre) ; (chapitre, None) = début du chapitre.
         self.chemins: dict[str, dict[tuple[str, str | None], str]] = {r.code: {} for r in self.rites}
 
@@ -766,8 +767,11 @@ class Site:
         if self.url:
             data['url'] = self.abs(cle + '/')
             data['image'] = self.abs('assets/covers/' + cle + '.jpg')
-            data['encoding'] = {'@type': 'MediaObject', 'encodingFormat': 'application/epub+zip',
-                                'contentUrl': self.abs('telecharger/' + livre.epub)}
+            data['encoding'] = [{'@type': 'MediaObject', 'encodingFormat': 'application/epub+zip',
+                                 'contentUrl': self.abs('telecharger/' + livre.epub)}]
+            if livre.pdf in self.pdfs:
+                data['encoding'].append({'@type': 'MediaObject', 'encodingFormat': 'application/pdf',
+                                         'contentUrl': self.abs('telecharger/' + livre.pdf)})
         return data
 
     def breadcrumb(self, path: str, items: list[tuple[str, str]]) -> dict:
@@ -821,7 +825,9 @@ class Site:
                  '<p class="accroche">' + exposants(livre.version.complet) + '</p>'
                  '<p style="text-align:center"><a class="bouton" href="' + sequence[0][1] + '">Commencer la lecture</a> '
                  '<a class="bouton second" href="' + racine + 'telecharger/' + livre.epub + '" download>'
-                 'Télécharger l’EPUB</a></p>'
+                 'Télécharger l’EPUB</a>'
+                 + (' <a class="bouton second" href="' + racine + 'telecharger/' + livre.pdf + '" download>PDF</a>'
+                    if livre.pdf in self.pdfs else '') + '</p>'
                  + ('<p class="autre-rite">' + html.escape(rite.limites) + '</p>' if rite.limites else '')
                  + ('<p class="autre-rite">Voir aussi : ' + autres_rites + '</p>' if autres_rites else ''))
         crumb = [(SITE_NAME, ''), (self.nom_edition(livre), cle + '/')]
@@ -950,6 +956,7 @@ class Site:
         aide = ('<div class="edition-carte carte-aide"><h2>Sur liseuse</h2>'
                 '<p>Télécharger l’EPUB, puis l’ouvrir sur sa liseuse (Kobo, PocketBook, Apple Livres…) '
                 'ou l’envoyer sur Kindle avec « Send to Kindle ».</p>'
+                + ('<p>Le PDF, au format A5, s’imprime ou se lit sur tablette.</p>' if self.pdfs else '') +
                 '<p>Les éditions se lisent aussi en ligne, même sans connexion une fois gardées.</p>'
                 '<p><a href="' + self.github + '/releases">Toutes les versions</a></p></div>')
         sections = []
@@ -961,7 +968,9 @@ class Site:
                 + (' loading="lazy"' if n or i > 1 else '') + '></a><h2>' + MENU[lv.mode] + '</h2>'
                 '<p class="texte">Textes ' + TEXTE[lv.mode] + '</p>'
                 '<p class="actions"><a class="bouton" href="' + self.cle(lv) + '/index.html">Lire</a>'
-                '<a class="bouton second" href="telecharger/' + lv.epub + '" download>EPUB</a></p></div>'
+                '<a class="bouton second" href="telecharger/' + lv.epub + '" download>EPUB</a>'
+                + ('<a class="bouton second" href="telecharger/' + lv.pdf + '" download>PDF</a>' if lv.pdf in self.pdfs else '')
+                + '</p></div>'
                 for i, lv in enumerate(livres))
             contenu = ('<div class="edition-carte carte-aide"><h2>Contenu</h2><p>'
                        + html.escape(rite.contenu[0].upper() + rite.contenu[1:]) + '.</p>'
@@ -1030,6 +1039,9 @@ class Site:
         telecharger.mkdir(exist_ok=True)
         for lv in self.livres:
             shutil.copyfile(sortie / lv.epub, telecharger / lv.epub)
+            if (sortie / lv.pdf).exists():
+                shutil.copyfile(sortie / lv.pdf, telecharger / lv.pdf)
+                self.pdfs.add(lv.pdf)
         (self.dossier / '.nojekyll').write_text('', encoding='utf-8')
         (self.dossier / (INDEXNOW + '.txt')).write_text(INDEXNOW, encoding='utf-8')
         # Domaine personnalisé de GitHub Pages, quand le site est publié à son adresse.

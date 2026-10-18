@@ -1,6 +1,6 @@
 # Siddour-ebook
 
-Siddour séfarade et ashkénaze gratuit, à lire en ligne sur **[sidour.page](https://sidour.page/)** ou à télécharger en EPUB pour liseuse.
+Siddour séfarade et ashkénaze gratuit, à lire en ligne sur **[sidour.page](https://sidour.page/)** ou à télécharger en EPUB pour liseuse et en PDF à imprimer.
 
 <!-- publication:debut -->
 ## Télécharger
@@ -41,7 +41,7 @@ Les liens de la dernière publication s’affichent en haut de cette page après
 - [Édition phonétique](dist/siddour_liseuse_phonetique.epub)
 - [Édition hébreu puis phonétique pour chaque passage](dist/siddour_liseuse_bilingue.epub)
 
-Les éditions ashkénazes (`siddour_liseuse_ashkenaze_<mode>.epub`) rejoindront `dist/` à leur première publication.
+Les éditions ashkénazes (`siddour_liseuse_ashkenaze_<mode>.epub`) et les PDF (`siddour_<mode>.pdf`, `siddour_ashkenaze_<mode>.pdf`) rejoindront `dist/` à leur prochaine publication.
 
 ## Installation
 
@@ -55,7 +55,7 @@ source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
-Pillow sert à recompresser les couvertures en JPEG ; sans lui, le PNG d’origine est intégré tel quel.
+Pillow sert à recompresser les couvertures en JPEG ; sans lui, le PNG d’origine est intégré tel quel. WeasyPrint met en page les PDF ; il demande Pango (sous Debian ou Ubuntu : `sudo apt install libpango-1.0-0 libpangoft2-1.0-0` ; sous macOS : `brew install pango`). Il n’est utile qu’avec `--pdf`.
 
 Sous Windows, activer l’environnement avec `.venv\Scripts\Activate.ps1` dans PowerShell, puis utiliser `python` si `python3` n’est pas disponible.
 
@@ -72,6 +72,9 @@ Cette commande produit les six EPUB (trois par rite) et exporte `rubriques_tradu
 ```bash
 # Un seul rite (sefarade ou ashkenaze)
 python3 siddour_ebook_liseuse.py --offline --rite ashkenaze --sortie ./dist
+
+# Les PDF en plus des EPUB (format A5, à imprimer ou à lire sur tablette)
+python3 siddour_ebook_liseuse.py --offline --pdf --sortie ./dist
 
 # Une édition seulement, dans chaque rite
 python3 siddour_ebook_liseuse.py --offline --mode phonetique --sortie ./dist
@@ -109,11 +112,11 @@ L’action :
 
 1. lance les tests (voir « Continuer le travail ») ;
 2. calcule le numéro suivant ;
-3. fabrique les six EPUB (trois par rite) ;
-4. les vérifie avec EPUBCheck ;
+3. fabrique les six EPUB (trois par rite) et les six PDF ;
+4. vérifie les EPUB avec EPUBCheck ;
 5. met à jour `dist/` et les liens en haut de ce README ;
 6. ajoute l’étiquette `edition-<N>-revision-<M>` ;
-7. crée la release avec les six fichiers, rangés par rite dans les notes ;
+7. crée la release avec les douze fichiers, rangés par rite dans les notes ;
 8. publie le site de lecture en ligne sur GitHub Pages.
 
 Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages › Build and deployment › Source : GitHub Actions**.
@@ -123,7 +126,7 @@ Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages 
 Pour une correction qui ne touche que le site (mise en page, liens…), lancer l’action **Republier le site**. Elle ne crée ni étiquette ni release. Le site :
 
 - garde le numéro et la date de la dernière publication ;
-- propose les EPUB de cette publication (`dist/`) ;
+- propose les EPUB et les PDF de cette publication (`dist/`) ;
 - se met à jour dans l’application installée, comme après une révision.
 
 Une correction du texte des livres demande en revanche une nouvelle révision, pour que les EPUB et le site restent identiques.
@@ -135,7 +138,7 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 Les six éditions se lisent aussi dans un navigateur. Le rite séfarade est à la racine du site (`hebreu/`, `phonetique/`, `bilingue/`), le rite ashkénaze sous `ashkenaze/` (`ashkenaze/hebreu/`…). En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets : un petit calendrier pour revenir à la page du jour, puis Livres, Hébreu, Phonétique, Bilingue. Depuis une page de prière, les onglets Hébreu, Phonétique et Bilingue ouvrent la même page dans l’autre édition du même rite. Sur l’accueil et la page des livres, ils mènent aux éditions du rite choisi dans « Aujourd’hui » (séfarade par défaut). Le site comprend :
 
 - une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
-- une page **Livres** (`livres.html`) avec, pour chaque rite, les couvertures, la lecture en ligne et les EPUB à télécharger. Sur téléphone, les trois éditions d’un rite et une case (aide à la lecture sur liseuse pour le rite séfarade, contenu du livre pour le rite ashkénaze) tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
+- une page **Livres** (`livres.html`) avec, pour chaque rite, les couvertures, la lecture en ligne et les EPUB et PDF à télécharger. Sur téléphone, les trois éditions d’un rite et une case (aide à la lecture sur liseuse pour le rite séfarade, contenu du livre pour le rite ashkénaze) tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
 - un sommaire par édition, avec un lien vers la même édition dans l’autre rite ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
 - une barre qui reste en haut de l’écran pendant la lecture : section précédente ‹, liste de toutes les sections rangées par chapitre pour y aller directement, section suivante ›. Sur les pages sans sections (accueil…), c’est le bandeau du site qui reste en haut.
@@ -281,6 +284,7 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/mise_en_page.py` | Placement des consignes, variantes, encadrés et notes (`ReadingLayout`). |
 | `siddour/phonetique.py` | Phonétique, dans la prononciation du rite (`PRONONCIATIONS`) ; vocalisations fautives de la source dans `CORRECTIONS`, mots non vocalisés et sigles dans `PH_WORDS` et `LECTURES`. |
 | `siddour/edition.py`, `siddour/style.css` | Assemblage des EPUB et feuille de style. |
+| `siddour/pdf.py`, `assets/fonts/` | Édition PDF (WeasyPrint) ; polices Noto Serif (latin, réduite aux alphabets latins) et Noto Serif Hebrew. |
 | `siddour/site.py` | Site web de lecture, métadonnées de référencement et application installable (PWA). |
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
 | `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis le titre commun des couvertures ; texture du fond « papier ancien ». |
@@ -309,6 +313,18 @@ Les deux rites partagent ces tables : une consigne identique se traduit une seul
 Couverture (`assets/covers/siddour_<mode>.png`, ou `assets/covers/ashkenaze/siddour_<mode>.png`), sommaire sur deux colonnes, introduction, page « À propos de cette édition » (sources, licences, conventions), puis les 26 chapitres du rite séfarade ou les 21 du rite ashkénaze. Le texte de l’introduction et les métadonnées sont dans `siddour/edition.py` ; ce qui change d’un rite à l’autre est dans `siddour/rites.py`.
 
 Métadonnées : titre, identifiant, langues (hébreu et français), auteur et éditeur, date, description, sujets, source Sefaria, droits et licences, série « Siddour séfarade pour liseuse » ou « Siddour ashkénaze pour liseuse » avec le numéro de l’édition (EPUB 3 et Calibre), couverture, date de modification et informations d’accessibilité. Les six livres passent EPUBCheck 5.1 sans erreur.
+
+### Contenu de chaque PDF
+
+Le même contenu que l’EPUB, mis en page au format A5 par WeasyPrint (`siddour/pdf.py`), pour l’impression ou la lecture sur tablette :
+
+- couverture en pleine page, puis sommaire avec le numéro de page de chaque section, introduction et « À propos » ;
+- chaque chapitre sur une nouvelle page, son titre rappelé en haut des pages suivantes, numéro de page en bas ;
+- signets (chapitres et sections), liens internes du sommaire, des notes et des ajouts encadrés ;
+- polices intégrées : Noto Serif pour le français et la phonétique, Noto Serif Hebrew pour l’hébreu, ce qui donne le même rendu sur toutes les machines ;
+- titre, auteur, description et mots-clés dans les propriétés du document.
+
+Le livre séfarade bilingue fait environ 700 pages ; chaque PDF demande une à deux minutes de fabrication.
 
 ### Conventions de mise en page
 
@@ -348,6 +364,6 @@ Les JSON du cache conservent les références et les métadonnées des versions 
 
 Le rite ashkénaze vient du *Siddur Ashkenaz* de Sefaria, qui réunit deux versions : *The Metsudah siddur, 1981* (CC-BY) et *Daat Siddur Ashkenaz* (domaine public). Chaque EPUB cite, page « À propos », les versions qu’il utilise. Les consignes traduites suivent surtout la Michna beroura. La phonétique de ce rite suit la prononciation israélienne, et non la prononciation ashkénaze traditionnelle. Les prières pour l’État et pour la communauté, vides dans la source, n’y figurent pas, ni Véyitèn lekha, faute de texte sous licence connue.
 
-La police **Noto Serif Hebrew** est distribuée sous SIL Open Font License 1.1, reproduite dans [OFL-NotoSerifHebrew.txt](OFL-NotoSerifHebrew.txt).
+La police **Noto Serif Hebrew** est distribuée sous SIL Open Font License 1.1, reproduite dans [OFL-NotoSerifHebrew.txt](OFL-NotoSerifHebrew.txt). Les PDF utilisent aussi **Noto Serif**, sous la même licence ([OFL-NotoSerif.txt](OFL-NotoSerif.txt)).
 
 La phonétique est générée automatiquement et reste approximative ; ses conventions sont décrites plus haut. Le contenu couvre le plan inclus, pas tous les offices possibles. La conservation des textes, la structure XML et les liens des six EPUB ont été vérifiés ; leur affichage exact dépend de la liseuse. Les références Pata’h Eliyahou et Beit Hassofer ont servi à guider la présentation et la phonétique, sans reproduire leurs textes.

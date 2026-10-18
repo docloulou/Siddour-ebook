@@ -199,6 +199,10 @@ class Livre:
     def epub(self) -> str:
         return self.rite.epub(self.mode)
 
+    @property
+    def pdf(self) -> str:
+        return self.rite.pdf(self.mode)
+
 
 def render_book(plan: list[dict], sources: dict, mode: str, consignes: Consignes,
                 version: Version | None = None, rite: Rite = SEFARADE, strict: bool = True) -> Livre:
