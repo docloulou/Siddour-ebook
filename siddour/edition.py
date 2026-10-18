@@ -6,6 +6,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from .changements import historique
 from .consignes import Consignes
 from .mise_en_page import render_section
 from .rites import SEFARADE, Rite
@@ -31,6 +32,7 @@ _DESCRIPTION = {
     'bilingue': '{} : chaque passage en hébreu vocalisé suivi de sa phonétique, consignes en français : {}.',
 }
 FONT_NOTICE = 'La police Noto Serif Hebrew est distribuée sous SIL Open Font License 1.1.'
+SITE_URL = 'https://sidour.page/'  # adresse publique du site de lecture
 
 
 def description(mode: str, rite: Rite = SEFARADE) -> str:
@@ -81,7 +83,6 @@ def colophon(version: Version) -> str:
             '<p>Fabriqué le ' + exposants(date_fr(version.jour)) + '</p></div>')
 
 
-SITE_URL = 'https://sidour.page/'  # adresse publique du site de lecture
 
 
 def make_credits(title: str, licences: set[str], mode: str, version: Version, rite: Rite = SEFARADE) -> str:
@@ -102,6 +103,35 @@ def make_credits(title: str, licences: set[str], mode: str, version: Version, ri
               'Les sources et les précisions techniques sont en notes numérotées, en fin de section. '
               'Les consignes françaises traduisent cette source et ses usages, ' + rite.usages + '.</p>'
             + ('<p class="credits">' + FONT_NOTICE + '</p>' if mode != 'phonetique' else ''))
+
+
+MODIFICATIONS_PAGE = 'modifications.html'  # historique complet, sur le site
+LIGNES_MODIFICATIONS = 5  # au plus, par publication, à la fin du livre
+
+
+def make_modifications(livre: Livre, nombre: int = 3) -> str:
+    """Récapitulatif très court des dernières publications qui touchent cette édition, en fin de livre."""
+    lignes = historique(livre.rite, livre.mode, livre.version, nombre)
+    if not lignes:
+        return ''
+    blocs = []
+    for titre, changements in lignes:
+        items = []
+        for ch in changements[:LIGNES_MODIFICATIONS]:
+            chapitres = ch.noms_chapitres(livre.rite) if ch.chapitres else []
+            lieu = (' (' + ', '.join(chapitres[:3]) + (', …' if len(chapitres) > 3 else '') + ')') if chapitres else ''
+            items.append('<li>' + html.escape(ch.resume) + ('<span class="modif-lieu">' + html.escape(lieu) + '</span>'
+                                                            if lieu else '') + '</li>')
+        reste = len(changements) - LIGNES_MODIFICATIONS
+        if reste > 0:
+            items.append('<li>… et ' + str(reste) + ' autre' + ('s' if reste > 1 else '') + ' modification'
+                         + ('s' if reste > 1 else '') + '.</li>')
+        blocs.append('<p class="modif-version">' + exposants(titre) + '</p><ul class="modifications">'
+                     + ''.join(items) + '</ul>')
+    adresse = SITE_URL + MODIFICATIONS_PAGE
+    return ('<h1>Dernières modifications</h1>' + ''.join(blocs)
+            + '<p class="credits">Toutes les modifications : <a href="' + adresse + '">'
+            + adresse.removeprefix('https://') + '</a>.</p>')
 
 
 def make_contents(chapters: list[tuple[str, str, list[str]]]) -> str:
@@ -285,6 +315,12 @@ def build_edition(livre: Livre, sortie: Path, font: Path | None, with_html: bool
         htmlparts.extend(content for _, content in sections)
         spine.extend(pages)
         toc.append((epub.Section(chap_title, href=pages[0].file_name), pages))
+    modifications = make_modifications(livre)
+    if modifications:
+        fin = page('modifications', 'Dernières modifications', modifications)
+        spine.append(fin)
+        toc.append(fin)
+        htmlparts.append(modifications)
     book.guide = guide + [{'type': 'toc', 'title': 'Sommaire', 'href': sommaire.file_name},
                   {'type': 'text', 'title': 'Introduction', 'href': intro.file_name}]
     book.spine = spine

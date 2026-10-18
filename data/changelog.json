@@ -1,0 +1,213 @@
+[
+  {
+    "tag": "edition-1-revision-4",
+    "date": "2026-10-15",
+    "changements": [
+      {
+        "resume": "Aligne la phonétique sur la prononciation de chaque rite.",
+        "details": "Rite séfarade, comme le Pata'h Eliyahou et Beit Hassofer : ḥ, ‘, w et q pour ח, ע, ו et ק, è pour le tséré et é pour le ségol, consonne doublée au daguech fort, chva prononcé après une voyelle longue.\n\nRite ashkénaze, dans la prononciation israélienne annoncée par le livre : ’h, v et k, é pour le tséré et è pour le ségol, sans consonne doublée, mots liés par un trait d'union au maqaf.",
+        "niveau": "revision",
+        "editions": [
+          "phonetique",
+          "bilingue"
+        ]
+      }
+    ]
+  },
+  {
+    "tag": "edition-1-revision-3",
+    "date": "2026-10-14",
+    "changements": [
+      {
+        "resume": "Ajoute la lecture du troisième Séfer à Chabbat Roch ’Hodech ’Hanouka.",
+        "details": "La consigne annonçait trois Séfarim sans rien dire du troisième ; elle suit désormais le Choul'han Aroukh (OC 684, 3) : le maftir y lit l'offrande du prince du jour.",
+        "niveau": "revision",
+        "rites": [
+          "sefarade"
+        ],
+        "chapitres": [
+          "hanouka"
+        ]
+      },
+      {
+        "resume": "Corrige la note de l’acrostiche Ehyé dans Vayevarekh David (Kaf ha’Haïm 51, 43).",
+        "niveau": "revision",
+        "rites": [
+          "sefarade"
+        ],
+        "chapitres": [
+          "priere-du-matin"
+        ]
+      },
+      {
+        "resume": "Corrige la traduction de « היחיד » dans la consigne d’Anénou : « chaque fidèle ».",
+        "niveau": "revision",
+        "rites": [
+          "sefarade"
+        ],
+        "chapitres": [
+          "priere-du-matin",
+          "priere-de-l-apres-midi"
+        ]
+      },
+      {
+        "resume": "Sort « Les jours sans Ta’hanoun » de l’encadré d’Avinou malkénou.",
+        "niveau": "revision",
+        "rites": [
+          "sefarade"
+        ],
+        "chapitres": [
+          "priere-du-matin",
+          "priere-de-l-apres-midi"
+        ]
+      },
+      {
+        "resume": "Garde les cinq versets de protection du voyageur dans un seul encadré.",
+        "niveau": "revision",
+        "rites": [
+          "sefarade"
+        ],
+        "chapitres": [
+          "priere-du-voyageur"
+        ]
+      },
+      {
+        "resume": "Le lien « Suite de la prière » reprend à la consigne qui annonce la suite.",
+        "details": "Après un encadré, le lien vise la première consigne visible avant le passage suivant (Al hanissim, Yaalé veyavo, Hara'haman de fête…), au lieu de la sauter.",
+        "niveau": "revision",
+        "chapitres": [
+          "priere-du-matin",
+          "priere-de-l-apres-midi",
+          "roch-hodech",
+          "apres-le-repas",
+          "hanouka"
+        ]
+      },
+      {
+        "resume": "Ne rattache le motif du ’hamets qu’à Pessa’h dans la consigne de Mizmor letoda.",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "priere-du-matin"
+        ]
+      },
+      {
+        "resume": "Corrige les jours de la montée et de la descente de Moché avant la lecture de la Torah.",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "priere-du-matin"
+        ]
+      },
+      {
+        "resume": "Garde d’un seul tenant la consigne d’oubli de « Tal oumatar ».",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "priere-du-matin",
+          "priere-de-l-apres-midi",
+          "priere-du-soir"
+        ]
+      },
+      {
+        "resume": "Titre l’encadré Morid hatal / Machiv haroua’h « Une seule formule selon la saison ».",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "priere-du-matin",
+          "priere-de-l-apres-midi",
+          "priere-du-soir"
+        ]
+      },
+      {
+        "resume": "Retire le tiret parasite des variantes « Hors d’Israël » d’Al hami’hya.",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "me-ene-chaloch"
+        ]
+      },
+      {
+        "resume": "Traduit les consignes de la ’halla et de la mezouza.",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "benedictions-diverses"
+        ]
+      },
+      {
+        "resume": "Place la mezouza inclinée, selon l’usage ashkénaze.",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ],
+        "chapitres": [
+          "benedictions-diverses"
+        ]
+      }
+    ]
+  },
+  {
+    "tag": "edition-1-revision-2",
+    "date": "2026-10-14",
+    "changements": [
+      {
+        "resume": "Ne translittère que le qeré quand la source donne aussi le ketiv.",
+        "niveau": "revision",
+        "editions": [
+          "phonetique",
+          "bilingue"
+        ]
+      },
+      {
+        "resume": "Lit Adonaï après les préfixes ka, ché et oumé.",
+        "details": "Dans Ashré, le Hallel, la prière de Hanna et le chant de Motsaé Chabbat : kaAdonaï, chèAdonaï, ouméAdonaï.",
+        "niveau": "revision",
+        "editions": [
+          "phonetique",
+          "bilingue"
+        ]
+      }
+    ]
+  },
+  {
+    "tag": "edition-1-revision-1",
+    "date": "2026-10-14",
+    "changements": [
+      {
+        "resume": "Ajoute le rite ashkénaze : 21 chapitres et 92 sections, en trois éditions.",
+        "details": "Tiré du Siddur Ashkenaz de Sefaria et rangé sur le modèle du plan séfarade, avec 277 consignes et 71 intertitres traduits en français. Pourim, le Tikoun ’Hatsot et les prières du cycle de la vie n’y sont pas encore.",
+        "niveau": "revision",
+        "rites": [
+          "ashkenaze"
+        ]
+      }
+    ]
+  },
+  {
+    "tag": "edition-1-revision-0",
+    "date": "2026-10-14",
+    "changements": [
+      {
+        "resume": "Première édition du rite séfarade : 26 chapitres et 95 sections, en hébreu, en phonétique et bilingue.",
+        "details": "Consignes traduites en français et placées avant le passage qu'elles concernent, ajouts délimités, zimoun présenté comme un dialogue.",
+        "niveau": "edition",
+        "rites": [
+          "sefarade"
+        ]
+      }
+    ]
+  }
+]

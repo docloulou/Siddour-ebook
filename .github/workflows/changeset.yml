@@ -1,0 +1,34 @@
+# Sur chaque pull request : une modification du contenu des livres (textes, consignes, phonétique,
+# plan, mise en page des livres…) doit ajouter un changeset dans .changeset/ (voir AGENTS.md).
+# Étiquette « sans-changeset » pour un remaniement qui laisse les livres identiques.
+name: Changeset
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Vérifier les changesets
+        env:
+          BASE: origin/${{ github.base_ref }}
+          SANS: ${{ contains(github.event.pull_request.labels.*.name, 'sans-changeset') }}
+        run: |
+          if [ "$SANS" = "true" ]; then
+            python3 -m siddour.changements verifier
+          else
+            python3 -m siddour.changements verifier --base "$BASE"
+          fi

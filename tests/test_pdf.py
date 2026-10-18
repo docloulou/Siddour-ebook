@@ -33,6 +33,8 @@ class DocumentTest(unittest.TestCase):
                     # Une section par entrée du sommaire, chaque chapitre sur une nouvelle page.
                     self.assertEqual(page.count('<div class="chapitre">'), len(plan))
                     self.assertNotIn("epub:type", page)
+                    # Le livre se termine par ses dernières modifications.
+                    self.assertIn("<h1>Dernières modifications</h1>", page.rsplit('<div class="chapitre">', 1)[1])
 
     def test_polices(self):
         for name in LATIN.values():
