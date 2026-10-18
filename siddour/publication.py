@@ -36,7 +36,8 @@ def bloc_readme(version: Version, depot: str, site: str = '') -> str:
     base = 'https://github.com/' + depot + '/releases/download/' + version.tag + '/'
     liens = '\n'.join('\n### ' + rite.libelle + '\n\n'
                       + ('*' + rite.limites + '*\n\n' if rite.limites else '')
-                      + '\n'.join('- [' + nom + '](' + base + rite.epub(mode) + ')' for mode, nom in EDITIONS)
+                      + '\n'.join('- ' + nom + ' : [EPUB](' + base + rite.epub(mode) + ') · [PDF](' + base + rite.pdf(mode) + ')'
+                                   for mode, nom in EDITIONS)
                       for rite in RITES.values())
     return (DEBUT + '\n## Télécharger\n\n**' + version.complet + '** · '
             '[notes de publication](https://github.com/' + depot + '/releases/tag/' + version.tag + ')'

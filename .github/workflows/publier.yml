@@ -1,5 +1,5 @@
 # Publication manuelle : Actions > « Publier les EPUB » > Run workflow.
-# Lance les tests, fabrique les six EPUB numérotés (trois par rite), les vérifie avec EPUBCheck, met à jour
+# Lance les tests, fabrique les six EPUB numérotés (trois par rite) et leurs PDF, vérifie les EPUB avec EPUBCheck, met à jour
 # les liens du README, crée la release correspondante et publie le site de
 # lecture sur GitHub Pages (Settings > Pages > Source : GitHub Actions).
 name: Publier les EPUB
@@ -49,7 +49,10 @@ jobs:
           cache: pip
 
       - name: Installer les dépendances
-        run: python3 -m pip install -r requirements.txt
+        run: |
+          # Pango, pour WeasyPrint qui met en page les PDF.
+          sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0
+          python3 -m pip install -r requirements.txt
 
       - name: Lancer les tests
         run: python3 -m unittest discover -s tests
@@ -62,9 +65,9 @@ jobs:
           python3 -m siddour.publication suivante --increment "$INCREMENT" | tee -a "$GITHUB_OUTPUT"
           echo "date=$(TZ=Europe/Paris date +%F)" | tee -a "$GITHUB_OUTPUT"
 
-      - name: Fabriquer les EPUB et le site
+      - name: Fabriquer les EPUB, les PDF et le site
         run: >
-          python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist
+          python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./dist --pdf
           --site ./_site --site-url "$SITE_URL" --depot "${{ github.repository }}"
           --edition ${{ steps.version.outputs.edition }}
           --revision ${{ steps.version.outputs.revision }}
@@ -86,7 +89,7 @@ jobs:
           python3 -m siddour.publication readme --tag "$TAG" --depot "$GITHUB_REPOSITORY" --date "${{ steps.version.outputs.date }}" --site "$SITE_URL"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md dist/*.epub
+          git add README.md dist/*.epub dist/*.pdf
           git commit -m "Publie la $LIBELLE"
           git tag -a "$TAG" -m "$LIBELLE"
           git push origin "HEAD:${GITHUB_REF_NAME}" "$TAG"
@@ -108,16 +111,18 @@ jobs:
             echo "- \`siddour_liseuse_hebreu.epub\` : textes en hébreu, consignes en français"
             echo "- \`siddour_liseuse_phonetique.epub\` : textes en phonétique, consignes en français"
             echo "- \`siddour_liseuse_bilingue.epub\` : chaque passage en hébreu puis en phonétique"
+            echo "- \`siddour_hebreu.pdf\`, \`siddour_phonetique.pdf\`, \`siddour_bilingue.pdf\` : les mêmes éditions en PDF (A5)"
             echo
             echo "Rite ashkénaze (sans Pourim, le Tikoun ’Hatsot ni le cycle de la vie) :"
             echo
             echo "- \`siddour_liseuse_ashkenaze_hebreu.epub\` : textes en hébreu, consignes en français"
             echo "- \`siddour_liseuse_ashkenaze_phonetique.epub\` : textes en phonétique, consignes en français"
             echo "- \`siddour_liseuse_ashkenaze_bilingue.epub\` : chaque passage en hébreu puis en phonétique"
+            echo "- \`siddour_ashkenaze_hebreu.pdf\`, \`siddour_ashkenaze_phonetique.pdf\`, \`siddour_ashkenaze_bilingue.pdf\` : les mêmes éditions en PDF (A5)"
             echo
             echo "Lire en ligne : $SITE_URL"
           } > notes.md
-          gh release create "$TAG" dist/*.epub --title "Siddour séfarade et ashkénaze — $LIBELLE" --notes-file notes.md --latest
+          gh release create "$TAG" dist/*.epub dist/*.pdf --title "Siddour séfarade et ashkénaze — $LIBELLE" --notes-file notes.md --latest
 
       - name: Envoyer le site
         uses: actions/upload-pages-artifact@v3

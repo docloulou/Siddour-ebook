@@ -1,7 +1,7 @@
 # Republication du site seule : Actions > « Republier le site » > Run workflow.
 # Pour une correction de présentation du site (mise en page, liens…) sans
 # nouvelle édition : le site garde le numéro et la date de la dernière
-# publication, et propose au téléchargement les EPUB de cette publication (dist/).
+# publication, et propose au téléchargement les EPUB et PDF de cette publication (dist/).
 # Aucune release, aucune étiquette ; l'application installée se met à jour.
 #
 # Essai d'une branche : lancer l'action depuis main en donnant le nom de la
@@ -49,7 +49,10 @@ jobs:
           cache: pip
 
       - name: Installer les dépendances
-        run: python3 -m pip install -r requirements.txt
+        run: |
+          # Pango, pour WeasyPrint qui met en page les PDF.
+          sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0
+          python3 -m pip install -r requirements.txt
 
       - name: Lancer les tests
         run: python3 -m unittest discover -s tests
@@ -61,13 +64,14 @@ jobs:
       - name: Fabriquer le site
         run: |
           python3 siddour_ebook_liseuse.py --offline --cache ./cache --sortie ./_epub \
-            --site ./_site --site-url "$SITE_URL" --depot "${{ github.repository }}" \
+            --site ./_site --site-url "$SITE_URL" --depot "${{ github.repository }}" --pdf \
             --edition ${{ steps.version.outputs.edition }} \
             --revision ${{ steps.version.outputs.revision }} \
             --date ${{ steps.version.outputs.date }}
-          # Les EPUB proposés restent ceux de la release publiée ; une édition encore
-          # jamais publiée (absente de dist/) garde l'EPUB fabriqué ici.
-          cp dist/*.epub ./_site/telecharger/
+          # Les EPUB et PDF proposés restent ceux de la release publiée ; une édition encore
+          # jamais publiée (absente de dist/) garde le fichier fabriqué ici.
+          shopt -s nullglob
+          cp dist/*.epub dist/*.pdf ./_site/telecharger/
 
       - name: Envoyer le site
         uses: actions/upload-pages-artifact@v3

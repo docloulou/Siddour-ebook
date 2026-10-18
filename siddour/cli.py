@@ -35,6 +35,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument('--rubriques', help='CSV facultatif de corrections : hebreu;francais')
     ap.add_argument('--font', help='police .ttf ou .otf à embarquer')
     ap.add_argument('--html', action='store_true', help='produire aussi les versions HTML pour relecture')
+    ap.add_argument('--pdf', action='store_true', help='produire aussi les éditions PDF (A5), avec WeasyPrint')
     ap.add_argument('--edition', type=int, help='numéro d’édition imprimé dans le livre (sinon « Version de travail »)')
     ap.add_argument('--revision', type=int, default=0, help='numéro de révision de cette édition (défaut : 0)')
     ap.add_argument('--date', type=date.fromisoformat, default=date.today(),
@@ -93,6 +94,9 @@ def main(argv: list[str] | None = None) -> None:
         for mode in modes:
             livre = render_book(plans[rite.code], sources[rite.code], mode, consignes, version, rite)
             build_edition(livre, sortie, font, args.html)
+            if args.pdf:
+                from .pdf import build_pdf
+                build_pdf(livre, sortie, font)
             livres.append(livre)
     if args.site:
         from .site import build_site
