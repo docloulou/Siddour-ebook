@@ -100,24 +100,55 @@ python3 siddour_ebook_liseuse.py --translit 'בָּרוּךְ אַתָּה' --ri
 
 Sans `--offline`, le script télécharge auprès de Sefaria les sections absentes du cache. Il réutilise les fichiers déjà présents.
 
+## Suivre les modifications du contenu
+
+Toute modification du contenu des livres (texte récité, consignes, phonétique, plan, présentation des pages) s’accompagne d’un **changeset** : un petit fichier `.changeset/<nom>.md` qui résume le changement en une phrase et donne son périmètre (rites, éditions, chapitres). Les changements d’architecture (site, actions, outils) n’en demandent pas. Le format et les règles sont dans [`AGENTS.md`](AGENTS.md) et [`.changeset/README.md`](.changeset/README.md) :
+
+```markdown
+---
+niveau: revision
+rites: sefarade
+editions: phonetique, bilingue
+chapitres: priere-du-matin
+---
+Corrige la phonétique du Tétragramme après le préfixe ché.
+```
+
+```bash
+python3 -m siddour.changements verifier                    # format, rites, éditions, chapitres
+python3 -m siddour.changements verifier --base origin/main  # exige un changeset si la branche touche au contenu
+```
+
+À chaque publication, les changesets en attente sont reportés sous le numéro de la nouvelle édition dans `data/changelog.json` (le journal), d’où viennent :
+
+- [`CHANGELOG.md`](CHANGELOG.md), régénéré à chaque publication ;
+- la page **Modifications** du site (`modifications.html`), avec le périmètre de chaque changement ;
+- la page **Dernières modifications** à la fin de chaque EPUB et PDF : les trois dernières publications qui touchent cette édition, une ligne par changement (cinq au plus par publication) ;
+- les notes de la release.
+
+Une version de travail (fabriquée sans `--edition`) montre en plus, à la fin des livres et sur le site, les changesets pas encore publiés, pour la relecture. L’action **Changeset** vérifie chaque pull request : une branche qui modifie un fichier de contenu (`cache/`, `data/`, plan, phonétique, mise en page…) sans changeset échoue, sauf avec l’étiquette `sans-changeset` quand les livres ne changent pas.
+
 ## Publier une nouvelle édition
 
 Dans l’onglet **Actions** de GitHub, choisir **Publier les EPUB**, puis **Run workflow**, et indiquer :
 
 - **revision** pour des corrections : coquilles, traductions de consignes, phonétique ;
 - **edition** pour un changement important : contenu ajouté, plan revu, nouvelle présentation ;
-- éventuellement une phrase décrivant les changements, reprise dans la release.
+- éventuellement une phrase d’introduction pour la release ; le détail des modifications vient des changesets.
+
+Il faut au moins un changeset en attente ; un changeset de niveau `edition` interdit de publier une simple révision.
 
 L’action :
 
 1. lance les tests (voir « Continuer le travail ») ;
 2. calcule le numéro suivant ;
-3. fabrique les six EPUB (trois par rite) et les six PDF ;
-4. vérifie les EPUB avec EPUBCheck ;
-5. met à jour `dist/` et les liens en haut de ce README ;
-6. ajoute l’étiquette `edition-<N>-revision-<M>` ;
-7. crée la release avec les douze fichiers, rangés par rite dans les notes ;
-8. publie le site de lecture en ligne sur GitHub Pages.
+3. reporte les changesets dans `data/changelog.json` et `CHANGELOG.md`, et les efface de `.changeset/` ;
+4. fabrique les six EPUB (trois par rite) et les six PDF ;
+5. vérifie les EPUB avec EPUBCheck ;
+6. met à jour `dist/`, le journal et les liens en haut de ce README ;
+7. ajoute l’étiquette `edition-<N>-revision-<M>` ;
+8. crée la release avec les douze fichiers et la liste des modifications ;
+9. publie le site de lecture en ligne sur GitHub Pages.
 
 Avant le premier lancement, il faut activer GitHub Pages : **Settings › Pages › Build and deployment › Source : GitHub Actions**.
 
@@ -138,6 +169,7 @@ Une correction du texte des livres demande en revanche une nouvelle révision, p
 Les six éditions se lisent aussi dans un navigateur. Le rite séfarade est à la racine du site (`hebreu/`, `phonetique/`, `bilingue/`), le rite ashkénaze sous `ashkenaze/` (`ashkenaze/hebreu/`…). En haut de chaque page, le bandeau montre le logo (le mot סידור doré de la couverture, `assets/pwa/logo.png`), le nom du site et les onglets : un petit calendrier pour revenir à la page du jour, puis Livres, Hébreu, Phonétique, Bilingue. Depuis une page de prière, les onglets Hébreu, Phonétique et Bilingue ouvrent la même page dans l’autre édition du même rite. Sur l’accueil et la page des livres, ils mènent aux éditions du rite choisi dans « Aujourd’hui » (séfarade par défaut). Le site comprend :
 
 - une page d’accueil **Aujourd’hui**, décrite plus bas : date du jour, prières et horaires ;
+- une page **Modifications** (`modifications.html`) : le journal des modifications du contenu, publication par publication, avec les rites, éditions et chapitres touchés ; un lien y mène depuis le pied de chaque page et la page des livres ;
 - une page **Livres** (`livres.html`) avec, pour chaque rite, les couvertures, la lecture en ligne et les EPUB et PDF à télécharger. Sur téléphone, les trois éditions d’un rite et une case (aide à la lecture sur liseuse pour le rite séfarade, contenu du livre pour le rite ashkénaze) tiennent en 2 × 2 ; sur grand écran, sur une seule ligne ;
 - un sommaire par édition, avec un lien vers la même édition dans l’autre rite ;
 - une page par section, comme dans l’EPUB, avec page précédente / suivante et un lien vers la même section dans les autres éditions.
@@ -289,7 +321,8 @@ Le script `siddour_ebook_liseuse.py` ne fait qu’appeler le paquet `siddour/` :
 | `siddour/aujourdhui.py` | Page d’accueil « Aujourd’hui » (date hébraïque, prières, horaires Hebcal, réglages) et grille des livres. |
 | `siddour/icones.py`, `assets/pwa/` | Icônes, écrans de démarrage iOS et logo du bandeau, générés depuis le titre commun des couvertures ; texture du fond « papier ancien ». |
 | `outils/verifier_site.py` | Vérification du site, de son référencement et de la PWA. |
-| `tests/` | Tests de non-régression : phonétique des deux rites, lecture des sources et de leurs correctifs, mise en page. |
+| `tests/` | Tests de non-régression : phonétique des deux rites, lecture des sources et de leurs correctifs, mise en page, PDF, changesets et journal des modifications. |
+| `siddour/changements.py`, `.changeset/`, `data/changelog.json` | Changesets et journal des modifications du contenu : vérification, report à la publication, `CHANGELOG.md`, fin des livres et page du site. |
 | `siddour/version.py`, `siddour/publication.py` | Numéro d’édition ; outils des actions de publication (`.github/workflows/publier.yml`, `site.yml`), dont le signalement IndexNow. |
 
 Les tests se lancent depuis la racine du dépôt ; les deux actions de publication les lancent aussi avant de fabriquer quoi que ce soit :
@@ -310,7 +343,7 @@ Les deux rites partagent ces tables : une consigne identique se traduit une seul
 
 ### Contenu de chaque EPUB
 
-Couverture (`assets/covers/siddour_<mode>.png`, ou `assets/covers/ashkenaze/siddour_<mode>.png`), sommaire sur deux colonnes, introduction, page « À propos de cette édition » (sources, licences, conventions), puis les 26 chapitres du rite séfarade ou les 21 du rite ashkénaze. Le texte de l’introduction et les métadonnées sont dans `siddour/edition.py` ; ce qui change d’un rite à l’autre est dans `siddour/rites.py`.
+Couverture (`assets/covers/siddour_<mode>.png`, ou `assets/covers/ashkenaze/siddour_<mode>.png`), sommaire sur deux colonnes, introduction, page « À propos de cette édition » (sources, licences, conventions), puis les 26 chapitres du rite séfarade ou les 21 du rite ashkénaze, et enfin les dernières modifications de l’édition. Le texte de l’introduction et les métadonnées sont dans `siddour/edition.py` ; ce qui change d’un rite à l’autre est dans `siddour/rites.py`.
 
 Métadonnées : titre, identifiant, langues (hébreu et français), auteur et éditeur, date, description, sujets, source Sefaria, droits et licences, série « Siddour séfarade pour liseuse » ou « Siddour ashkénaze pour liseuse » avec le numéro de l’édition (EPUB 3 et Calibre), couverture, date de modification et informations d’accessibilité. Les six livres passent EPUBCheck 5.1 sans erreur.
 
@@ -318,7 +351,7 @@ Métadonnées : titre, identifiant, langues (hébreu et français), auteur et é
 
 Le même contenu que l’EPUB, mis en page au format A5 par WeasyPrint (`siddour/pdf.py`), pour l’impression ou la lecture sur tablette :
 
-- couverture en pleine page, puis sommaire avec le numéro de page de chaque section, introduction et « À propos » ;
+- couverture en pleine page, puis sommaire avec le numéro de page de chaque section, introduction et « À propos » ; les dernières modifications en fin de livre ;
 - chaque chapitre sur une nouvelle page, son titre rappelé en haut des pages suivantes, numéro de page en bas ;
 - signets (chapitres et sections), liens internes du sommaire, des notes et des ajouts encadrés ;
 - polices intégrées : Noto Serif pour le français et la phonétique, Noto Serif Hebrew pour l’hébreu, ce qui donne le même rendu sur toutes les machines ;

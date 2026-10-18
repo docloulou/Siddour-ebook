@@ -66,3 +66,9 @@ a { color: #000; }
 .colophon { margin-top: 2.5em; padding-top: .6em; border-top: 1px solid #ccc; text-align: center;
             font: .8em/1.4 sans-serif; color: #555; }
 .colophon p { margin: .1em 0; text-indent: 0; }
+
+/* Dernières modifications, en fin de livre */
+.modif-version { font: bold .85em/1.4 sans-serif; margin: 1.1em 0 .3em; page-break-after: avoid; break-after: avoid; }
+ul.modifications { margin: 0 0 .6em; padding-left: 1.2em; font-size: .88em; line-height: 1.4; }
+ul.modifications li { margin: .15em 0; }
+.modif-lieu { color: #555; font-style: italic; }

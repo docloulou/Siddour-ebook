@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 from .edition import (CSS, FONT_PATH, Livre, colophon, cover_image, description,
-                      introduction, make_contents, make_credits)
+                      introduction, make_contents, make_credits, make_modifications)
 
 FONTS = FONT_PATH.parent
 # Noto Serif (latin), réduite aux alphabets latins : le texte français et la phonétique (ḥ, ‘…)
@@ -98,6 +98,9 @@ def document(livre: Livre, font: Path | None) -> str:
         body = ''.join('<section id="c%02d_%02d">' % (ci, si) + ancres(content, 's%02d%02d-' % (ci, si)) + '</section>'
                        for si, (_, content) in enumerate(sections, 1))
         parts.append('<div class="chapitre"><h1>' + html.escape(chap['fr']) + '</h1>' + he + body + '</div>')
+    modifications = make_modifications(livre)
+    if modifications:
+        parts.append('<div class="liminaire">' + modifications + '</div>')
     body = ''.join(parts).replace('epub:type="noteref"', 'role="doc-noteref"').replace('epub:type="footnote"', 'role="doc-footnote"')
     lang = 'he' if mode == 'hebreu' else 'fr'
     return ('<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><title>' + html.escape(livre.title)

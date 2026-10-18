@@ -3,6 +3,7 @@
 Arborescence produite :
     index.html                         accueil « Aujourd'hui » : date hébraïque, prières et horaires du jour
     livres.html                        les éditions : lecture en ligne, téléchargements EPUB et PDF
+    modifications.html                 journal des modifications du contenu des livres
     <mode>/index.html                  sommaire d'une édition séfarade
     <mode>/<chapitre>/<section>.html   une page par section, comme dans l'EPUB
     ashkenaze/<mode>/...               les éditions ashkénazes, rangées de la même façon
@@ -26,8 +27,9 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import urljoin
 
-from .edition import (CSS, FONT_PATH, SITE_URL, TITLES, Livre, cover_image, description, exposants, introduction,
-                      make_contents, make_credits)
+from .changements import en_attente, journal
+from .edition import (CSS, FONT_PATH, MODIFICATIONS_PAGE, SITE_URL, TITLES, Livre, cover_image, description, exposants,
+                      introduction, make_contents, make_credits)
 from .hebreu import NIKUD_RE
 from .publication import INDEXNOW
 from .rites import Rite
@@ -195,6 +197,14 @@ button.bouton { font: inherit; cursor: pointer; }
                            .site-head .marque { gap: .55em; } .site-head .marque img { height: 1.9em; }
                            .barre .inner { padding: .35em .8em; } }
 @media (max-width: 22em) { .site-head .nom small { letter-spacing: .06em; } }
+/* Journal des modifications */
+.journal h2 { font-size: 1.1em; }
+.journal ul { list-style: none; padding: 0; }
+.journal li { margin: 0 0 1em; }
+.journal li p { margin: .2em 0; }
+.journal-resume { font-weight: bold; }
+.journal-perimetre { font: .82em/1.4 sans-serif; color: #5a5040; }
+.journal-edition { font: .75em sans-serif; color: #8a6d1f; border: 1px solid #c9b47a; border-radius: 3px; padding: 0 .35em; }
 '''
 
 # Script commun aux pages : inscription du service worker, annonce de mise à jour,
@@ -655,7 +665,8 @@ class Site:
                 + haut + '<main>\n' + body + '\n</main>\n'
                 '<footer class="site-foot"><p>' + exposants(self.version.complet) + ' · Textes issus de '
                 '<a href="https://www.sefaria.org">Sefaria</a> · '
-                '<a href="' + root + 'livres.html#telecharger">Télécharger les EPUB</a></p>'
+                '<a href="' + root + 'livres.html#telecharger">Télécharger les EPUB</a> · '
+                '<a href="' + root + MODIFICATIONS_PAGE + '">Modifications</a></p>'
                 '<p>Projet libre et collaboratif : <a href="' + self.github + '">contribuer sur GitHub</a> · '
                 '<a href="' + self.github + '/issues">signaler une erreur</a>'
                 '<span class="contact" data-c="' + CONTACT + '" hidden> · <a href="#">nous écrire</a></span></p></footer>\n'
@@ -958,7 +969,8 @@ class Site:
                 'ou l’envoyer sur Kindle avec « Send to Kindle ».</p>'
                 + ('<p>Le PDF, au format A5, s’imprime ou se lit sur tablette.</p>' if self.pdfs else '') +
                 '<p>Les éditions se lisent aussi en ligne, même sans connexion une fois gardées.</p>'
-                '<p><a href="' + self.github + '/releases">Toutes les versions</a></p></div>')
+                '<p><a href="' + MODIFICATIONS_PAGE + '">Ce qui a changé</a> · '
+                '<a href="' + self.github + '/releases">Toutes les versions</a></p></div>')
         sections = []
         for n, rite in enumerate(self.rites):
             livres = [lv for lv in self.livres if lv.rite is rite]
@@ -1010,6 +1022,34 @@ class Site:
                    'Les pages déjà lues restent disponibles ; pour lire une édition entière sans connexion, '
                    'ouvrir son sommaire et choisir « Garder hors ligne ».</p><p style="text-align:center">'
                    '<a class="bouton" href="' + (self.url or 'index.html') + '">Retour à l’accueil</a></p>', index=False)
+
+    def modifications(self) -> None:
+        """Journal des modifications du contenu, publication par publication, avec le périmètre de chacune."""
+        v = self.version
+        blocs = []
+        if v.edition is None and en_attente():
+            blocs.append(('travail', 'Version de travail (non publiée)', en_attente()))
+        blocs += [(p.tag, p.version.complet, p.changements) for p in journal()
+                  if v.edition is None or (p.version.edition, p.version.revision) <= (v.edition, v.revision)]
+        corps_ = ''.join(
+            '<section class="journal" id="' + ident + '"><h2>' + exposants(titre) + '</h2><ul>'
+            + ''.join('<li><p class="journal-resume">' + html.escape(c.resume)
+                      + (' <span class="journal-edition">nouvelle édition</span>' if c.niveau == 'edition' else '') + '</p>'
+                      '<p class="journal-perimetre">' + html.escape(c.perimetre()) + '</p>'
+                      + ''.join('<p>' + html.escape(par) + '</p>' for par in c.details.split('\n\n') if par.strip())
+                      + '</li>' for c in changements)
+            + '</ul></section>' for ident, titre, changements in blocs)
+        titre = 'Modifications des livres — ' + SITE_NAME
+        resume = ('Ce qui change d’une révision à l’autre dans le siddour séfarade et ashkénaze : textes, consignes, '
+                  'phonétique, avec les rites, éditions et chapitres touchés.')
+        body = ('<h1>Modifications des livres</h1><p class="accroche">Ce qui change dans le contenu des livres, '
+                'publication par publication : les rites, les éditions et les chapitres touchés.</p>'
+                + (corps_ or '<p>Aucune modification publiée pour l’instant.</p>'))
+        self.write(MODIFICATIONS_PAGE, titre, resume, body,
+                   mots=mots_cles(('modifications', 'révisions', 'nouveautés', 'corrections')),
+                   jsonld=[self.page_jsonld(MODIFICATIONS_PAGE, 'WebPage', titre, resume, 'assets/partage.jpg',
+                                            breadcrumb={'@id': self.ident(MODIFICATIONS_PAGE, 'fil')}),
+                           self.breadcrumb(MODIFICATIONS_PAGE, [(SITE_NAME, ''), ('Modifications', MODIFICATIONS_PAGE)])])
 
     def assets(self, sortie: Path) -> None:
         from PIL import Image
@@ -1155,6 +1195,7 @@ def build_site(livres: list[Livre], dossier: Path, sortie: Path, url: str = '', 
     for livre in livres:
         site.edition(livre)
     site.accueil()
+    site.modifications()
     site.index_moteurs()
     site.pwa()
     print('Site :', dossier, '|', len(site.pages), 'pages', '|', date_fr(site.version.jour), '| cache', site.cache)
